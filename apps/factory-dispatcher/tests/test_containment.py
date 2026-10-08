@@ -430,8 +430,10 @@ def test_verification_profile_exact_write_set_for_a_plain_clone(tmp_path, monkey
     import launchd_agent
 
     substrate_port = launchd_agent.TUNNEL_DEFAULTS["substrate-prod"]["local_port"]
+    temporal_port = launchd_agent.TUNNEL_DEFAULTS["temporal"]["local_port"]
     assert _network_rule_entries(text) == [
         '(deny network-outbound (remote tcp "*:22"))',
+        f'(deny network-outbound (remote tcp "*:{temporal_port}"))',
         '(deny network-outbound (remote tcp "localhost:*"))',
         f'(allow network-outbound (remote tcp "localhost:{substrate_port}"))',
     ]
@@ -1477,10 +1479,13 @@ def test_credential_dirs_exact_read_deny_set_and_ordered_network_rules(
         network = _network_rule_entries(text)
         assert network == [
             '(deny network-outbound (remote tcp "*:22"))',
+            f'(deny network-outbound (remote tcp "*:{temporal_port}"))',
             '(deny network-outbound (remote tcp "localhost:*"))',
             f'(allow network-outbound (remote tcp "localhost:{substrate_port}"))',
         ]
-        assert str(temporal_port) not in "".join(network)
+        # 2026-10-08: Temporal is a tailnet device too, so the port is denied on
+        # every host rather than merely absent from the loopback allow.
+        assert f'(allow network-outbound (remote tcp "localhost:{temporal_port}"))' not in network
 
 
 def test_kubeconfig_entry_outside_credential_dirs_gets_a_literal_deny(

@@ -724,18 +724,23 @@ def _read_deny_lines(environ: dict[str, str] | None = None) -> str:
 
 def _network_rule_lines() -> str:
     """The only network rules either profile carries (dev.findings 75b50b58,
-    dd648709): outbound ssh denied outright, every loopback TCP port denied
-    except the substrate tunnel's -- allowed LAST, because in SBPL the
-    later rule wins (measured: swapping the order denies the substrate port
-    too). A function-level import: a module-level ``import launchd_agent``
+    dd648709): outbound ssh denied outright, Temporal's gRPC port denied on
+    every host (since 2026-10-08 Temporal is also a tailnet device,
+    `temporal.<tailnet>.ts.net:7233`, so a loopback-only deny no longer
+    bounds it; the worker has no legitimate use of 7233 anywhere), every
+    loopback TCP port denied except the substrate tunnel's -- allowed LAST,
+    because in SBPL the later rule wins (measured: swapping the order denies
+    the substrate port too). A function-level import: a module-level ``import launchd_agent``
     would cycle (launchd_agent -> worker_checkout -> dispatch ->
     containment).
     """
     from launchd_agent import TUNNEL_DEFAULTS
 
     substrate_port = TUNNEL_DEFAULTS["substrate-prod"]["local_port"]
+    temporal_port = TUNNEL_DEFAULTS["temporal"]["local_port"]
     return (
         '(deny network-outbound (remote tcp "*:22"))\n'
+        f'(deny network-outbound (remote tcp "*:{temporal_port}"))\n'
         '(deny network-outbound (remote tcp "localhost:*"))\n'
         f'(allow network-outbound (remote tcp "localhost:{substrate_port}"))'
     )
