@@ -1,0 +1,97 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "metadata": {
+        "name": "substrate-7c9f8d6b5-k2p9x",
+        "namespace": "platform-substrate-prod",
+        "creationTimestamp": "2026-08-21T21:14:03Z",
+        "labels": {"app": "substrate"},
+        "ownerReferences": [
+          {"apiVersion": "apps/v1", "kind": "ReplicaSet", "name": "substrate-7c9f8d6b5", "controller": true}
+        ]
+      },
+      "status": {
+        "phase": "Pending",
+        "startTime": "2026-08-21T21:14:03Z",
+        "conditions": [
+          {"type": "Ready", "status": "False", "lastTransitionTime": "2026-08-21T21:14:03Z"}
+        ],
+        "containerStatuses": [
+          {
+            "name": "substrate",
+            "image": "zot.local:30500/substrate@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+            "ready": false,
+            "started": false,
+            "state": {
+              "waiting": {
+                "reason": "ImagePullBackOff",
+                "message": "Back-off pulling image \"zot.local:30500/substrate@sha256:0000000000000000000000000000000000000000000000000000000000000000\""
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "metadata": {
+        "name": "mcp-hub-5f6b8c9d4-qz7wn",
+        "namespace": "platform-mcp-prod",
+        "creationTimestamp": "2026-08-21T21:16:41Z",
+        "labels": {"app": "mcp-hub"},
+        "ownerReferences": [
+          {"apiVersion": "apps/v1", "kind": "ReplicaSet", "name": "mcp-hub-5f6b8c9d4", "controller": true}
+        ]
+      },
+      "status": {
+        "phase": "Pending",
+        "startTime": "2026-08-21T21:16:41Z",
+        "conditions": [
+          {"type": "Ready", "status": "False", "lastTransitionTime": "2026-08-21T21:16:41Z"}
+        ],
+        "containerStatuses": [
+          {
+            "name": "mcp-hub",
+            "image": "zot.local:30500/mcp-hub@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+            "ready": false,
+            "started": false,
+            "state": {
+              "waiting": {
+                "reason": "ErrImagePull",
+                "message": "rpc error: code = NotFound desc = failed to pull and unpack image \"zot.local:30500/mcp-hub@sha256:0000...0\": not found"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "metadata": {
+        "name": "lifeops-console-6d8f7b5c9-h4t2m",
+        "namespace": "platform-core",
+        "creationTimestamp": "2026-08-21T21:20:11Z",
+        "labels": {"app": "lifeops-console"},
+        "ownerReferences": [
+          {"apiVersion": "apps/v1", "kind": "ReplicaSet", "name": "lifeops-console-6d8f7b5c9", "controller": true}
+        ]
+      },
+      "status": {
+        "phase": "Running",
+        "startTime": "2026-08-21T21:20:11Z",
+        "conditions": [
+          {"type": "Ready", "status": "True", "lastTransitionTime": "2026-08-21T21:20:05Z"}
+        ],
+        "containerStatuses": [
+          {
+            "name": "lifeops-console",
+            "image": "zot.local:30500/lifeops-console:2026-08-19",
+            "ready": true,
+            "started": true,
+            "state": {"running": {"startedAt": "2026-08-21T21:20:12Z"}}
+          }
+        ]
+      }
+    }
+  ]
+}

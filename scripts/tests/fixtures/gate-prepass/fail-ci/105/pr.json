@@ -1,0 +1,16 @@
+{
+  "number": 105,
+  "body": "Dispatched-bead id: 123e4567-e89b-12d3-a456-426614174003\nChange kind: structural\n\n## Verification Evidence\npython -m pytest scripts/tests/ -q\n",
+  "changed_files": [
+    "scripts/gate-prepass.py"
+  ],
+  "ci_conclusion": "failure",
+  "bead": {
+    "scope": {
+      "paths": [
+        "scripts/**"
+      ],
+      "forbidden_paths": []
+    }
+  }
+}

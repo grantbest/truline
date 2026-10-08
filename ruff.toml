@@ -1,0 +1,48 @@
+# Ruff configuration for the whole repo.
+#
+# Why this file exists: `ruff check` with no config runs ruff's *built-in
+# default* rule set, and that default is not stable across ruff releases.
+# Under 0.15.x the default is ["E4", "E7", "E9", "F"] and `ruff check apps/`
+# reports "All checks passed!". Under 0.16.1 the default was widened to
+# include pyupgrade, isort, flake8-datetimez, flake8-bugbear and more, and
+# the same unchanged tree reports 1121 errors (576 UP006, 175 UP045,
+# 100 I001, 71 UP035, 40 DTZ005, 29 BLE001, 15 RUF100, ...). Nothing in the
+# repo had changed — only the linter's opinion of what "default" means.
+#
+# Selecting explicitly makes the lint gate's verdict a property of this repo
+# rather than of whichever ruff the self-hosted runner happens to have in its
+# tool cache. Verified 2026-08-02: with the select below, both ruff 0.15.21
+# and ruff 0.16.1 report "All checks passed!" on apps/.
+#
+# The set below is deliberately the historical default — it encodes exactly
+# what CI has been enforcing all along, so adding this file changes no
+# verdict and requires no code changes. Widening it (UP, I, DTZ, BLE, B, ...)
+# is a real decision with ~1121 findings behind it; make that a separate,
+# reviewable commit that lands the rule and its fixes together rather than
+# letting a version bump land it by accident.
+#
+# Note: apps/ carries 42 `# noqa: BLE001` comments, so at some point this
+# code was checked against a broader set than the one enforced here. Those
+# directives are inert under this select — RUF100 would call all 42 unused
+# (plus 2 stale `# noqa: E402` in factory-dispatcher tests that suppress
+# nothing under any select) — but RUF100 is not selected, so they cost
+# nothing. Leave them: they are the seed of the flake8-blind-except adoption
+# whenever that gets triaged.
+#
+# The ruff version is pinned in .github/workflows/lint.yml; keep the two in
+# sync when either moves.
+
+# Lowest requires-python across apps/*/pyproject.toml (automations: >=3.10;
+# mcp-hub: >=3.11). Pinned for the same reason as `select`: ruff's default
+# target-version also moves between releases.
+target-version = "py310"
+
+# Deliberately-malformed inputs for the secret-scan meta-tests. The
+# unquoted bare-hex case in fixtures/gitleaks/leaky.py is not valid Python
+# — that is the point, it reproduces one of the four shapes the rule has to
+# catch — and ruff reads it as F821. Fixtures are data for a gate, not code
+# this repo executes, so they are out of scope for the linter.
+extend-exclude = ["scripts/tests/fixtures/"]
+
+[lint]
+select = ["E4", "E7", "E9", "F"]

@@ -1,0 +1,912 @@
+{
+  "_about": "Redacted snapshot for dev.finding d7cdc16c (liability-bill matching). Taken read-only 2026-09-27 by the outer loop from the production store (GET /beads, finance.bill all states; finance.transaction filtered to payment-like rows, per bank_sync._is_payment_like_transaction, posted 2026-06-01..2026-09-24, on a credit account or on a depository account whose text names citi/amex/american express/discover; state=removed excluded). Account ids (account_id, account_bead_id) are replaced by 'acct-' + sha256('lifeops-fixture-2026-09-27:' + id)[:12]; card masks inside external_id are replaced by '****'; digit runs of 4+ in merchant/description text are replaced by '####'. Bead ids of bills and transactions are kept so the ledger's proof ids can be cross-read. Fields not read by the matcher are dropped. This file is the outer loop's; a dev.task may read it and may not edit it.",
+  "taken_at": "2026-09-27",
+  "window_rule": "A liability bill due D is paid by a payment-like transaction posted in (D minus one calendar month, D + 7 days], on the bill's own account when the bill carries an account_id, otherwise on a transaction whose institution equals the bill's external_id institution (the second ':'-separated field); |amount| + 0.50 >= the bill amount; bills are assigned in ascending (due_date, id) order and each takes the unclaimed candidate nearest its due date (smallest |D - posted_date|, then earlier posted_date, then lower id); a transaction proves at most one bill.",
+  "expected_pairings": [
+    {
+      "bill_id": "08866637-2316-435f-8d00-0bf3e1aa2a2e",
+      "due_date": "2026-06-17",
+      "bill_account": null,
+      "bill_amount": 41.0,
+      "expected_transaction_id": "fdc8c2bd-8b0c-4586-8958-8493c13f8ac1",
+      "expected_posted_date": "2026-06-10",
+      "expected_amount": -41.0,
+      "recorded_proof_2026_09_27": "060fa99c-25dd-4e95-92cd-8ee606ab20f6"
+    },
+    {
+      "bill_id": "40ba1136-a3e9-4003-b7cb-29429412329c",
+      "due_date": "2026-07-08",
+      "bill_account": "American Airlines AAdvantage® MileUp® card",
+      "bill_amount": 41.0,
+      "expected_transaction_id": "01d80351-c660-4d69-9e46-3815a765114a",
+      "expected_posted_date": "2026-06-30",
+      "expected_amount": -313.77,
+      "recorded_proof_2026_09_27": "01d80351-c660-4d69-9e46-3815a765114a"
+    },
+    {
+      "bill_id": "eea6ca04-098e-4d24-a3d3-07edb33e0071",
+      "due_date": "2026-07-17",
+      "bill_account": "Citi®/AAdvantage® Platinum Select® World Elite Mastercard®",
+      "bill_amount": 226.2,
+      "expected_transaction_id": "f2a05be8-7b83-41e4-b10f-c59133c0acbb",
+      "expected_posted_date": "2026-06-30",
+      "expected_amount": -226.2,
+      "recorded_proof_2026_09_27": "f2a05be8-7b83-41e4-b10f-c59133c0acbb"
+    },
+    {
+      "bill_id": "68634ce7-c352-4987-9642-e3e7a6d1acb0",
+      "due_date": "2026-07-21",
+      "bill_account": "Blue Cash Preferred®",
+      "bill_amount": 40.0,
+      "expected_transaction_id": "9062a7d9-90e8-4372-a7f3-780c042e61a7",
+      "expected_posted_date": "2026-06-30",
+      "expected_amount": -40.0,
+      "recorded_proof_2026_09_27": "9062a7d9-90e8-4372-a7f3-780c042e61a7"
+    },
+    {
+      "bill_id": "586d626f-9846-492f-81f8-be90f4dcf749",
+      "due_date": "2026-08-08",
+      "bill_account": "American Airlines AAdvantage® MileUp® card",
+      "bill_amount": 8.98,
+      "expected_transaction_id": "4b74cc08-0217-4bdb-9249-5ddc504b067c",
+      "expected_posted_date": "2026-08-01",
+      "expected_amount": -170.91,
+      "recorded_proof_2026_09_27": "6b7ff2a9-cb7b-4814-aca7-d6da12e0b550"
+    },
+    {
+      "bill_id": "3da69195-3ff1-41da-b17f-6c39ebdd21bf",
+      "due_date": "2026-08-17",
+      "bill_account": "Citi®/AAdvantage® Platinum Select® World Elite Mastercard®",
+      "bill_amount": 282.9,
+      "expected_transaction_id": "6b7ff2a9-cb7b-4814-aca7-d6da12e0b550",
+      "expected_posted_date": "2026-08-01",
+      "expected_amount": -282.9,
+      "recorded_proof_2026_09_27": null
+    },
+    {
+      "bill_id": "1dcccebc-684a-42f4-bb85-301a6f393924",
+      "due_date": "2026-08-21",
+      "bill_account": "Blue Cash Preferred®",
+      "bill_amount": 40.0,
+      "expected_transaction_id": "ad413961-a35e-44a1-b7aa-c0f62dbf0c98",
+      "expected_posted_date": "2026-08-01",
+      "expected_amount": -40.0,
+      "recorded_proof_2026_09_27": "f98487ad-bd14-49ce-b5d1-7ebcd5f5c05f"
+    },
+    {
+      "bill_id": "cbba0c0a-e7dd-4cab-80b7-3350f84038b7",
+      "due_date": "2026-09-08",
+      "bill_account": "American Airlines AAdvantage® MileUp® card",
+      "bill_amount": 41.0,
+      "expected_transaction_id": "09cf40e4-7d25-4602-ba6d-4f967292297e",
+      "expected_posted_date": "2026-08-29",
+      "expected_amount": -41.0,
+      "recorded_proof_2026_09_27": "09cf40e4-7d25-4602-ba6d-4f967292297e"
+    },
+    {
+      "bill_id": "129c20b8-3812-4b80-93dc-f4f338958076",
+      "due_date": "2026-09-17",
+      "bill_account": "Citi®/AAdvantage® Platinum Select® World Elite Mastercard®",
+      "bill_amount": 277.0,
+      "expected_transaction_id": "aa5471dc-6bd3-440b-a0e7-dd26f536631d",
+      "expected_posted_date": "2026-08-29",
+      "expected_amount": -277.0,
+      "recorded_proof_2026_09_27": null
+    },
+    {
+      "bill_id": "958a9bde-d220-4c01-b16f-4ae288234859",
+      "due_date": "2026-09-21",
+      "bill_account": "Blue Cash Preferred®",
+      "bill_amount": 40.0,
+      "expected_transaction_id": "f98487ad-bd14-49ce-b5d1-7ebcd5f5c05f",
+      "expected_posted_date": "2026-08-29",
+      "expected_amount": -40.0,
+      "recorded_proof_2026_09_27": null
+    },
+    {
+      "bill_id": "42bd5da7-9151-4cbd-9818-a9de9a00594f",
+      "due_date": "2026-10-08",
+      "bill_account": "American Airlines AAdvantage® MileUp® card",
+      "bill_amount": 41.0,
+      "expected_transaction_id": null,
+      "expected_posted_date": null,
+      "expected_amount": null,
+      "recorded_proof_2026_09_27": null
+    }
+  ],
+  "accounts": [
+    {
+      "account_id": "acct-2c2cfc7ac389",
+      "institution": "amex",
+      "name": "Blue Cash Preferred®",
+      "type": "credit",
+      "subtype": "credit card"
+    },
+    {
+      "account_id": "acct-d42f9ba1cb4f",
+      "institution": "chase",
+      "name": "TOTAL CHECKING",
+      "type": "depository",
+      "subtype": "checking"
+    },
+    {
+      "account_id": "acct-a37c790e8641",
+      "institution": "citi",
+      "name": "American Airlines AAdvantage® MileUp® card",
+      "type": "credit",
+      "subtype": "credit card"
+    },
+    {
+      "account_id": "acct-209a9a7740a6",
+      "institution": "citi",
+      "name": "Citi®/AAdvantage® Platinum Select® World Elite Mastercard®",
+      "type": "credit",
+      "subtype": "credit card"
+    },
+    {
+      "account_id": "acct-cf6ba07b7275",
+      "institution": "discover",
+      "name": "Discover More Card",
+      "type": "credit",
+      "subtype": "credit card"
+    }
+  ],
+  "bills": [
+    {
+      "id": "08866637-2316-435f-8d00-0bf3e1aa2a2e",
+      "type": "bill",
+      "state": "paid",
+      "created_at": "2026-05-31T03:05:27.408218Z",
+      "content": {
+        "account_id": null,
+        "amount": 41.0,
+        "due_date": "2026-06-17",
+        "source": "liability",
+        "vendor": "Citi®/AAdvantage® Platinum Select® World Elite Mastercard®",
+        "external_id": "grant:citi:****:2026-06",
+        "category": "interest_fees"
+      }
+    },
+    {
+      "id": "40ba1136-a3e9-4003-b7cb-29429412329c",
+      "type": "bill",
+      "state": "paid",
+      "created_at": "2026-06-11T22:12:14.902536Z",
+      "content": {
+        "account_id": "acct-a37c790e8641",
+        "amount": 41.0,
+        "due_date": "2026-07-08",
+        "source": "liability",
+        "vendor": "American Airlines AAdvantage® MileUp® card",
+        "external_id": "grant:citi:****:2026-07",
+        "category": "interest_fees"
+      }
+    },
+    {
+      "id": "eea6ca04-098e-4d24-a3d3-07edb33e0071",
+      "type": "bill",
+      "state": "paid",
+      "created_at": "2026-06-21T03:00:24.794593Z",
+      "content": {
+        "account_id": "acct-209a9a7740a6",
+        "amount": 226.2,
+        "due_date": "2026-07-17",
+        "source": "liability",
+        "vendor": "Citi®/AAdvantage® Platinum Select® World Elite Mastercard®",
+        "external_id": "grant:citi:****:2026-07",
+        "category": "interest_fees"
+      }
+    },
+    {
+      "id": "68634ce7-c352-4987-9642-e3e7a6d1acb0",
+      "type": "bill",
+      "state": "paid",
+      "created_at": "2026-06-28T03:00:17.402462Z",
+      "content": {
+        "account_id": "acct-2c2cfc7ac389",
+        "amount": 40.0,
+        "due_date": "2026-07-21",
+        "source": "liability",
+        "vendor": "Blue Cash Preferred®",
+        "external_id": "grant:amex:****:2026-07",
+        "category": "interest_fees"
+      }
+    },
+    {
+      "id": "586d626f-9846-492f-81f8-be90f4dcf749",
+      "type": "bill",
+      "state": "paid",
+      "created_at": "2026-07-11T19:49:33.287209Z",
+      "content": {
+        "account_id": "acct-a37c790e8641",
+        "amount": 8.98,
+        "due_date": "2026-08-08",
+        "source": "liability",
+        "vendor": "American Airlines AAdvantage® MileUp® card",
+        "external_id": "grant:citi:****:2026-08",
+        "category": "interest_fees"
+      }
+    },
+    {
+      "id": "3da69195-3ff1-41da-b17f-6c39ebdd21bf",
+      "type": "bill",
+      "state": "overdue",
+      "created_at": "2026-07-23T02:04:04.801926Z",
+      "content": {
+        "account_id": "acct-209a9a7740a6",
+        "amount": 282.9,
+        "due_date": "2026-08-17",
+        "source": "liability",
+        "vendor": "Citi®/AAdvantage® Platinum Select® World Elite Mastercard®",
+        "external_id": "grant:citi:****:2026-08",
+        "category": "interest_fees"
+      }
+    },
+    {
+      "id": "1dcccebc-684a-42f4-bb85-301a6f393924",
+      "type": "bill",
+      "state": "paid",
+      "created_at": "2026-07-29T02:00:04.836656Z",
+      "content": {
+        "account_id": "acct-2c2cfc7ac389",
+        "amount": 40.0,
+        "due_date": "2026-08-21",
+        "source": "liability",
+        "vendor": "Blue Cash Preferred®",
+        "external_id": "grant:amex:****:2026-08",
+        "category": "interest_fees"
+      }
+    },
+    {
+      "id": "cbba0c0a-e7dd-4cab-80b7-3350f84038b7",
+      "type": "bill",
+      "state": "paid",
+      "created_at": "2026-08-14T02:04:04.646768Z",
+      "content": {
+        "account_id": "acct-a37c790e8641",
+        "amount": 41.0,
+        "due_date": "2026-09-08",
+        "source": "liability",
+        "vendor": "American Airlines AAdvantage® MileUp® card",
+        "external_id": "grant:citi:****:2026-09",
+        "category": "interest_fees"
+      }
+    },
+    {
+      "id": "129c20b8-3812-4b80-93dc-f4f338958076",
+      "type": "bill",
+      "state": "overdue",
+      "created_at": "2026-08-22T14:04:05.104827Z",
+      "content": {
+        "account_id": "acct-209a9a7740a6",
+        "amount": 277.0,
+        "due_date": "2026-09-17",
+        "source": "liability",
+        "vendor": "Citi®/AAdvantage® Platinum Select® World Elite Mastercard®",
+        "external_id": "grant:citi:****:2026-09",
+        "category": "interest_fees"
+      }
+    },
+    {
+      "id": "958a9bde-d220-4c01-b16f-4ae288234859",
+      "type": "bill",
+      "state": "pending",
+      "created_at": "2026-08-29T02:00:05.295531Z",
+      "content": {
+        "account_id": "acct-2c2cfc7ac389",
+        "amount": 40.0,
+        "due_date": "2026-09-21",
+        "source": "liability",
+        "vendor": "Blue Cash Preferred®",
+        "external_id": "grant:amex:****:2026-09",
+        "category": "interest_fees"
+      }
+    },
+    {
+      "id": "42bd5da7-9151-4cbd-9818-a9de9a00594f",
+      "type": "bill",
+      "state": "pending",
+      "created_at": "2026-09-14T02:04:05.098584Z",
+      "content": {
+        "account_id": "acct-a37c790e8641",
+        "amount": 41.0,
+        "due_date": "2026-10-08",
+        "source": "liability",
+        "vendor": "American Airlines AAdvantage® MileUp® card",
+        "external_id": "grant:citi:****:2026-10",
+        "category": "interest_fees"
+      }
+    }
+  ],
+  "transactions": [
+    {
+      "id": "9d49f2b5-cb2f-4dea-8c28-5c0b2b7919a2",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-2c2cfc7ac389",
+        "account_bead_id": "acct-2c2cfc7ac389",
+        "institution": "amex",
+        "amount": -1.5,
+        "posted_date": "2026-06-10",
+        "merchant": "MOBILE PAYMENT - THANK YOU",
+        "merchant_name": "MOBILE PAYMENT - THANK YOU",
+        "normalized_merchant": "Mobile Payment - Thank You",
+        "description": "MOBILE PAYMENT - THANK YOU",
+        "is_transfer": false,
+        "our_category": "misc"
+      }
+    },
+    {
+      "id": "fdc8c2bd-8b0c-4586-8958-8493c13f8ac1",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-209a9a7740a6",
+        "account_bead_id": "acct-209a9a7740a6",
+        "institution": "citi",
+        "amount": -41.0,
+        "posted_date": "2026-06-10",
+        "merchant": "ONLINE PAYMENT, THANK YOU",
+        "merchant_name": "ONLINE PAYMENT, THANK YOU",
+        "normalized_merchant": "Online Payment, Thank You",
+        "description": "ONLINE PAYMENT, THANK YOU",
+        "is_transfer": false,
+        "our_category": "misc"
+      }
+    },
+    {
+      "id": "ff7eb6fb-b189-4862-a4d1-9e809d5dd66e",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-d42f9ba1cb4f",
+        "account_bead_id": "acct-d42f9ba1cb4f",
+        "institution": "chase",
+        "amount": 1.5,
+        "posted_date": "2026-06-10",
+        "merchant": "AMERICAN EXPRESS ACH PMT M#### WEB ID: ####",
+        "merchant_name": "AMERICAN EXPRESS ACH PMT M#### WEB ID: ####",
+        "normalized_merchant": "American Express Ach Pmt M#### Web Id:",
+        "description": "AMERICAN EXPRESS ACH PMT M#### WEB ID: ####",
+        "is_transfer": true,
+        "our_category": "transfer"
+      }
+    },
+    {
+      "id": "060fa99c-25dd-4e95-92cd-8ee606ab20f6",
+      "type": "transaction",
+      "state": "reconciled",
+      "parent_id": "08866637-2316-435f-8d00-0bf3e1aa2a2e",
+      "content": {
+        "account_id": "acct-d42f9ba1cb4f",
+        "account_bead_id": "acct-d42f9ba1cb4f",
+        "institution": "chase",
+        "amount": 41.0,
+        "posted_date": "2026-06-11",
+        "merchant": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "merchant_name": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "normalized_merchant": "Citi Card Online Payment",
+        "description": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "is_transfer": true,
+        "our_category": "transfer"
+      }
+    },
+    {
+      "id": "609cef48-dd09-4ec5-8761-960ca39b6306",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-d42f9ba1cb4f",
+        "account_bead_id": "acct-d42f9ba1cb4f",
+        "institution": "chase",
+        "amount": 59.0,
+        "posted_date": "2026-06-11",
+        "merchant": "DISCOVER E-PAYMENT #### WEB ID: ####",
+        "merchant_name": "DISCOVER E-PAYMENT #### WEB ID: ####",
+        "normalized_merchant": "Discover E-Payment",
+        "description": "DISCOVER E-PAYMENT #### WEB ID: ####",
+        "is_transfer": true,
+        "our_category": "transfer"
+      }
+    },
+    {
+      "id": "01d80351-c660-4d69-9e46-3815a765114a",
+      "type": "transaction",
+      "state": "reconciled",
+      "parent_id": "40ba1136-a3e9-4003-b7cb-29429412329c",
+      "content": {
+        "account_id": "acct-a37c790e8641",
+        "account_bead_id": "acct-a37c790e8641",
+        "institution": "citi",
+        "amount": -313.77,
+        "posted_date": "2026-06-30",
+        "merchant": "ONLINE PAYMENT, THANK YOU",
+        "merchant_name": "ONLINE PAYMENT, THANK YOU",
+        "normalized_merchant": "Online Payment, Thank You",
+        "description": "ONLINE PAYMENT, THANK YOU",
+        "is_transfer": false,
+        "our_category": "misc"
+      }
+    },
+    {
+      "id": "9062a7d9-90e8-4372-a7f3-780c042e61a7",
+      "type": "transaction",
+      "state": "reconciled",
+      "parent_id": "68634ce7-c352-4987-9642-e3e7a6d1acb0",
+      "content": {
+        "account_id": "acct-2c2cfc7ac389",
+        "account_bead_id": "acct-2c2cfc7ac389",
+        "institution": "amex",
+        "amount": -40.0,
+        "posted_date": "2026-06-30",
+        "merchant": "MOBILE PAYMENT - THANK YOU",
+        "merchant_name": "MOBILE PAYMENT - THANK YOU",
+        "normalized_merchant": "Mobile Payment - Thank You",
+        "description": "MOBILE PAYMENT - THANK YOU",
+        "is_transfer": false,
+        "our_category": "misc"
+      }
+    },
+    {
+      "id": "a4398570-b677-4f56-945c-f5c3cdc875c4",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-d42f9ba1cb4f",
+        "account_bead_id": "acct-d42f9ba1cb4f",
+        "institution": "chase",
+        "amount": 40.0,
+        "posted_date": "2026-06-30",
+        "merchant": "AMERICAN EXPRESS ACH PMT M#### WEB ID: ####",
+        "merchant_name": "AMERICAN EXPRESS ACH PMT M#### WEB ID: ####",
+        "normalized_merchant": "American Express Ach Pmt M#### Web Id:",
+        "description": "AMERICAN EXPRESS ACH PMT M#### WEB ID: ####",
+        "is_transfer": true,
+        "our_category": "transfer"
+      }
+    },
+    {
+      "id": "a935095d-ed3a-4ab8-b0d2-2e0d37430d3f",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-cf6ba07b7275",
+        "account_bead_id": "acct-cf6ba07b7275",
+        "institution": "discover",
+        "amount": -34.0,
+        "posted_date": "2026-06-30",
+        "merchant": "CASHBACK BONUS REDEMPTION PYMT/STMT CRDT",
+        "merchant_name": "CASHBACK BONUS REDEMPTION PYMT/STMT CRDT",
+        "normalized_merchant": "Cashback Bonus Redemption Pymt/Stmt Crdt",
+        "description": "CASHBACK BONUS REDEMPTION PYMT/STMT CRDT",
+        "is_transfer": true,
+        "our_category": "transfer"
+      }
+    },
+    {
+      "id": "a94e676b-7167-4fb5-ad38-097171b336f9",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-cf6ba07b7275",
+        "account_bead_id": "acct-cf6ba07b7275",
+        "institution": "discover",
+        "amount": -20.0,
+        "posted_date": "2026-06-30",
+        "merchant": "INTERNET PAYMENT - THANK YOU",
+        "merchant_name": "INTERNET PAYMENT - THANK YOU",
+        "normalized_merchant": "Internet Payment - Thank You",
+        "description": "INTERNET PAYMENT - THANK YOU",
+        "is_transfer": false,
+        "our_category": "misc"
+      }
+    },
+    {
+      "id": "f2a05be8-7b83-41e4-b10f-c59133c0acbb",
+      "type": "transaction",
+      "state": "reconciled",
+      "parent_id": "eea6ca04-098e-4d24-a3d3-07edb33e0071",
+      "content": {
+        "account_id": "acct-209a9a7740a6",
+        "account_bead_id": "acct-209a9a7740a6",
+        "institution": "citi",
+        "amount": -226.2,
+        "posted_date": "2026-06-30",
+        "merchant": "ONLINE PAYMENT, THANK YOU",
+        "merchant_name": "ONLINE PAYMENT, THANK YOU",
+        "normalized_merchant": "Online Payment, Thank You",
+        "description": "ONLINE PAYMENT, THANK YOU",
+        "is_transfer": false,
+        "our_category": "misc"
+      }
+    },
+    {
+      "id": "038b108e-4ce4-40cc-b14c-5051ba3a7164",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-d42f9ba1cb4f",
+        "account_bead_id": "acct-d42f9ba1cb4f",
+        "institution": "chase",
+        "amount": 313.77,
+        "posted_date": "2026-07-01",
+        "merchant": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "merchant_name": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "normalized_merchant": "Citi Card Online Payment",
+        "description": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "is_transfer": true,
+        "our_category": "transfer"
+      }
+    },
+    {
+      "id": "9f16e6d8-e181-476e-a1b4-ae19a21e24f1",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-d42f9ba1cb4f",
+        "account_bead_id": "acct-d42f9ba1cb4f",
+        "institution": "chase",
+        "amount": 226.2,
+        "posted_date": "2026-07-01",
+        "merchant": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "merchant_name": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "normalized_merchant": "Citi Card Online Payment",
+        "description": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "is_transfer": true,
+        "our_category": "transfer"
+      }
+    },
+    {
+      "id": "bca2ae56-dddf-46f1-b0c2-bb840a3d34b9",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-d42f9ba1cb4f",
+        "account_bead_id": "acct-d42f9ba1cb4f",
+        "institution": "chase",
+        "amount": 20.0,
+        "posted_date": "2026-07-01",
+        "merchant": "DISCOVER E-PAYMENT #### WEB ID: ####",
+        "merchant_name": "DISCOVER E-PAYMENT #### WEB ID: ####",
+        "normalized_merchant": "Discover E-Payment",
+        "description": "DISCOVER E-PAYMENT #### WEB ID: ####",
+        "is_transfer": true,
+        "our_category": "transfer"
+      }
+    },
+    {
+      "id": "010cdfa2-a6a4-4a81-9ed0-5596405981f2",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-cf6ba07b7275",
+        "account_bead_id": "acct-cf6ba07b7275",
+        "institution": "discover",
+        "amount": -33.0,
+        "posted_date": "2026-08-01",
+        "merchant": "CASHBACK BONUS REDEMPTION PYMT/STMT CRDT",
+        "merchant_name": "CASHBACK BONUS REDEMPTION PYMT/STMT CRDT",
+        "normalized_merchant": "Cashback Bonus Redemption Pymt/Stmt Crdt",
+        "description": "CASHBACK BONUS REDEMPTION PYMT/STMT CRDT",
+        "is_transfer": true,
+        "our_category": "transfer"
+      }
+    },
+    {
+      "id": "26423d3b-4c86-429c-8f52-8d7d0a654eef",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-cf6ba07b7275",
+        "account_bead_id": "acct-cf6ba07b7275",
+        "institution": "discover",
+        "amount": -89.0,
+        "posted_date": "2026-08-01",
+        "merchant": "INTERNET PAYMENT - THANK YOU",
+        "merchant_name": "INTERNET PAYMENT - THANK YOU",
+        "normalized_merchant": "Internet Payment - Thank You",
+        "description": "INTERNET PAYMENT - THANK YOU",
+        "is_transfer": false,
+        "our_category": "misc"
+      }
+    },
+    {
+      "id": "4b74cc08-0217-4bdb-9249-5ddc504b067c",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-a37c790e8641",
+        "account_bead_id": "acct-a37c790e8641",
+        "institution": "citi",
+        "amount": -170.91,
+        "posted_date": "2026-08-01",
+        "merchant": "ONLINE PAYMENT, THANK YOU",
+        "merchant_name": "ONLINE PAYMENT, THANK YOU",
+        "normalized_merchant": "Online Payment, Thank You",
+        "description": "ONLINE PAYMENT, THANK YOU",
+        "is_transfer": false,
+        "our_category": "misc"
+      }
+    },
+    {
+      "id": "6b7ff2a9-cb7b-4814-aca7-d6da12e0b550",
+      "type": "transaction",
+      "state": "reconciled",
+      "parent_id": "586d626f-9846-492f-81f8-be90f4dcf749",
+      "content": {
+        "account_id": "acct-209a9a7740a6",
+        "account_bead_id": "acct-209a9a7740a6",
+        "institution": "citi",
+        "amount": -282.9,
+        "posted_date": "2026-08-01",
+        "merchant": "ONLINE PAYMENT, THANK YOU",
+        "merchant_name": "ONLINE PAYMENT, THANK YOU",
+        "normalized_merchant": "Online Payment, Thank You",
+        "description": "ONLINE PAYMENT, THANK YOU",
+        "is_transfer": false,
+        "our_category": "misc"
+      }
+    },
+    {
+      "id": "ad413961-a35e-44a1-b7aa-c0f62dbf0c98",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-2c2cfc7ac389",
+        "account_bead_id": "acct-2c2cfc7ac389",
+        "institution": "amex",
+        "amount": -40.0,
+        "posted_date": "2026-08-01",
+        "merchant": "MOBILE PAYMENT - THANK YOU",
+        "merchant_name": "MOBILE PAYMENT - THANK YOU",
+        "normalized_merchant": "Mobile Payment - Thank You",
+        "description": "MOBILE PAYMENT - THANK YOU",
+        "is_transfer": false,
+        "our_category": "misc"
+      }
+    },
+    {
+      "id": "28590828-2e9c-40dd-b7d4-80d2c8d55655",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-d42f9ba1cb4f",
+        "account_bead_id": "acct-d42f9ba1cb4f",
+        "institution": "chase",
+        "amount": 40.0,
+        "posted_date": "2026-08-03",
+        "merchant": "AMERICAN EXPRESS ACH PMT M#### WEB ID: ####",
+        "merchant_name": "AMERICAN EXPRESS ACH PMT M#### WEB ID: ####",
+        "normalized_merchant": "American Express Ach Pmt M#### Web Id:",
+        "description": "AMERICAN EXPRESS ACH PMT M#### WEB ID: ####",
+        "is_transfer": true,
+        "our_category": "transfer"
+      }
+    },
+    {
+      "id": "3ab34119-bca0-4345-8838-c02500e23c0c",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-d42f9ba1cb4f",
+        "account_bead_id": "acct-d42f9ba1cb4f",
+        "institution": "chase",
+        "amount": 170.91,
+        "posted_date": "2026-08-03",
+        "merchant": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "merchant_name": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "normalized_merchant": "Citi Card Online Payment",
+        "description": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "is_transfer": true,
+        "our_category": "transfer"
+      }
+    },
+    {
+      "id": "3fed0250-75a7-4cf9-b49e-576738b06d2c",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-d42f9ba1cb4f",
+        "account_bead_id": "acct-d42f9ba1cb4f",
+        "institution": "chase",
+        "amount": 89.0,
+        "posted_date": "2026-08-03",
+        "merchant": "DISCOVER E-PAYMENT #### WEB ID: ####",
+        "merchant_name": "DISCOVER E-PAYMENT #### WEB ID: ####",
+        "normalized_merchant": "Discover E-Payment",
+        "description": "DISCOVER E-PAYMENT #### WEB ID: ####",
+        "is_transfer": true,
+        "our_category": "transfer"
+      }
+    },
+    {
+      "id": "a9420c24-91b0-4312-ba11-ffcc8d9f0368",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-d42f9ba1cb4f",
+        "account_bead_id": "acct-d42f9ba1cb4f",
+        "institution": "chase",
+        "amount": 282.9,
+        "posted_date": "2026-08-03",
+        "merchant": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "merchant_name": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "normalized_merchant": "Citi Card Online Payment",
+        "description": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "is_transfer": true,
+        "our_category": "transfer"
+      }
+    },
+    {
+      "id": "09cf40e4-7d25-4602-ba6d-4f967292297e",
+      "type": "transaction",
+      "state": "reconciled",
+      "parent_id": "cbba0c0a-e7dd-4cab-80b7-3350f84038b7",
+      "content": {
+        "account_id": "acct-a37c790e8641",
+        "account_bead_id": "acct-a37c790e8641",
+        "institution": "citi",
+        "amount": -41.0,
+        "posted_date": "2026-08-29",
+        "merchant": "ONLINE PAYMENT, THANK YOU",
+        "merchant_name": "ONLINE PAYMENT, THANK YOU",
+        "normalized_merchant": "Online Payment, Thank You",
+        "description": "ONLINE PAYMENT, THANK YOU",
+        "is_transfer": false,
+        "our_category": "misc"
+      }
+    },
+    {
+      "id": "7405cbaf-3544-4c4e-9a9d-1a2412c64240",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-cf6ba07b7275",
+        "account_bead_id": "acct-cf6ba07b7275",
+        "institution": "discover",
+        "amount": -156.0,
+        "posted_date": "2026-08-29",
+        "merchant": "INTERNET PAYMENT - THANK YOU",
+        "merchant_name": "INTERNET PAYMENT - THANK YOU",
+        "normalized_merchant": "Internet Payment - Thank You",
+        "description": "INTERNET PAYMENT - THANK YOU",
+        "is_transfer": false,
+        "our_category": "misc"
+      }
+    },
+    {
+      "id": "aa5471dc-6bd3-440b-a0e7-dd26f536631d",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-209a9a7740a6",
+        "account_bead_id": "acct-209a9a7740a6",
+        "institution": "citi",
+        "amount": -277.0,
+        "posted_date": "2026-08-29",
+        "merchant": "ONLINE PAYMENT, THANK YOU",
+        "merchant_name": "ONLINE PAYMENT, THANK YOU",
+        "normalized_merchant": "Online Payment, Thank You",
+        "description": "ONLINE PAYMENT, THANK YOU",
+        "is_transfer": false,
+        "our_category": "misc"
+      }
+    },
+    {
+      "id": "f98487ad-bd14-49ce-b5d1-7ebcd5f5c05f",
+      "type": "transaction",
+      "state": "reconciled",
+      "parent_id": "1dcccebc-684a-42f4-bb85-301a6f393924",
+      "content": {
+        "account_id": "acct-2c2cfc7ac389",
+        "account_bead_id": "acct-2c2cfc7ac389",
+        "institution": "amex",
+        "amount": -40.0,
+        "posted_date": "2026-08-29",
+        "merchant": "MOBILE PAYMENT - THANK YOU",
+        "merchant_name": "MOBILE PAYMENT - THANK YOU",
+        "normalized_merchant": "Mobile Payment - Thank You",
+        "description": "MOBILE PAYMENT - THANK YOU",
+        "is_transfer": false,
+        "our_category": "misc"
+      }
+    },
+    {
+      "id": "59077c96-8036-458b-8a05-6560899cfb42",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-d42f9ba1cb4f",
+        "account_bead_id": "acct-d42f9ba1cb4f",
+        "institution": "chase",
+        "amount": 156.0,
+        "posted_date": "2026-08-31",
+        "merchant": "DISCOVER E-PAYMENT #### WEB ID: ####",
+        "merchant_name": "DISCOVER E-PAYMENT #### WEB ID: ####",
+        "normalized_merchant": "Discover E-Payment",
+        "description": "DISCOVER E-PAYMENT #### WEB ID: ####",
+        "is_transfer": true,
+        "our_category": "transfer"
+      }
+    },
+    {
+      "id": "dd77c576-0334-4bb5-b2d7-4be14f12a136",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-d42f9ba1cb4f",
+        "account_bead_id": "acct-d42f9ba1cb4f",
+        "institution": "chase",
+        "amount": 41.0,
+        "posted_date": "2026-08-31",
+        "merchant": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "merchant_name": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "normalized_merchant": "Citi Card Online Payment",
+        "description": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "is_transfer": true,
+        "our_category": "transfer"
+      }
+    },
+    {
+      "id": "e282e680-7e25-4032-8514-416342f53e4c",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-d42f9ba1cb4f",
+        "account_bead_id": "acct-d42f9ba1cb4f",
+        "institution": "chase",
+        "amount": 277.0,
+        "posted_date": "2026-08-31",
+        "merchant": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "merchant_name": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "normalized_merchant": "Citi Card Online Payment",
+        "description": "CITI CARD ONLINE PAYMENT #### WEB ID: CITICTP",
+        "is_transfer": true,
+        "our_category": "transfer"
+      }
+    },
+    {
+      "id": "e32fa6e8-f4c8-45be-b7db-e7280d23792d",
+      "type": "transaction",
+      "state": "posted",
+      "parent_id": null,
+      "content": {
+        "account_id": "acct-d42f9ba1cb4f",
+        "account_bead_id": "acct-d42f9ba1cb4f",
+        "institution": "chase",
+        "amount": 40.0,
+        "posted_date": "2026-08-31",
+        "merchant": "AMERICAN EXPRESS ACH PMT M#### WEB ID: ####",
+        "merchant_name": "AMERICAN EXPRESS ACH PMT M#### WEB ID: ####",
+        "normalized_merchant": "American Express Ach Pmt M#### Web Id:",
+        "description": "AMERICAN EXPRESS ACH PMT M#### WEB ID: ####",
+        "is_transfer": true,
+        "our_category": "transfer"
+      }
+    }
+  ]
+}

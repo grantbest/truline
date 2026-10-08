@@ -1,0 +1,189 @@
+{
+  "_fixture": {
+    "pins": "ea_dependency.summarize_dependency_posture (apps/factory-dispatcher/activities/ea_dependency.py) and impact._depends_on_posture (apps/mcp-hub/src/tools/impact.py) must classify this fixture identically -- the dependency-posture definition, computed once, read twice. See docs/architecture/dependency-posture.md.",
+    "date": "2026-10-01",
+    "bead": "dev.finding 682ac674, part b",
+    "source_of_truth": "this file. apps/mcp-hub/tests/fixtures/dependency-posture-fixture.json is a byte-identical copy -- edit here, then copy; scripts/tests/test_dependency_posture_fixture_drift.py enforces the identity."
+  },
+  "applications": [
+    {
+      "id": "app-1",
+      "namespace": "arch",
+      "type": "application",
+      "state": "operate",
+      "content": {
+        "ref": "app.known-edge",
+        "name": "Known via app-to-app edge",
+        "workload": { "runtime": "none" }
+      }
+    },
+    {
+      "id": "app-2",
+      "namespace": "arch",
+      "type": "application",
+      "state": "operate",
+      "content": {
+        "ref": "app.assessed-none",
+        "name": "Assessed none, no edge",
+        "workload": {
+          "runtime": "kubernetes",
+          "objects": [
+            { "cluster": "cluster-a", "namespace": "ns-assessed-none", "kind": "Deployment", "name": "assessed-none" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "app-3",
+      "namespace": "arch",
+      "type": "application",
+      "state": "operate",
+      "content": {
+        "ref": "app.ci-only",
+        "name": "Depends only on arch.ci records",
+        "workload": { "runtime": "none" }
+      }
+    },
+    {
+      "id": "app-4",
+      "namespace": "arch",
+      "type": "application",
+      "state": "operate",
+      "content": {
+        "ref": "app.no-signal",
+        "name": "No edges, no observation",
+        "workload": { "runtime": "none" }
+      }
+    },
+    {
+      "id": "app-5",
+      "namespace": "arch",
+      "type": "application",
+      "state": "operate",
+      "content": {
+        "ref": "app.edge-and-observation",
+        "name": "App-to-app edge AND an assessed-none observation -- the edge wins",
+        "workload": { "runtime": "none" }
+      }
+    },
+    {
+      "id": "app-6",
+      "namespace": "arch",
+      "type": "application",
+      "state": "operate",
+      "content": {
+        "ref": "app.service-only",
+        "name": "Depends only on a non-application, non-ci bead",
+        "workload": { "runtime": "none" }
+      }
+    }
+  ],
+  "cis": [
+    { "id": "ci-1", "namespace": "arch", "type": "ci", "state": "operate", "content": { "ref": "ci.one", "name": "CI One" } },
+    { "id": "ci-2", "namespace": "arch", "type": "ci", "state": "operate", "content": { "ref": "ci.two", "name": "CI Two" } }
+  ],
+  "services": [
+    { "id": "svc-1", "namespace": "arch", "type": "service", "state": "operate", "content": { "ref": "svc.one", "name": "Service One" } }
+  ],
+  "observations": [
+    {
+      "id": "obs-1",
+      "namespace": "arch",
+      "type": "observation",
+      "state": "active",
+      "trust_tier": "system",
+      "created_by": "factory-dispatcher/ea-observer",
+      "content": {
+        "ref": "obs.ea-dependency.app-assessed-none",
+        "observed_at": "2026-09-23T12:00:00Z",
+        "workload": { "cluster": "repository", "namespace": "architecture", "kind": "EaDependencyAssessment", "name": "app.assessed-none" },
+        "source_class": "observed"
+      },
+      "context": {
+        "observation_kind": "ea_dependency_assessment",
+        "application_ref": "app.assessed-none",
+        "assessment": "assessed_none"
+      }
+    },
+    {
+      "id": "obs-2",
+      "namespace": "arch",
+      "type": "observation",
+      "state": "active",
+      "trust_tier": "system",
+      "created_by": "factory-dispatcher/ea-observer",
+      "content": {
+        "ref": "obs.ea-dependency.app-edge-and-observation",
+        "observed_at": "2026-09-23T12:00:00Z",
+        "workload": { "cluster": "repository", "namespace": "architecture", "kind": "EaDependencyAssessment", "name": "app.edge-and-observation" },
+        "source_class": "observed"
+      },
+      "context": {
+        "observation_kind": "ea_dependency_assessment",
+        "application_ref": "app.edge-and-observation",
+        "assessment": "assessed_none"
+      }
+    }
+  ],
+  "units": [
+    {
+      "cluster": "cluster-a",
+      "namespace": "ns-assessed-none",
+      "kind": "Deployment",
+      "name": "assessed-none",
+      "pod_labels": {},
+      "literal_envs": [],
+      "has_unresolvable_env": false
+    }
+  ],
+  "links": [
+    {
+      "id": "link-1",
+      "source_id": "app-1",
+      "target_id": "app-4",
+      "link_type": "depends_on",
+      "created_by": "factory-dispatcher/ea-observer/dependency",
+      "content": { "method": "fixture: app.known-edge depends on app.no-signal", "target_ref": "app.no-signal" }
+    },
+    {
+      "id": "link-2",
+      "source_id": "app-5",
+      "target_id": "app-4",
+      "link_type": "depends_on",
+      "created_by": "factory-dispatcher/ea-observer/dependency",
+      "content": { "method": "fixture: app.edge-and-observation depends on app.no-signal", "target_ref": "app.no-signal" }
+    },
+    {
+      "id": "link-3",
+      "source_id": "app-3",
+      "target_id": "ci-1",
+      "link_type": "depends_on",
+      "created_by": "factory-dispatcher/ea-observer",
+      "content": {}
+    },
+    {
+      "id": "link-4",
+      "source_id": "app-3",
+      "target_id": "ci-2",
+      "link_type": "depends_on",
+      "created_by": "factory-dispatcher/ea-observer",
+      "content": {}
+    },
+    {
+      "id": "link-5",
+      "source_id": "app-6",
+      "target_id": "svc-1",
+      "link_type": "depends_on",
+      "created_by": "factory-dispatcher/ea-observer",
+      "content": {}
+    }
+  ],
+  "expected": {
+    "app.known-edge": { "bucket": "known", "coherence_case": false },
+    "app.assessed-none": { "bucket": "assessed_none", "coherence_case": false },
+    "app.ci-only": { "bucket": "unknown", "coherence_case": true },
+    "app.no-signal": { "bucket": "unknown", "coherence_case": false },
+    "app.edge-and-observation": { "bucket": "known", "coherence_case": false },
+    "app.service-only": { "bucket": "unknown", "coherence_case": true }
+  }
+}

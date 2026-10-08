@@ -1,0 +1,9 @@
+{
+  "number": 926,
+  "files": [
+    "apps/factory-dispatcher/dispatch.py",
+    "apps/factory-dispatcher/activities/dispatch_steps.py",
+    "apps/factory-dispatcher/guards.py",
+    "apps/factory-dispatcher/tests/test_dispatch.py"
+  ]
+}

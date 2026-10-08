@@ -1,0 +1,5 @@
+{
+  "required": ["lane", "title", "intent", "acceptance", "scope", "risk_class"],
+  "forbidden_always": [".github/workflows/**", "docs/releases/**"],
+  "lanes": ["code-health", "drift", "bug-triage", "feature"]
+}

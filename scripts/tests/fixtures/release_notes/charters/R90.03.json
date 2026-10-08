@@ -1,0 +1,28 @@
+{
+  "ref": "R90.03",
+  "name": "Fixture release for UNMEASURED vs NOT DELIVERED",
+  "objective": "Exercise release-notes.py's end-to-end rendering of an UNMEASURED outcome alongside a NOT DELIVERED one in the same release, with no network and no credentials.",
+  "opened_at": "2026-08-20",
+  "target_at": "2026-09-16",
+  "declared_balance": {
+    "feature": 0,
+    "enabling": 50,
+    "blocking": 0,
+    "risk": 50,
+    "security": 0
+  },
+  "outcomes": [
+    {
+      "id": "O-A",
+      "statement": "Enabling work whose PR never merged.",
+      "work_class": "enabling",
+      "requirement_refs": []
+    },
+    {
+      "id": "O-B",
+      "statement": "Risk work, shipped but never bound to this release.",
+      "work_class": "risk",
+      "requirement_refs": []
+    }
+  ]
+}

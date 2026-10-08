@@ -1,0 +1,23 @@
+{
+  "tasks": [
+    {
+      "id": "20000000-0000-4000-8000-000000000001",
+      "state": "review",
+      "content": {
+        "title": "Enabling work still in review",
+        "outcome_ref": "O-A"
+      }
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000002",
+      "state": "done",
+      "updated_at": "2026-09-01T00:00:00Z",
+      "content": {
+        "title": "Shipped work, no delivers edge"
+      }
+    }
+  ],
+  "delivers": {
+    "20000000-0000-4000-8000-000000000001": "R90.03"
+  }
+}

@@ -1,0 +1,38 @@
+# Declared, reviewable patterns for scripts/private_identifiers.py.
+#
+# This is the PUBLIC tree's example. The operator of a deployment keeps a
+# private copy naming their own hosts, domain and people, and runs the check
+# against both their own repository and this one pinned as a submodule. The
+# credential and financial-field shapes below are generic and stay.
+#
+# category is one of: household_identifier, financial_field, credential.
+patterns:
+  - name: host-example
+    category: household_identifier
+    pattern: "replace-me-with-your-cluster-host"
+    note: "Example. Replace with the hosts that must never reach a published tree."
+
+  - name: financial-field-assignment
+    category: financial_field
+    pattern: '(account_number|acct_number|routing_number|aba_number|iban|swift_bic|card_number|cvv|social_security_number|\bssn\b)["'']?\s*[:=]\s*["'']?[0-9]{3,}'
+    note: "A named personal-financial field assigned a literal digit value."
+
+  - name: financial-field-ssn-shape
+    category: financial_field
+    pattern: '\b[0-9]{3}-[0-9]{2}-[0-9]{4}\b'
+    note: "US Social Security Number shape."
+
+  - name: credential-aws-access-key
+    category: credential
+    pattern: "AKIA[0-9A-Z]{16}"
+    note: "AWS access key id shape."
+
+  - name: credential-private-key-block
+    category: credential
+    pattern: "-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----"
+    note: "PEM private key armour."
+
+  - name: credential-github-token
+    category: credential
+    pattern: "ghp_[A-Za-z0-9]{20,}"
+    note: "GitHub personal access token shape."

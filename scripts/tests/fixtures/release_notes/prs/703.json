@@ -1,0 +1,11 @@
+{
+  "number": 703,
+  "title": "Ship the security outcome",
+  "url": "https://github.com/grantbest/homelabv2/pull/703",
+  "body": "Dispatched-bead id: 10000000-0000-4000-8000-000000000003\n",
+  "state": "MERGED",
+  "mergedAt": "2026-08-26T00:00:00Z",
+  "comments": [
+    {"body": "Release-gate: MERGE-WITH-CHANGES"}
+  ]
+}

@@ -1,0 +1,7 @@
+{
+ "comments": [
+  {
+   "body": "## Release-gate verdict (fresh-context gate agent, Amendment 37)\n\nFirst Gastown-lane work product, held to the factory bar without concessions — and it met it. All three GAS-2 acceptance criteria discharged: the symlink-admission tests pass for both module names; the refusal block is byte-identical to pre-change (the #677-probe-verified message survives, live-probed); 18 passed (12 + the 6 new). The PR's empty-origin subtlety is real and was probe-confirmed: from apps/factory-dispatcher/tasks, `Path(\"\").resolve()` IS the tasks dir, so a naive resolve-both-sides fix would have admitted a no-`__file__` module — the pre-check blocks exactly that, pinned from that cwd. Both mutation claims reproduced exactly (unresolved comparison → 2 symlink tests fail; guard removed → 2 no-`__file__` tests fail). Ruff and repo invariants clean; scope inside scripts/; lane markers present with Change kind matching the spec's risk_class; the environmental pydantic story is coherent and pre-existing.\n\nAdvisory recorded, non-blocking: a relative `__file__` is now cwd-dependent (admitted only when cwd IS the dispatcher dir — path resolves to the dispatcher's own file, consistent with the guard's path-claim trust model; fails closed elsewhere). A real behavior delta the body didn't name.\n\nRelease-gate: MERGE"
+  }
+ ]
+}

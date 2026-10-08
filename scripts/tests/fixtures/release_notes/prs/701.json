@@ -1,0 +1,11 @@
+{
+  "number": 701,
+  "title": "Ship the enabling outcome",
+  "url": "https://github.com/grantbest/homelabv2/pull/701",
+  "body": "Dispatched-bead id: 10000000-0000-4000-8000-000000000001\n",
+  "state": "MERGED",
+  "mergedAt": "2026-08-27T00:00:00Z",
+  "comments": [
+    {"body": "Release-gate: MERGE"}
+  ]
+}

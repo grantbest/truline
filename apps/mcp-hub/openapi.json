@@ -1,0 +1,3003 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Truline MCP Hub",
+    "description": "Personal OS tool server. Exposes homelab, calendar, and finance tools as OpenAPI for Open WebUI.",
+    "version": "0.1.1"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/substrate/{path}": {
+      "delete": {
+        "tags": [
+          "Substrate"
+        ],
+        "summary": "Substrate Proxy",
+        "operationId": "substrate_proxy_delete",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Substrate"
+        ],
+        "summary": "Substrate Proxy",
+        "operationId": "substrate_proxy_get",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "options": {
+        "tags": [
+          "Substrate"
+        ],
+        "summary": "Substrate Proxy",
+        "operationId": "substrate_proxy_options",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Substrate"
+        ],
+        "summary": "Substrate Proxy",
+        "operationId": "substrate_proxy_patch",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Substrate"
+        ],
+        "summary": "Substrate Proxy",
+        "operationId": "substrate_proxy_post",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/plaid": {
+      "post": {
+        "summary": "Plaid transaction webhooks",
+        "operationId": "plaid_webhook_webhooks_plaid_post",
+        "parameters": [
+          {
+            "name": "plaid-verification",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Plaid-Verification"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Plaid Webhook Webhooks Plaid Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/context/current": {
+      "post": {
+        "tags": [
+          "Context"
+        ],
+        "summary": "Location, weather, and day context",
+        "operationId": "get_current_context",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Current Context"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/factory/task_runnable": {
+      "post": {
+        "tags": [
+          "Factory"
+        ],
+        "summary": "Whether a dev.task can be claimed right now, and why not if it can't",
+        "operationId": "get_task_runnable",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskRunnableQuery"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Task Runnable"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/factory/schedule_status": {
+      "get": {
+        "tags": [
+          "Factory"
+        ],
+        "summary": "Whether the dispatch schedule is paused, its pause note, and recent run outcomes",
+        "operationId": "get_factory_schedule_status",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Factory Schedule Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/factory/probe": {
+      "get": {
+        "tags": [
+          "Factory"
+        ],
+        "summary": "Probe the console operator surface: read what the release index and factory-state panel claim, re-read the store and the schedule independently, and record the comparison (R26.09/O-7)",
+        "operationId": "get_console_surface_probe",
+        "parameters": [
+          {
+            "name": "release_ref",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Release ref(s) to check; omit for every non-terminal release",
+              "title": "Release Ref"
+            },
+            "description": "Release ref(s) to check; omit for every non-terminal release"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Console Surface Probe"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/factory/impact": {
+      "post": {
+        "tags": [
+          "Factory"
+        ],
+        "summary": "What a change, application or CI affects, over the graph's typed edges (affects/depends_on/consumes) -- with the coverage the answer is computed on, stated beside it (R26.09/O-4, PC-ASR-002/AC-1)",
+        "operationId": "get_impact_analysis",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImpactQuery"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Impact Analysis"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/factory/release_delivery": {
+      "post": {
+        "tags": [
+          "Factory"
+        ],
+        "summary": "How much of a release's declared work is delivered",
+        "operationId": "get_release_delivery",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReleaseDeliveryQuery"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Release Delivery"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/factory/tasks": {
+      "post": {
+        "tags": [
+          "Factory"
+        ],
+        "summary": "File a dev.task bead from a JSON spec \u2014 the same shape file_task.py's CLI accepts",
+        "operationId": "file_dev_task",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "type": "object",
+                "title": "Spec"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response File Dev Task"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/factory/findings": {
+      "post": {
+        "tags": [
+          "Factory"
+        ],
+        "summary": "File a dev.finding bead from a JSON spec \u2014 the same shape file_finding.py's CLI accepts",
+        "operationId": "file_dev_finding",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "type": "object",
+                "title": "Spec"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response File Dev Finding"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/factory/note": {
+      "post": {
+        "tags": [
+          "Factory"
+        ],
+        "summary": "File a dev.note bead against a dev.task -- comments, answers, status, review",
+        "operationId": "file_dev_note",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response File Dev Note"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/factory/prs/{number}/merge": {
+      "post": {
+        "tags": [
+          "Factory"
+        ],
+        "summary": "Start a merge-by-verdict workflow for a PR (R26.09/O-2) -- ships dark until a decision record grants factory.merge; see .factory/design.md",
+        "operationId": "start_pr_merge_on_verdict",
+        "parameters": [
+          {
+            "name": "number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Number"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Start Pr Merge On Verdict"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/factory/prs/merge/{workflow_id}": {
+      "get": {
+        "tags": [
+          "Factory"
+        ],
+        "summary": "Read a merge-by-verdict workflow's recorded disposition",
+        "operationId": "get_pr_merge_disposition",
+        "parameters": [
+          {
+            "name": "workflow_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Workflow Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Pr Merge Disposition"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/homelab/platform_status": {
+      "post": {
+        "tags": [
+          "Homelab"
+        ],
+        "summary": "Rollout status of all K8s deployments",
+        "operationId": "get_platform_status",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Get Platform Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/homelab/grafana_alerts": {
+      "post": {
+        "tags": [
+          "Homelab"
+        ],
+        "summary": "Active firing alerts from Grafana",
+        "operationId": "get_grafana_alerts",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response Get Grafana Alerts"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/homelab/beads": {
+      "post": {
+        "tags": [
+          "Homelab"
+        ],
+        "summary": "Recent beads from Substrate by namespace and type",
+        "operationId": "query_beads",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HomelabBeadsQuery"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response Query Beads"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/homelab/litellm_spend": {
+      "post": {
+        "tags": [
+          "Homelab"
+        ],
+        "summary": "Current month token spend per model",
+        "operationId": "get_litellm_spend",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "number"
+                  },
+                  "type": "object",
+                  "title": "Response Get Litellm Spend"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar/events": {
+      "post": {
+        "tags": [
+          "Calendar"
+        ],
+        "summary": "Calendar events for a single day across primary, family, and kids' calendars",
+        "operationId": "get_calendar_events",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarEventsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response Get Calendar Events"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar/upcoming": {
+      "post": {
+        "tags": [
+          "Calendar"
+        ],
+        "summary": "Upcoming calendar events for the next N days",
+        "operationId": "get_upcoming_events",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarUpcomingQuery"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response Get Upcoming Events"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/log_expense": {
+      "post": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Log an expense",
+        "operationId": "log_expense",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogExpenseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Log Expense"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/get_expenses": {
+      "post": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "List expenses for a month",
+        "operationId": "get_expenses",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetExpensesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response Get Expenses"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/log_bill": {
+      "post": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Log a pending bill",
+        "operationId": "log_bill",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogBillRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Log Bill"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/mark_bill_paid": {
+      "post": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Transition a bill from pending to paid",
+        "operationId": "mark_bill_paid",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkBillPaidRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Mark Bill Paid"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/get_bills_due": {
+      "post": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Bills due in the next N days",
+        "operationId": "get_bills_due",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetBillsDueRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response Get Bills Due"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/set_budget": {
+      "post": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Set or replace the active budget for a category",
+        "operationId": "set_budget",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetBudgetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Set Budget"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/budget_status": {
+      "post": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Per-category budget status",
+        "operationId": "get_budget_status",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BudgetStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Budget Status"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/get_transactions": {
+      "post": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Real bank transactions imported via Plaid",
+        "operationId": "get_transactions",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetTransactionsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response Get Transactions"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/transactions/recent": {
+      "get": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Recent bank transactions ordered by posted date",
+        "operationId": "get_recent_transactions",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "groceries",
+                    "dining",
+                    "utilities",
+                    "kids",
+                    "auto",
+                    "housing",
+                    "entertainment",
+                    "health",
+                    "interest_fees",
+                    "misc"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "name": "institution",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Institution"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 2000,
+              "minimum": 1,
+              "default": 1000,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "include_transfers",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Include Transfers"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Get Recent Transactions"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/get_account_balances": {
+      "post": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Current balances for all connected accounts",
+        "operationId": "get_account_balances",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response Get Account Balances"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/get_unreconciled_transactions": {
+      "post": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Imported transactions that have no LLM category (need manual fix)",
+        "operationId": "get_unreconciled_transactions",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetUnreconciledRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response Get Unreconciled Transactions"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/subscriptions": {
+      "get": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Detected recurring subscriptions: monthly-equivalent cost, price hikes, and stale/cancel candidates",
+        "operationId": "list_subscriptions",
+        "parameters": [
+          {
+            "name": "include_stale",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Include Stale"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response List Subscriptions"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/bills": {
+      "get": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Bill guardian: bills grouped into overdue / due-soon / upcoming / paid, with proof-of-payment",
+        "operationId": "get_bill_ledger",
+        "parameters": [
+          {
+            "name": "days_ahead",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 14,
+              "title": "Days Ahead"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Bill Ledger"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/run_rate": {
+      "get": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Average monthly burn over recent complete months, split Fixed (recurring) vs Variable",
+        "operationId": "calculate_run_rate",
+        "parameters": [
+          {
+            "name": "months",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 3,
+              "title": "Months"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Calculate Run Rate"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/ledger_variance": {
+      "get": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Cumulative unexplained ledger variance per account and in total",
+        "operationId": "get_ledger_variance",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Ledger Variance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/category_history": {
+      "get": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Per-category monthly spend series + stats for budget recommendation",
+        "operationId": "get_category_history",
+        "parameters": [
+          {
+            "name": "months",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 6,
+              "title": "Months"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Category History"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/scenario": {
+      "post": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Run a 12-month cash-flow what-if (baseline vs scenario) and persist the projection",
+        "operationId": "run_scenario",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Run Scenario"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/rules/commit": {
+      "post": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Persist an auto-categorization rule and start its background retroaction",
+        "operationId": "commit_rule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RuleCommitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Commit Rule"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/connections": {
+      "get": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Per-institution Plaid connection health, last sync, and account counts",
+        "operationId": "get_connections_status",
+        "parameters": [
+          {
+            "name": "probe",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Probe"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Connections Status"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/connections/{institution_slug}/sync": {
+      "post": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Run an institution's bank sync now",
+        "operationId": "trigger_bank_sync",
+        "parameters": [
+          {
+            "name": "institution_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Institution Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Trigger Bank Sync"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/schedules": {
+      "get": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Bank-sync schedule state per linked institution",
+        "operationId": "get_bank_sync_schedules",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Bank Sync Schedules"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finance/schedules/reconcile": {
+      "post": {
+        "tags": [
+          "Finance"
+        ],
+        "summary": "Re-register Temporal schedules without a worker restart",
+        "operationId": "reconcile_schedules",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Reconcile Schedules"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ha/get_state": {
+      "post": {
+        "tags": [
+          "Home Assistant"
+        ],
+        "summary": "Current state of a Home Assistant entity",
+        "operationId": "get_state",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HAGetStateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get State"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ha/list_entities": {
+      "post": {
+        "tags": [
+          "Home Assistant"
+        ],
+        "summary": "List HA entities, optionally filtered by domain",
+        "operationId": "list_entities",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HAListEntitiesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response List Entities"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ha/get_history": {
+      "post": {
+        "tags": [
+          "Home Assistant"
+        ],
+        "summary": "HA entity state changes over the last N minutes",
+        "operationId": "get_history",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HAGetHistoryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get History"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ha/get_office_intent_today": {
+      "post": {
+        "tags": [
+          "Home Assistant"
+        ],
+        "summary": "Composite signal: is the Operator heading to Chicago office today?",
+        "operationId": "get_office_intent_today",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Office Intent Today"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vision/extract": {
+      "post": {
+        "tags": [
+          "Vision"
+        ],
+        "summary": "Extract structured data from a photo and stage it for review",
+        "operationId": "vision_extract",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StagedVisionExtraction"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vision/extract_only": {
+      "post": {
+        "tags": [
+          "Vision"
+        ],
+        "summary": "Extract structured data from a photo (no persistence) \u2014 for dry-runs",
+        "operationId": "vision_extract_only",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisionExtraction"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/automations/pay_train_parking/trigger": {
+      "post": {
+        "tags": [
+          "Automations"
+        ],
+        "summary": "Pay today's train parking",
+        "description": "Trigger today's Metra train-parking payment automation.\n\nRuns the same Temporal workflow as the weekday schedule, so every\nkill-switch stays in effect (Home Assistant skip boolean, dry-run mode,\nalready-paid-today guard). Returns the Temporal identifier for auditing.",
+        "operationId": "trigger_pay_train_parking",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Trigger Pay Train Parking"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BudgetStatusRequest": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "title": "Month",
+            "description": "'current', 'last', or a specific month as 'YYYY-MM'.",
+            "default": "current"
+          }
+        },
+        "type": "object",
+        "title": "BudgetStatusRequest"
+      },
+      "CalendarEventsRequest": {
+        "properties": {
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date",
+            "description": "ISO date (YYYY-MM-DD). Defaults to today."
+          }
+        },
+        "type": "object",
+        "title": "CalendarEventsRequest"
+      },
+      "CalendarUpcomingQuery": {
+        "properties": {
+          "days_ahead": {
+            "type": "integer",
+            "maximum": 60.0,
+            "minimum": 1.0,
+            "title": "Days Ahead",
+            "default": 7
+          }
+        },
+        "type": "object",
+        "title": "CalendarUpcomingQuery"
+      },
+      "GetBillsDueRequest": {
+        "properties": {
+          "days_ahead": {
+            "type": "integer",
+            "maximum": 365.0,
+            "minimum": 1.0,
+            "title": "Days Ahead",
+            "default": 14
+          },
+          "only_pending": {
+            "type": "boolean",
+            "title": "Only Pending",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "GetBillsDueRequest"
+      },
+      "GetExpensesRequest": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "title": "Month",
+            "description": "'current', 'last', or a specific month as 'YYYY-MM'.",
+            "default": "current"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "groceries",
+                  "dining",
+                  "utilities",
+                  "kids",
+                  "auto",
+                  "housing",
+                  "entertainment",
+                  "health",
+                  "interest_fees",
+                  "misc"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "default": 100
+          }
+        },
+        "type": "object",
+        "title": "GetExpensesRequest"
+      },
+      "GetTransactionsRequest": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "title": "Month",
+            "description": "'current', 'last', or 'YYYY-MM'",
+            "default": "current"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "groceries",
+                  "dining",
+                  "utilities",
+                  "kids",
+                  "auto",
+                  "housing",
+                  "entertainment",
+                  "health",
+                  "interest_fees",
+                  "misc"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "institution": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "chase"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution"
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 100
+          }
+        },
+        "type": "object",
+        "title": "GetTransactionsRequest"
+      },
+      "GetUnreconciledRequest": {
+        "properties": {
+          "days_back": {
+            "type": "integer",
+            "maximum": 180.0,
+            "minimum": 1.0,
+            "title": "Days Back",
+            "default": 30
+          }
+        },
+        "type": "object",
+        "title": "GetUnreconciledRequest"
+      },
+      "HAGetHistoryRequest": {
+        "properties": {
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id"
+          },
+          "minutes": {
+            "type": "integer",
+            "maximum": 1440.0,
+            "minimum": 1.0,
+            "title": "Minutes",
+            "description": "Lookback window in minutes (capped at 24h).",
+            "default": 60
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity_id"
+        ],
+        "title": "HAGetHistoryRequest"
+      },
+      "HAGetStateRequest": {
+        "properties": {
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id",
+            "description": "HA entity id, e.g. 'person.grant_best', 'zone.office_chicago'"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity_id"
+        ],
+        "title": "HAGetStateRequest"
+      },
+      "HAListEntitiesRequest": {
+        "properties": {
+          "domain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain",
+            "description": "HA domain filter (e.g., 'zone', 'person', 'input_boolean'). None = all entities."
+          }
+        },
+        "type": "object",
+        "title": "HAListEntitiesRequest"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HomelabBeadsQuery": {
+        "properties": {
+          "namespace": {
+            "type": "string",
+            "enum": [
+              "finance",
+              "personal",
+              "homelab"
+            ],
+            "title": "Namespace"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type",
+            "description": "Bead type, e.g. 'expense', 'bill', 'budget', 'digest'. Omit for all types."
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State",
+            "description": "Bead state filter, e.g. 'pending', 'resolved'."
+          },
+          "trust_tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trust Tier",
+            "description": "Trust tier filter."
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id",
+            "description": "Restrict to children of this bead id."
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created After",
+            "description": "ISO8601 lower bound on created_at."
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "default": 10
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "namespace"
+        ],
+        "title": "HomelabBeadsQuery"
+      },
+      "ImpactQuery": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "change",
+              "application",
+              "ci"
+            ],
+            "title": "Kind",
+            "description": "The EA object type to compute the impact of"
+          },
+          "ref": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Ref",
+            "description": "content.ref of the arch.<kind> bead"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "ref"
+        ],
+        "title": "ImpactQuery"
+      },
+      "LogBillRequest": {
+        "properties": {
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Amount"
+          },
+          "vendor": {
+            "type": "string",
+            "title": "Vendor"
+          },
+          "due_date": {
+            "type": "string",
+            "title": "Due Date",
+            "description": "ISO date (YYYY-MM-DD)"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "groceries",
+              "dining",
+              "utilities",
+              "kids",
+              "auto",
+              "housing",
+              "entertainment",
+              "health",
+              "interest_fees",
+              "misc"
+            ],
+            "title": "Category",
+            "default": "utilities"
+          },
+          "recurring": {
+            "type": "boolean",
+            "title": "Recurring",
+            "default": false
+          },
+          "frequency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "monthly",
+                  "quarterly",
+                  "annual"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frequency"
+          }
+        },
+        "type": "object",
+        "required": [
+          "amount",
+          "vendor",
+          "due_date"
+        ],
+        "title": "LogBillRequest"
+      },
+      "LogExpenseRequest": {
+        "properties": {
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Amount"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "groceries",
+              "dining",
+              "utilities",
+              "kids",
+              "auto",
+              "housing",
+              "entertainment",
+              "health",
+              "interest_fees",
+              "misc"
+            ],
+            "title": "Category",
+            "description": "Pick the closest match. Coffee/restaurants \u2192 'dining'. Supermarket \u2192 'groceries'."
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "vendor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor"
+          },
+          "paid_with": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid With"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date",
+            "description": "ISO date (YYYY-MM-DD). Defaults to today."
+          }
+        },
+        "type": "object",
+        "required": [
+          "amount",
+          "category",
+          "description"
+        ],
+        "title": "LogExpenseRequest"
+      },
+      "MarkBillPaidRequest": {
+        "properties": {
+          "bead_id": {
+            "type": "string",
+            "title": "Bead Id",
+            "description": "UUID returned when the bill was logged."
+          },
+          "paid_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid Date",
+            "description": "ISO date (YYYY-MM-DD). Defaults to today."
+          }
+        },
+        "type": "object",
+        "required": [
+          "bead_id"
+        ],
+        "title": "MarkBillPaidRequest"
+      },
+      "NoteCreateRequest": {
+        "properties": {
+          "parent_id": {
+            "type": "string",
+            "title": "Parent Id",
+            "description": "dev.task bead id this note is filed against"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "comment",
+              "question",
+              "answer",
+              "status",
+              "attachment",
+              "review"
+            ],
+            "title": "Kind"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "blocking": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blocking"
+          },
+          "answers_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answers Ref"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "approve",
+                  "request-changes"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verdict"
+          },
+          "releases_work": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Releases Work"
+          }
+        },
+        "type": "object",
+        "required": [
+          "parent_id",
+          "kind",
+          "body"
+        ],
+        "title": "NoteCreateRequest",
+        "description": "The closed dev.note shape -- mirrors\napps/substrate/src/schemas.py::DevNoteContent's own implied shape, so\nthis route refuses exactly what the store would refuse (this bead's\nAC-3), not a second intake that accepts more and just moves the 422 one\nlayer out."
+      },
+      "ReleaseDeliveryQuery": {
+        "properties": {
+          "release_ref": {
+            "type": "string",
+            "title": "Release Ref",
+            "description": "Release ref, e.g. 'R26.01'"
+          }
+        },
+        "type": "object",
+        "required": [
+          "release_ref"
+        ],
+        "title": "ReleaseDeliveryQuery"
+      },
+      "RuleCommitRequest": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Field",
+            "description": "Transaction content field to match (e.g. 'normalized_merchant'; 'vendor' aliases to it)."
+          },
+          "operator": {
+            "type": "string",
+            "enum": [
+              "contains",
+              "equals",
+              "starts_with",
+              "regex"
+            ],
+            "title": "Operator",
+            "description": "Match operator."
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Value",
+            "description": "Value/pattern to match against the field (case-insensitive)."
+          },
+          "target_category": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Target Category",
+            "description": "Category to assign to matching, currently-Uncategorized transactions."
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "operator",
+          "value",
+          "target_category"
+        ],
+        "title": "RuleCommitRequest"
+      },
+      "ScenarioRequest": {
+        "properties": {
+          "scenario_name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Scenario Name",
+            "description": "Label for this what-if, e.g. 'Buy New Car'."
+          },
+          "monthly_impact": {
+            "type": "number",
+            "title": "Monthly Impact",
+            "description": "Recurring monthly cash-flow change. Negative for a new cost (e.g. -600 car payment), positive for new income.",
+            "default": 0.0
+          },
+          "upfront_impact": {
+            "type": "number",
+            "title": "Upfront Impact",
+            "description": "One-time cash impact applied at month 0. Negative for an outlay (e.g. -5000 down payment).",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "scenario_name"
+        ],
+        "title": "ScenarioRequest"
+      },
+      "SetBudgetRequest": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "groceries",
+              "dining",
+              "utilities",
+              "kids",
+              "auto",
+              "housing",
+              "entertainment",
+              "health",
+              "interest_fees",
+              "misc"
+            ],
+            "title": "Category"
+          },
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Amount"
+          },
+          "period": {
+            "type": "string",
+            "enum": [
+              "monthly",
+              "quarterly",
+              "annual"
+            ],
+            "title": "Period",
+            "default": "monthly"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "amount"
+        ],
+        "title": "SetBudgetRequest"
+      },
+      "StagedVisionExtraction": {
+        "properties": {
+          "bead_id": {
+            "type": "string",
+            "title": "Bead Id"
+          },
+          "extraction": {
+            "$ref": "#/components/schemas/VisionExtraction"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bead_id",
+          "extraction"
+        ],
+        "title": "StagedVisionExtraction",
+        "description": "Return shape for /vision/extract: the raw extraction plus the bead id\nthat the LifeOps Console Vision Inbox will pick up for human review."
+      },
+      "TaskRunnableQuery": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id",
+            "description": "dev.task bead id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_id"
+        ],
+        "title": "TaskRunnableQuery"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VisionExtraction": {
+        "properties": {
+          "todos": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Todos",
+            "default": []
+          },
+          "events": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Events",
+            "default": []
+          },
+          "expenses": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Expenses",
+            "default": []
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "summary"
+        ],
+        "title": "VisionExtraction"
+      },
+      "VisionRequest": {
+        "properties": {
+          "image_base64": {
+            "type": "string",
+            "title": "Image Base64",
+            "description": "Base64 encoded image (JPEG/PNG)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "image_base64"
+        ],
+        "title": "VisionRequest"
+      }
+    }
+  }
+}

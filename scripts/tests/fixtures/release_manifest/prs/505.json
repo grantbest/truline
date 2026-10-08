@@ -1,0 +1,8 @@
+{
+  "number": 505,
+  "title": "Outer-loop attended change",
+  "body": "Outer-loop: true\n\nAttended SRE work; there is no originating dev.task bead by design.\n\nChange kind: behavioral\n\n## Verification Evidence\npython -m pytest scripts/tests/ -q\n",
+  "url": "https://github.com/grantbest/homelabv2/pull/505",
+  "headRefName": "claude/outer-loop-fixture",
+  "baseRefName": "main"
+}

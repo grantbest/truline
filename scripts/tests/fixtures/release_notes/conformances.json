@@ -1,0 +1,29 @@
+[
+  {
+    "content": {
+      "requirement_id": "PC-FAC-001",
+      "acceptance_criterion_id": "AC-5",
+      "measured_at": "2026-08-06",
+      "verdict": "absent",
+      "measured_revision": "abc1111"
+    }
+  },
+  {
+    "content": {
+      "requirement_id": "PC-FAC-001",
+      "acceptance_criterion_id": "AC-5",
+      "measured_at": "2026-08-27",
+      "verdict": "pass",
+      "measured_revision": "def2222"
+    }
+  },
+  {
+    "content": {
+      "requirement_id": "PC-TRU-001",
+      "acceptance_criterion_id": "AC-1",
+      "measured_at": "2026-08-10",
+      "verdict": "absent",
+      "measured_revision": "aaa0000"
+    }
+  }
+]

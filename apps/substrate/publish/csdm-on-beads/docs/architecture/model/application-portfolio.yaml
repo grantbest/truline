@@ -1,0 +1,73 @@
+# Example application portfolio.
+#
+# app.substrate and app.temporal are a stand-in "foundation" pair —
+# ../../../scripts/ea-conformance.py's check_foundation rule expects some
+# application to name a foundation grouping in its note when this model
+# declares one. Name yours whatever fits your own system, or omit
+# check_foundation from your own copy of the checker if the concept doesn't
+# apply to you.
+#
+# Validated by ../../../scripts/ea-conformance.py. See ../../README.md.
+
+version: 1
+generated: 2026-09-12
+namespace: arch
+type: application
+
+applications:
+
+  - ref: app.substrate
+    state: operate
+    content:
+      name: Example Substrate
+      description: Stand-in foundation application, present so the foundation-grouping check has something to validate.
+      layer: supply
+      owner: example-owner
+      build: oss
+      technical_health: healthy
+      business_value: high
+      time_disposition: invest
+      workload:
+        runtime: none
+        note: "Fixture data for the installable conformance example; runs nowhere real."
+      realizes: []
+      evidence: ["docs/README.md"]
+      assessed_at: 2026-09-01
+      note: "FOUNDATION (Amendment 24): grouped with app.temporal below."
+
+  - ref: app.temporal
+    state: operate
+    content:
+      name: Example Temporal
+      description: Stand-in foundation application, present so the foundation-grouping check has something to validate.
+      layer: supply
+      owner: example-owner
+      build: oss
+      technical_health: healthy
+      business_value: high
+      time_disposition: invest
+      workload:
+        runtime: none
+        note: "Fixture data for the installable conformance example; runs nowhere real."
+      realizes: []
+      evidence: ["docs/README.md"]
+      assessed_at: 2026-09-01
+      note: "FOUNDATION (Amendment 24): grouped with app.substrate above."
+
+  - ref: app.example
+    state: operate
+    content:
+      name: Example Application
+      description: A minimal example application realizing cap.example.
+      layer: supply
+      owner: example-owner
+      build: oss
+      technical_health: healthy
+      business_value: medium
+      time_disposition: invest
+      realizes: [cap.example]
+      workload:
+        runtime: none
+        note: "Fixture data for the installable conformance example; runs nowhere real."
+      evidence: ["docs/README.md"]
+      assessed_at: 2026-09-01

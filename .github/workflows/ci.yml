@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff==0.12.0
+      - run: python -m ruff check apps/ scripts/
+
+  private-identifiers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml pytest
+      - run: python -m pytest -q scripts/tests/test_private_identifiers.py --deselect scripts/tests/test_private_identifiers.py::test_live_scope_file_claims_and_declares_every_known_shadowed_path
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  scripts-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml pydantic httpx temporalio pytest pytest-asyncio
+      - run: python -m pytest -q scripts/tests --deselect scripts/tests/test_private_identifiers.py::test_live_scope_file_claims_and_declares_every_known_shadowed_path
+
+  substrate-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # SQLAlchemy 2.1 no longer pulls greenlet, and its asyncio extension needs it.
+      - run: pip install -r apps/substrate/requirements.txt greenlet pytest pytest-asyncio
+      # The DB is never dialled (sessions are faked) but DATABASE_URL must parse, and the
+      # encryption key must be a real Fernet key; a throwaway one is generated per run.
+      - run: |
+          export SUBSTRATE_ENCRYPTION_KEY="$(python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')"
+          cd apps/substrate && python -m pytest -q tests/ client/tests/
+        env:
+          DATABASE_URL: postgresql+asyncpg://ci:ci@localhost:5432/ci
+          SUBSTRATE_API_KEY: ci-test-key
+
+  dispatcher-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r apps/factory-dispatcher/requirements.txt pytest pytest-asyncio
+      - run: cd apps/factory-dispatcher && python -m pytest -q tests/ --deselect tests/test_dispatch.py::test_worker_report_container_is_inert_for_both_readers --deselect tests/test_dispatcher_coverage_baseline.py::test_coverage_ratchet_is_wired_correctly --deselect tests/test_lint_dependency.py::test_dispatcher_ruff_pin_matches_ci_ruff_pin --deselect tests/test_change_apply.py::test_apply_merged_pr_changes_creates_one_record_per_merged_pr --deselect tests/test_change_apply.py::test_apply_merged_pr_changes_fetches_dev_task_population_once_per_sweep --deselect tests/test_change_apply.py::test_apply_merged_pr_changes_is_zero_writes_the_second_time_over_the_same_range --deselect tests/test_change_apply.py::test_apply_merged_pr_changes_only_advances_for_new_merges_after_the_watermark --deselect tests/test_change_apply.py::test_apply_merged_pr_changes_reads_no_attachment_notes_when_every_pr_resolves_through_pr_url --deselect tests/test_change_apply.py::test_apply_merged_pr_changes_reads_release_verdicts_once_per_sweep_not_per_pr --deselect tests/test_change_apply.py::test_apply_merged_pr_changes_reflects_a_real_release_verdict_without_editing_the_evidence_string --deselect tests/test_change_apply.py::test_first_run_records_the_pre_history_gap_once --deselect tests/test_change_apply.py::test_watermark_observation_declares_source_class_derived_and_created_by_on_create --deselect tests/test_change_apply.py::test_watermark_observation_declares_source_class_derived_and_created_by_on_update --deselect tests/test_ea_coverage_apply.py::test_a_same_day_retry_with_a_changed_row_updates_rather_than_duplicates --deselect tests/test_ea_coverage_apply.py::test_report_ea_coverage_lands_one_bead_per_row --deselect tests/test_ea_coverage_apply.py::test_report_ea_coverage_lands_the_technology_row_as_not_evaluated_without_a_status_bead --deselect tests/test_ea_coverage_apply.py::test_report_ea_coverage_reflects_the_technology_row_counts_when_the_observer_ran_cleanly --deselect tests/test_ea_coverage_apply.py::test_two_runs_on_different_dates_each_mint_a_new_bead_per_row --deselect tests/test_ea_coverage_apply.py::test_two_runs_on_the_same_date_reconcile_the_same_bead --deselect tests/test_file_task.py::test_the_known_exceptions_still_exist_in_the_corpus --deselect tests/test_scanner.py::test_classify_filing_note_a34_1_operator_decision_wins_over_an_occurred_condition --deselect tests/test_scanner.py::test_classify_filing_note_ops14_no_hold_provenance_note_fails --deselect tests/test_scanner.py::test_classify_filing_note_ops70_against_the_real_architecture_doc --deselect tests/test_scanner.py::test_classify_filing_note_ops70_expired_hold_fails_even_beside_a_no_decider_clause --deselect tests/test_scanner.py::test_classify_filing_note_r2605_3_machine_resolvable_not_yet_occurred_passes --deselect tests/test_scanner.py::test_merged_main_tasks_basenames_finds_the_real_negative_fixture_population --deselect tests/test_source_class_ratification_record.py::test_fixture_declares_the_keep_decision --deselect tests/test_source_class_ratification_record.py::test_section_names_the_keep_decision --deselect tests/test_source_class_ratification_record.py::test_writer_table_matches_fixture_derived_by_created_by --deselect tests/test_source_class_ratification_record.py::test_by_type_prose_matches_fixture_derived_by_type --deselect tests/test_source_class_ratification_record.py::test_totals_match_fixture --deselect tests/test_source_class_ratification_record.py::test_sweep_size_figures_are_each_attributed_to_a_source --deselect tests/test_source_class_ratification_record.py::test_writer_table_is_distinguished_from_the_ratified_set --deselect tests/test_source_class_ratification_record.py::test_observed_is_the_stable_control --deselect tests/test_source_class_ratification_record.py::test_authored_discrepancy_is_named_but_not_investigated --deselect tests/test_source_class_ratification_record.py::test_ea_load_arch_service_rows_are_carved_out_of_the_ratification --deselect tests/test_source_class_ratification_record.py::test_unset_96_rows_named_with_2026_09_17_figures_not_the_fixtures_188 --deselect tests/test_source_class_ratification_record.py::test_no_revert_path_is_claimed_or_built --deselect tests/test_knowledge_ingestion.py::test_real_registry_file_parses_the_first_registered_source --deselect tests/test_knowledge_ingestion.py::test_real_registry_source_is_eligible_for_extraction_task_filing --deselect tests/test_scanner.py::test_amendment_statuses_reads_the_real_architecture_doc
+
+  mcp-hub-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e apps/mcp-hub/ pytest pytest-asyncio pytest-httpx schemathesis python-jose
+      - run: cd apps/mcp-hub && python -m pytest -q tests/ --deselect tests/test_bank_sync.py::test_temporal_worker_declares_litellm_url --deselect tests/test_factory_status.py::test_release_delivery_matches_release_status_build_release_report --deselect tests/test_factory_status.py::test_release_delivery_carries_insufficient_sample --deselect tests/test_factory_status.py::test_release_delivery_reports_unknown_when_release_data_cannot_be_read --deselect tests/test_factory_status.py::test_release_delivery_includes_criteria_with_a_normal_verdict --deselect tests/test_factory_status.py::test_release_delivery_reports_an_unmeasurable_criterion_as_unknown_through_json
+
+  console-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: cd apps/lifeops-console && npm ci && npm test

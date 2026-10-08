@@ -1,0 +1,15 @@
+{
+  "urgency_bands": {"medium": 0.33, "high": 0.66},
+  "aging_days": 14,
+  "max_aging_steps": 3,
+  "balance_tolerance_pct": 25,
+  "absent_after_elapsed_pct": 0.33,
+  "no_landed_work_after_elapsed_pct": 0.5,
+  "criterion_stale_days": 30,
+  "min_classified": 5,
+  "rework_rate_pct": 40,
+  "unmeasured_actionable_after_hours": 48,
+  "re_alert_interval_hours": 168,
+  "reconciler_interval_seconds": 3600,
+  "dispatch_interval_seconds": 900
+}

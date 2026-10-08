@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Air LaunchAgent for the factory tunnel keeper's reboot-surviving watchdog.
+
+  This is the half of tunnel supervision that CAN run under launchd. The kubectl
+  port-forward tunnel itself cannot: macOS Local Network privacy denies LAN access to a
+  process launchd starts in the background, in every domain this codebase can select
+  (`gui/<uid>` included; see `launchd_agent.install_tunnel`, stood down 2026-09-04, and
+  `docs/runbooks/factory-tunnel-keeper.md`). This watchdog does no LAN work: it reads a local
+  heartbeat file the keeper itself wrote and, if it looks stale or the keeper's process is
+  gone, posts one outbound HTTPS request to a Discord webhook; neither operation is gated by
+  Local Network privacy.
+
+  RunAtLoad means this fires once at every login, including the login after a reboot, when the
+  attended tunnel keeper will NOT yet have been restarted: exactly the case this exists to
+  announce. StartInterval means it also fires periodically during a long session, in case the
+  keeper dies without a reboot. Not KeepAlive: this is a one-shot check-and-exit, not a
+  long-running process to keep alive.
+
+  Do not put secrets in this plist; it takes no flags that could carry one.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>$LABEL</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>$SHELL_COMMAND</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StartInterval</key>
+  <integer>$START_INTERVAL_SECONDS</integer>
+  <key>StandardOutPath</key>
+  <string>$STDOUT_PATH</string>
+  <key>StandardErrorPath</key>
+  <string>$STDERR_PATH</string>
+</dict>
+</plist>

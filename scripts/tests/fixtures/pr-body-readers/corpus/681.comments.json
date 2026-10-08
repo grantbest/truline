@@ -1,0 +1,7 @@
+{
+ "comments": [
+  {
+   "body": "## Release-gate verdict (fresh-context gate agent, Amendment 37)\n\nAll five GAS-1 acceptance criteria discharged, verified by execution: the three argv-pinning tests assert the exact unescaped tokens for the probe's own values; the key-with-'=' guard raises naming bead id and key, placed before `bd create` with a test proving nothing is written on refusal (stronger than the criterion, per the #679 gate's advisory); the docstring transcribes the operator's probe evidence verbatim (nothing invented); the #676 two-phase contract appears only as unmodified context in the diff; 24 passed, ruff clean, invariants pass. The gate re-ran both mutations itself: guard removed → exactly the 2 guard tests fail; specials escaped → the argv tests fail. Guard coverage is exact — only `projected_content_keys` output ever reaches `--set-metadata`, fixed literal keys are untouched, and no false refusal is reachable.\n\nAdvisories, non-blocking: keys containing newlines (or empty keys) remain uncharacterized — natural follow-up if substrate field names are ever less constrained; the \"fails 3\" mutation claim holds for the full escape set, escaping '=' alone fails 2 (cosmetic imprecision).\n\nRelease-gate: MERGE"
+  }
+ ]
+}

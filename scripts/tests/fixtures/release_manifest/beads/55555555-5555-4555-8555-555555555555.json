@@ -1,0 +1,21 @@
+{
+  "id": "55555555-5555-4555-8555-555555555555",
+  "namespace": "dev",
+  "type": "task",
+  "state": "review",
+  "content": {
+    "title": "The gate reads the dispatcher's own handwriting",
+    "lane": "platform",
+    "risk_class": "low",
+    "intent": "Prove the release-gate tooling recognises the dispatcher's live PR body.",
+    "acceptance": [
+      "Both gate scripts extract the originating bead id from this body."
+    ],
+    "scope": {
+      "paths": [
+        "scripts/**"
+      ],
+      "forbidden_paths": []
+    }
+  }
+}

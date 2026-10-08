@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Air LaunchAgent for the factory Temporal worker.
+
+  This is deliberately not a Kubernetes Deployment. The worker shells out to
+  Claude CLI under the dispatcher's own sandbox-exec containment, and Claude
+  CLI subscription auth has only been validated unattended on Air against
+  the Operator's logged-in CLI session.
+  Whether that auth can be carried into a container, technically and within the
+  provider's terms, remains the open F1-SPIKE container-auth question.
+
+  Do not put secrets in this plist. LaunchAgent plists in ~/Library/LaunchAgents
+  are world-readable enough that credentials must stay in the process
+  environment or in the referenced external env file.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>$LABEL</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>$SHELL_COMMAND</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>30</integer>
+  <key>StandardOutPath</key>
+  <string>$STDOUT_PATH</string>
+  <key>StandardErrorPath</key>
+  <string>$STDERR_PATH</string>
+</dict>
+</plist>

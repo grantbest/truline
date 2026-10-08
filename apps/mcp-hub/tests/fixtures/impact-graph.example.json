@@ -1,0 +1,209 @@
+{
+  "_comment": [
+    "Committed fixture for apps/mcp-hub/tests/test_impact.py -- a small graph",
+    "exercising every branch impact.compute_impact makes. Posture comes from",
+    "LINKS and arch.observation beads, never from a content field (round-2",
+    "#1020 gate finding: content.depends_on predates #513 and is blank on the",
+    "live estate) -- mirroring ea_dependency.py's land_dependency_posture:",
+    "  - chg-1 (chg.with-affects) has outgoing affects edges to app-1 and app-2",
+    "  - chg-2 (chg.without-affects) has no edges at all",
+    "  - app-1 (app.known) carries an ACTIVE assessed-none arch.observation",
+    "    (obs-1) -> known posture -- plus real depends_on/consumes edges to",
+    "    ci-1 and svc-1 (an app can have both a dependency edge and an",
+    "    assessed-none finding in this fixture; only the observation drives",
+    "    its posture here)",
+    "  - app-2 (app.unknown) has no depends_on edges and no observation ->",
+    "    unknown posture, and carries no edges of its own",
+    "  - app-3 (app.ci-only) depends_on a CI (ci-3) and consumes a service",
+    "    (svc-2) but has no app-to-app depends_on edge and no observation ->",
+    "    unknown posture (ea_dependency's own 'coherence case': a real edge,",
+    "    just not an application-to-application one) -- content.depends_on is",
+    "    blank, the live shape (round-2 #1020 gate finding)",
+    "  - app-5 (app.dependent) depends_on app-6 -- an application-to-",
+    "    application edge -> known posture, with no observation needed",
+    "  - app-7 (app.sibling) ALSO depends_on app-6 -- a second, independent",
+    "    consumer of the same dependency (round-2 #1024 gate finding: proves",
+    "    the closure never walks forward into app-6 and back out to app-7 --",
+    "    querying app.dependent must never return app.sibling)",
+    "  - app-6 (app.leaf) has no outgoing edges and no observation -> unknown",
+    "  - ci-1 (ci.owned) has an incoming depends_on edge (from app-1) -> owned",
+    "  - ci-2 (ci.unowned) has no incoming edges -> unowned",
+    "  - ci-3 (ci.observed-only) has an incoming depends_on edge (from app-3,",
+    "    the unknown-posture app) -> owned, even though its owner is unknown",
+    "  - svc-1 (svc.one) has an incoming consumes edge (from app-1)",
+    "  - svc-2 (svc.observed-only) has an incoming consumes edge (from app-3,",
+    "    the unknown-posture app)",
+    "  - obs-1 is an active assessed-none arch.observation for app.known",
+    "    (content.ref == obs.ea-dependency.app-known, matching",
+    "    ea_dependency.dependency_assessment_ref('app.known'))"
+  ],
+  "changes": [
+    {
+      "id": "chg-1",
+      "namespace": "arch",
+      "type": "change",
+      "state": "implemented",
+      "content": {
+        "ref": "chg.with-affects",
+        "change_type": "standard",
+        "summary": "Roll out the known app",
+        "applications": ["app.known", "app.unknown"],
+        "evidence": ["docs/example.md"]
+      }
+    },
+    {
+      "id": "chg-2",
+      "namespace": "arch",
+      "type": "change",
+      "state": "implemented",
+      "content": {
+        "ref": "chg.without-affects",
+        "change_type": "standard",
+        "summary": "A change with no recorded affects edges",
+        "applications": ["app.known"],
+        "evidence": ["docs/example.md"]
+      }
+    }
+  ],
+  "applications": [
+    {
+      "id": "app-1",
+      "namespace": "arch",
+      "type": "application",
+      "state": "operate",
+      "content": {
+        "ref": "app.known",
+        "name": "Known App",
+        "workload": { "runtime": "kubernetes" }
+      }
+    },
+    {
+      "id": "app-2",
+      "namespace": "arch",
+      "type": "application",
+      "state": "operate",
+      "content": {
+        "ref": "app.unknown",
+        "name": "Unassessed App",
+        "workload": { "runtime": "kubernetes" }
+      }
+    },
+    {
+      "id": "app-3",
+      "namespace": "arch",
+      "type": "application",
+      "state": "operate",
+      "content": {
+        "ref": "app.ci-only",
+        "name": "CI-Only App",
+        "workload": { "runtime": "kubernetes" }
+      }
+    },
+    {
+      "id": "app-5",
+      "namespace": "arch",
+      "type": "application",
+      "state": "operate",
+      "content": {
+        "ref": "app.dependent",
+        "name": "Dependent App",
+        "workload": { "runtime": "kubernetes" }
+      }
+    },
+    {
+      "id": "app-6",
+      "namespace": "arch",
+      "type": "application",
+      "state": "operate",
+      "content": {
+        "ref": "app.leaf",
+        "name": "Leaf App",
+        "workload": { "runtime": "kubernetes" }
+      }
+    },
+    {
+      "id": "app-7",
+      "namespace": "arch",
+      "type": "application",
+      "state": "operate",
+      "content": {
+        "ref": "app.sibling",
+        "name": "Sibling App",
+        "workload": { "runtime": "kubernetes" }
+      }
+    }
+  ],
+  "cis": [
+    {
+      "id": "ci-1",
+      "namespace": "arch",
+      "type": "ci",
+      "state": "active",
+      "content": { "ref": "ci.owned", "ci_kind": "workload", "cluster": "c1", "namespace": "n1", "kind": "Deployment", "name": "owned" }
+    },
+    {
+      "id": "ci-2",
+      "namespace": "arch",
+      "type": "ci",
+      "state": "active",
+      "content": { "ref": "ci.unowned", "ci_kind": "workload", "cluster": "c1", "namespace": "n1", "kind": "Deployment", "name": "unowned" }
+    },
+    {
+      "id": "ci-3",
+      "namespace": "arch",
+      "type": "ci",
+      "state": "active",
+      "content": { "ref": "ci.observed-only", "ci_kind": "workload", "cluster": "c1", "namespace": "n1", "kind": "Deployment", "name": "observed-only" }
+    }
+  ],
+  "services": [
+    {
+      "id": "svc-1",
+      "namespace": "arch",
+      "type": "service",
+      "state": "active",
+      "content": { "ref": "svc.one", "name": "Service One" }
+    },
+    {
+      "id": "svc-2",
+      "namespace": "arch",
+      "type": "service",
+      "state": "active",
+      "content": { "ref": "svc.observed-only", "name": "Observed-Only Service" }
+    }
+  ],
+  "observations": [
+    {
+      "id": "obs-1",
+      "namespace": "arch",
+      "type": "observation",
+      "state": "active",
+      "content": {
+        "ref": "obs.ea-dependency.app-known",
+        "observed_at": "2026-09-19T00:00:00Z",
+        "workload": {
+          "cluster": "repository",
+          "namespace": "architecture",
+          "kind": "EaDependencyAssessment",
+          "name": "app.known"
+        },
+        "source_class": "observed"
+      },
+      "context": {
+        "observation_kind": "ea-dependency-assessment",
+        "application_ref": "app.known",
+        "assessment": "assessed_none"
+      }
+    }
+  ],
+  "links": [
+    { "id": "link-1", "source_id": "chg-1", "target_id": "app-1", "link_type": "affects" },
+    { "id": "link-2", "source_id": "chg-1", "target_id": "app-2", "link_type": "affects" },
+    { "id": "link-3", "source_id": "app-1", "target_id": "ci-1", "link_type": "depends_on" },
+    { "id": "link-4", "source_id": "app-1", "target_id": "svc-1", "link_type": "consumes" },
+    { "id": "link-5", "source_id": "app-3", "target_id": "ci-3", "link_type": "depends_on" },
+    { "id": "link-6", "source_id": "app-3", "target_id": "svc-2", "link_type": "consumes" },
+    { "id": "link-7", "source_id": "app-5", "target_id": "app-6", "link_type": "depends_on" },
+    { "id": "link-8", "source_id": "app-7", "target_id": "app-6", "link_type": "depends_on" }
+  ]
+}

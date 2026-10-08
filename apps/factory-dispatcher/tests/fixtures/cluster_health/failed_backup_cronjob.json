@@ -1,0 +1,69 @@
+{
+  "cronjobs": {
+    "apiVersion": "batch/v1",
+    "kind": "List",
+    "items": [
+      {
+        "metadata": {"name": "pg-backup", "namespace": "platform-backup"},
+        "spec": {"schedule": "0 3 * * *"},
+        "status": {
+          "lastScheduleTime": "2026-08-23T03:00:15Z",
+          "lastSuccessfulTime": "2026-08-21T03:00:22Z"
+        }
+      },
+      {
+        "metadata": {"name": "pg-restore-drill", "namespace": "platform-backup"},
+        "spec": {"schedule": "30 4 * * *"},
+        "status": {
+          "lastScheduleTime": "2026-08-23T04:30:07Z"
+        }
+      },
+      {
+        "metadata": {"name": "grafana-report-export", "namespace": "monitoring"},
+        "spec": {"schedule": "0 6 * * 1"},
+        "status": {
+          "lastScheduleTime": "2026-08-17T06:00:03Z",
+          "lastSuccessfulTime": "2026-08-10T06:00:03Z"
+        }
+      }
+    ]
+  },
+  "jobs": {
+    "apiVersion": "batch/v1",
+    "kind": "List",
+    "items": [
+      {
+        "metadata": {
+          "name": "pg-backup-29123456",
+          "namespace": "platform-backup",
+          "creationTimestamp": "2026-08-23T03:00:15Z",
+          "ownerReferences": [
+            {"apiVersion": "batch/v1", "kind": "CronJob", "name": "pg-backup", "controller": true}
+          ]
+        },
+        "status": {
+          "failed": 1,
+          "conditions": [
+            {
+              "type": "Failed",
+              "status": "True",
+              "reason": "BackoffLimitExceeded",
+              "message": "Job has reached the specified backoff limit"
+            }
+          ]
+        }
+      },
+      {
+        "metadata": {
+          "name": "pg-backup-29122880",
+          "namespace": "platform-backup",
+          "creationTimestamp": "2026-08-21T03:00:22Z",
+          "ownerReferences": [
+            {"apiVersion": "batch/v1", "kind": "CronJob", "name": "pg-backup", "controller": true}
+          ]
+        },
+        "status": {"succeeded": 1}
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "number": 210,
+  "body": "Dispatched-bead id: aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa\nChange kind: structural\n\n## Verification Evidence\npython -m pytest scripts/tests/ -q\n",
+  "changed_files": [
+    "scripts/check-fast-path.py"
+  ],
+  "ci_conclusion": "success",
+  "bead": {
+    "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    "lane": "code-health",
+    "risk_class": "structural",
+    "scope": {
+      "paths": ["scripts/**"],
+      "forbidden_paths": []
+    }
+  }
+}

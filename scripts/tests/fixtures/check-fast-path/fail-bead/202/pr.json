@@ -1,0 +1,8 @@
+{
+  "number": 202,
+  "body": "Change kind: structural\n\n## Verification Evidence\npython -m pytest scripts/tests/ -q\n",
+  "changed_files": [
+    "scripts/check-fast-path.py"
+  ],
+  "ci_conclusion": "success"
+}

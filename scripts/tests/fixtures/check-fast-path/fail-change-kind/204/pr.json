@@ -1,0 +1,18 @@
+{
+  "number": 204,
+  "body": "Dispatched-bead id: 88888888-8888-4888-8888-888888888888\nChange kind: behavioral\n\n## Verification Evidence\npython -m pytest scripts/tests/ -q\n",
+  "changed_files": [
+    "scripts/check-fast-path.py"
+  ],
+  "ci_conclusion": "success",
+  "bead": {
+    "id": "88888888-8888-4888-8888-888888888888",
+    "lane": "code-health",
+    "autonomy": "auto",
+    "risk_class": "structural",
+    "scope": {
+      "paths": ["scripts/**"],
+      "forbidden_paths": []
+    }
+  }
+}

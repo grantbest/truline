@@ -1,0 +1,18 @@
+{
+  "number": 207,
+  "body": "Dispatched-bead id: eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee\nChange kind: structural\n",
+  "changed_files": [
+    "scripts/check-fast-path.py"
+  ],
+  "ci_conclusion": "success",
+  "bead": {
+    "id": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+    "lane": "code-health",
+    "autonomy": "auto",
+    "risk_class": "structural",
+    "scope": {
+      "paths": ["scripts/**"],
+      "forbidden_paths": []
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "id": "10000000-0000-4000-8000-000000000001",
+  "namespace": "dev",
+  "type": "task",
+  "state": "done",
+  "content": {
+    "title": "Ship the enabling outcome",
+    "lane": "platform",
+    "outcome_ref": "O-1",
+    "pr_url": "https://github.com/grantbest/homelabv2/pull/701"
+  }
+}

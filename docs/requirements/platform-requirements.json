@@ -1,0 +1,1040 @@
+{
+  "registry": {
+    "id": "REG-PLATFORM",
+    "name": "Platform Requirements Registry",
+    "version": "0.1.0",
+    "status": "EXAMPLE",
+    "owner": "the operator",
+    "scope": "The platform: the substrate and its bead contracts, the factory (intake, dispatch, verification, merge), execution and scheduling, trust and reversibility, delivery and CI, and assurance. A product built on the platform is out of scope and belongs in its own registry.",
+    "purpose": "Give platform work something testable to cite. Every dev.task names the requirement criteria it serves in requirement_refs; scripts/check-repo-invariants.py resolves each citation against this directory and fails on a dangling one.",
+    "companion_registry": {
+      "id": "REG-LIFEOPS",
+      "path": "docs/requirements/lifeops-requirements.json",
+      "boundary": "REG-LIFEOPS owns what the example vertical must do. REG-PLATFORM owns what the machine that builds and runs it must do. A requirement belongs here if it would still be true were the vertical replaced by a different product."
+    },
+    "method": "This file is an example in the shape the tooling validates. An operator replaces it with requirements reverse-engineered from their own system; every conformance verdict then cites a file:line, a merged PR, or a command run during the measuring pass.",
+    "conformance_legend": {
+      "pass": "Verified working against code inspection or a command run during the measuring pass.",
+      "fail": "Verified broken or verifiably not meeting the criterion.",
+      "absent": "No implementation exists.",
+      "unverified": "Plausibly implemented; not exercised. Do not treat as passing."
+    },
+    "status_legend": {
+      "implemented": "Built and conforming.",
+      "partial": "Built, conforms to some acceptance criteria only.",
+      "defective": "Built, but measures or does the wrong thing.",
+      "absent": "Not built."
+    },
+    "source_legend": {
+      "derived-from-implementation": "Intent inferred from code, docstrings and merged PR bodies.",
+      "operating-record": "Derived from something that happened on a stated date.",
+      "architecture-mandated": "Required by ARCHITECTURE.md, stated here as a testable criterion.",
+      "analyst-proposed": "Proposed to close a gap; not yet approved by the owner."
+    },
+    "verdict_discipline": "Conformance verdicts are dated snapshots of the system as observed on the measuring date. Sprints burn them down. Do not edit a verdict to match today's code; record a new observation instead. A verdict that is silently corrected destroys the measurement it exists to provide."
+  },
+  "capabilities": [
+    {
+      "id": "CAP-SUB",
+      "name": "Substrate",
+      "ea_refs": [
+        "pc.substrate",
+        "pc.substrate.persistence",
+        "pc.substrate.provenance",
+        "pc.substrate.retrieval",
+        "pc.substrate.events"
+      ],
+      "summary": "One store for beads, their edges, their provenance and their lifecycle."
+    },
+    {
+      "id": "CAP-FAC",
+      "name": "Factory",
+      "ea_refs": [
+        "pc.factory",
+        "pc.factory.intake",
+        "pc.factory.collaboration",
+        "pc.factory.dispatch",
+        "pc.factory.verification",
+        "pc.factory.generation",
+        "pc.factory.merge"
+      ],
+      "summary": "Turning a filed intent into a reviewed, merged change without a human in each step."
+    },
+    {
+      "id": "CAP-EXE",
+      "name": "Execution",
+      "ea_refs": [
+        "pc.execution",
+        "pc.execution.orchestration",
+        "pc.execution.scheduling",
+        "pc.execution.dispatch"
+      ],
+      "summary": "Durable orchestration and scheduling of the work the platform performs."
+    },
+    {
+      "id": "CAP-TRU",
+      "name": "Trust",
+      "ea_refs": [
+        "pc.trust",
+        "pc.trust.edge",
+        "pc.trust.origin",
+        "pc.trust.confidence",
+        "pc.trust.reversibility",
+        "pc.trust.secrets",
+        "pc.trust.dataprotection"
+      ],
+      "summary": "Whether a change can be undone, whether a claim can be traced, and whether a secret stays one."
+    },
+    {
+      "id": "CAP-DEL",
+      "name": "Delivery",
+      "ea_refs": [
+        "pc.delivery",
+        "pc.delivery.gitops",
+        "pc.delivery.images",
+        "pc.delivery.promotion",
+        "pc.delivery.ci"
+      ],
+      "summary": "Getting a merged commit onto the cluster, reproducibly and reversibly."
+    },
+    {
+      "id": "CAP-ASR",
+      "name": "Assurance",
+      "ea_refs": [
+        "pc.assurance",
+        "pc.assurance.metrics",
+        "pc.assurance.logging",
+        "pc.assurance.alerting",
+        "pc.assurance.continuity"
+      ],
+      "summary": "Knowing what the platform is doing, and being able to get it back."
+    },
+    {
+      "id": "CAP-INF",
+      "name": "Inference",
+      "ea_refs": [
+        "pc.inference",
+        "pc.inference.gateway",
+        "pc.inference.local",
+        "pc.inference.cost",
+        "pc.inference.capacity"
+      ],
+      "summary": "Model calls: one path, attributable, and with capacity distinguishable from failure."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "PC-ASR-001",
+      "capability": "CAP-ASR",
+      "title": "The architecture model is checked against the system it describes",
+      "status": "partial",
+      "priority": "P1",
+      "source": "architecture-mandated",
+      "rationale": "A model that is validated for internal consistency but never compared with the running system produces confident, wrong answers.",
+      "implementation": [
+        "scripts/ea-conformance.py",
+        "scripts/ea-load.py",
+        ".github/workflows/lint.yml (job: EA model conformance)",
+        "apps/factory-dispatcher/activities/ea_apply.py"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "the model YAML",
+          "when": "CI runs",
+          "then": "its structure and evidence citations are validated",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "the model and the substrate",
+          "when": "they diverge",
+          "then": "the build fails",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "a capability with no supports edge",
+          "when": "conformance runs",
+          "then": "blank is an illegal state rather than a silent pass",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-ASR-002",
+      "capability": "CAP-ASR",
+      "title": "Every view declares the coverage it is built on",
+      "status": "partial",
+      "priority": "P1",
+      "source": "analyst-proposed",
+      "rationale": "A portfolio view built on a 20%-populated graph answers confidently and wrongly. Missing linkage must be a failure state, not a blank cell.",
+      "implementation": [
+        "apps/lifeops-console/src/routes/Architecture.tsx",
+        "apps/lifeops-console/src/lib/blast-radius.ts",
+        "apps/lifeops-console/src/routes/ReleaseView.tsx",
+        "apps/lifeops-console/src/lib/release-view.ts"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "any portfolio or architecture view",
+          "when": "it renders",
+          "then": "it states the share of the estate it covers, with both numbers shown",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "coverage",
+          "when": "it is measured",
+          "then": "the measurement is dated and retained so a decline between two dates is detectable",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-ASR-006",
+      "title": "The live estate is observed back into the model",
+      "capability": "CAP-ASR",
+      "priority": "P1",
+      "status": "implemented",
+      "source": "Reconstructed from the shipped behavior that cited it: PC-ASR-006 was cited with per-criterion precision across the codebase while existing in no registry (the population scripts/requirement_citations.py was built to detect, per the operator's record \u2014 the detector was deliberately forbidden to register requirements; this entry is the reserved product-owner act).",
+      "rationale": "A model reconciled only from git rots in exactly the direction git cannot see: the running cluster. Observation closes the loop the mirror cannot \u2014 what actually runs is compared to what the model declares, and the disagreement becomes a record rather than a surprise.",
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "the running cluster and the loaded model",
+          "when": "the scheduled observation runs",
+          "then": "live workloads and namespaces are read with credentials the worker already holds and compared against declared arch.application beads, each divergence landing as a finding",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "the technology layer",
+          "when": "records enter the substrate",
+          "then": "they enter by observation only \u2014 a hand-authored arch.ci is rejected at the schema",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "a previously observed divergence",
+          "when": "it recurs or stops recurring",
+          "then": "a recurrence updates its one standing arch.observation rather than minting another, and a divergence that stops recurring is resolved",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "implementation": [
+        "apps/factory-dispatcher/activities/ea_observation.py",
+        "scripts/ea_reflect.py",
+        "apps/substrate/src/schemas.py",
+        "apps/factory-dispatcher/schedule_runtime.py"
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-ASR-007",
+      "title": "The model, its derivations, and the substrate reconcile mechanically",
+      "capability": "CAP-ASR",
+      "priority": "P1",
+      "status": "implemented",
+      "source": "Reconstructed from the shipped behavior that cited it \u2014 see PC-ASR-006's source note; the per-criterion citations (AC-2, AC-3, AC-4) across scripts/ea-load.py, scripts/ea-derive.py, scripts/ea-conformance.py, apps/factory-dispatcher/schedule_runtime.py and the ea_apply activity/workflow defined these criteria in practice before they were registered.",
+      "rationale": "Hand-maintained mirrors and hand-copied derivable facts are the two rot vectors the EA practice exists to close. Every reconciliation a human must remember is one the platform will eventually forget; every derivable fact a human retypes is a divergence with a timestamp already running.",
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "docs/architecture/model/**",
+          "when": "the loader runs",
+          "then": "arch.* beads mirror it idempotently on content.ref \u2014 edges reconciled rather than appended, deletions reported rather than performed",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "a fact derivable from the manifests (depends_on edges, kubernetes workload objects, arch.ci records)",
+          "when": "the model is maintained",
+          "then": "machinery derives and writes it, and a hand-authored copy is the conformance violation",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "main moves",
+          "when": "nothing else is done",
+          "then": "the model applies to the substrate on an in-cluster schedule, with zero writes on an unchanged revision and a standing failure record on error",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-4",
+          "given": "the model and the substrate",
+          "when": "they diverge",
+          "then": "the divergence is detectable read-only with a nonzero exit",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "implementation": [
+        "scripts/ea-load.py",
+        "scripts/ea-derive.py",
+        "scripts/ea-conformance.py",
+        "apps/factory-dispatcher/activities/ea_apply.py",
+        "apps/factory-dispatcher/schedule_runtime.py"
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-ASR-008",
+      "capability": "CAP-ASR",
+      "title": "Release health is a managed record with a lifecycle, a declared policy, an honest coverage and a recorded disposition",
+      "status": "absent",
+      "priority": "P0",
+      "source": "analyst-proposed",
+      "rationale": "The owner's ask: 'alignment/visibility into the Health of the current release.' Measured at one revision: activities/release_status.py mints one dated arch.observation per release per day (many active, none read) with every number in unvalidated context and no notify path; the fixture release stood at blocking 81.8% vs 10% declared with risk and security ABSENT and nobody told; task-level rework and gate coverage (0 dev.release records) are visible nowhere; CAP-ASR declares alerting and no PC-ASR record covers an alert. The record must be a governed type with a state machine (arch.incident/arch.risk precedent), measured by the admitted measures edge, thresholds in a fenced document under a loader, alerts that transition and dedupe without permanent silence (the fixture release/O-13), unknown never rendered as zero or on_track (the fixture release/O-6), a disposition that moves state (PRIN-017). The governed-type mechanism is analyst design.",
+      "implementation": [
+        "substrate/src/schemas.py ArchReleaseHealthContent + ARCH_TYPE_SCHEMAS (:1389)",
+        "substrate/src/bead_rules.py STATE_MACHINES/ENTRY_STATES",
+        "scripts/health_policy.py (new; HealthPolicy model)",
+        "fd/release_health.py (new, pure)",
+        "fd/activities/release_status.py:37 (reconciler, identity unchanged)",
+        "fd/schedule_runtime.py:46-48 (hourly)",
+        "docs/releases/policy/health-policy.json + scripts/release-load.py health_policy_validation_error",
+        "hub/src/tools/notify.py ALERT_INVENTORY + failure_diagnosis.py *_ALERT_ID constants",
+        "fd/operator_verbs.py --dispose-health",
+        "console/src/lib/release-view.ts, routes/ReleaseView.tsx, routes/ReleaseIndex.tsx",
+        "scripts/release-status.py (HEALTH block), scripts/release-notes.py (readiness)"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "the committed fixture, docs/releases/policy/health-policy.json, and a store double that refuses a second create for one ref, refuses a PATCH from any identity other than factory-dispatcher/release-status, and refuses a transition not in the registered machine",
+          "when": "the reconciler runs six times over the fixture for the fixture release: twice at header.captured_at, at +1h and +2h over unchanged inputs, then twice at header.midpoint_day, where a new signal (class_absent) holds",
+          "then": "exactly one arch.release_health bead with ref health.<ref> and a measures edge exists; run one (now = header.captured_at) creates health.<ref> at unmeasured, writes one measures link from the health bead to the release bead, and transitions unmeasured -> on_track (every holding condition is pending on a first measurement): exactly create + add_link + transition_state; run two (now = header.captured_at, unchanged inputs) PATCHes content with class_over_share ['blocking'] fired (header.expected_class_over_share) and transitions on_track -> drifting once by compare-and-set within the registered machine -- hysteresis fires on the second sight, so run two is not a zero-write run; runs three and four (+1h and +2h, unchanged inputs) write nothing, because the fingerprint is equal despite the moving clock; run five (now = header.midpoint_day, where class_absent holds for the fixture release's risk and security per header.expected_class_absent_at_midpoint) PATCHes content with class_absent recorded pending=true and performs no transition; run six (now = header.midpoint_day) PATCHes content with class_absent fired=true and transitions drifting -> breached once by compare-and-set within the registered machine, class_absent being impact high (re-specified <date> to the hysteresis-correct sequence a sprint item AC-3 states in the same words)",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "the same fixture with each of these inputs removed in turn (tasks, delivers links, conformances, charter opened_at, policy file, changes); separately the fixture's queue-order file null or absent; and separately the charter's target_at removed",
+          "when": "health is computed",
+          "then": "for the six removed inputs, state is unmeasured with coverage.unreadable naming exactly the removed input (tasks_read, delivers_read, conformances_read, time_box_read, policy_read, changes_read); no signal is reported fired; balance carries no percentage; for a null or absent queue-order file, coverage stays complete, queue.oldest_claimable_age_days_by_class reads 'unknown' with read_from naming the absence, and queue_starvation reads 'unknown' (no queue-order file exists before the fixture release B8, and a release must not read unmeasured for that); for a charter without target_at, coverage stays complete (time_box_read true), elapsed_pct is null, urgency is 'unknown' and the time_unmeasurable signal holds (pending on the first measurement, fired on the second)",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "a health bead in state unmeasured; a missing bead; a bead whose measured_at is older than 24 hours plus 2 x reconciler_interval_seconds (the reconciler writes nothing while the record is unchanged except a once-a-day heartbeat patch of measured_at, so a steady, healthy record is never older than 24 hours plus two intervals); and the ReleaseIndex links-failure state",
+          "when": "release_delivery serves and ReleaseView/ReleaseIndex render",
+          "then": "each case renders 'health unknown: <coverage.unreadable | no record | stale since \u2026>' via UnknownMarker, never on_track and never '0 complete \u00b7 0 in progress'",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-4",
+          "given": "a scripted sequence over a 30-day fake clock \u2014 on_track; drifting (signal A); unchanged 10 days; breached (A+B); accepted by disposition; new signal C; on_track \u2014 and separately tests/fixtures/alert-state-empty.json as FACTORY_ALERT_STATE_PATH evaluated 400 times on one unchanged condition",
+          "when": "each step runs through AlertPolicy",
+          "then": "exactly one post per transition (drifting informational, breached actionable, recovered informational), one re-alert after 168h unchanged, zero posts while the accepted disposition's fingerprint matches, one post when C changes it, unmeasured persisting past 48h re-posts once as actionable, and exactly one post across the 400 evaluations; all four release_health ids resolve in ALERT_INVENTORY with opens_incident False",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-5",
+          "given": "a record in drifting; a dev.note from `--dispose-health the fixture release --dispose-kind accepted --dispose-until <date> --dispose-reason \u2026` whose provenance has model 'none' and worker 'operator/dispose-health'; a second note with the same fields but provenance {model: 'claude-\u2026', worker: 'claude'}; a third lacking the structured fields",
+          "when": "the reconciler runs before and after `until`, and after the fired set changes",
+          "then": "the operator note moves the record to accepted with disposition {kind, until, note_id, recorded_by}; it returns to drifting/breached when until passes or the fired set changes; the worker-provenance note is ignored and disposition_ignored names 'claude'; the unstructured note is ignored",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-6",
+          "given": "docs/releases/policy/health-policy.json with balance_tolerance_pct 150, and the file missing",
+          "when": "release-load.py --check runs and the reconciler runs",
+          "then": "--check refuses naming the file and key (health_policy_validation_error); the reconciler writes state unmeasured with coverage.unreadable = ['policy'] and never falls back to defaults",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-7",
+          "given": "the release inputs fixture, whose notes_by_task holds the review and requeue notes of every bound task (each requeue note reduced with resets_attempts and requeue_reason kept) and whose header records, per release, the TASK-LEVEL counts {bound, request_changes_tasks, requeued_tasks, union_tasks, superseded, rate} beside the note-level counts and expected_rework_fires: {ref: bool} evaluated against policy.rework_rate_pct at capture",
+          "when": "health is computed twice at the same inputs",
+          "then": "rework{bound, request_changes_tasks, requeued_tasks, union, superseded, rate} equals the header's task-level counts per release with rate = union/bound; rate is null with insufficient_sample when bound < min_classified; regresses_edges_read is 0 with a coverage_note naming the absent filer; the rework signal is pending after the first measurement and fired after the second exactly for the releases whose header.expected_rework_fires is true",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-8",
+          "given": "the release inputs fixture for the fixture release at now = captured_at, and the same charter with every outcome delivered or dispositioned, no open bound beads, none in review, and every change carrying a verdict record",
+          "when": "close_readiness is computed and release-notes.py renders",
+          "then": "the first yields ready false with blockers naming each undelivered/undispositioned outcome id, each open bound bead id, and the count of changes without a verdict record; the second yields ready true with an empty list; the notes render a 'Close readiness' section listing the blockers verbatim; readiness is 'unknown' when any input is unreadable",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-9",
+          "given": "the the fixture release fixture at now = header.captured_at and at now = header.captured_at + 22 days",
+          "when": "health is computed twice at each date",
+          "then": "at captured_at class_over_share is pending after the first and fired after the second measurement for the classes header.expected_class_over_share names, and class_absent does not fire (elapsed < absent_after_elapsed_pct); at +22 days class_absent fires on the second measurement for the classes header.expected_class_absent_at_midpoint names; queue.oldest_claimable_age_days_by_class equals the value in the fixture's queue-order file and reads 'unknown' when that file is null or older than 2 x dispatch_interval_seconds",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-DEL-001",
+      "capability": "CAP-DEL",
+      "title": "Every deployed image is addressable by digest",
+      "status": "absent",
+      "priority": "P0",
+      "source": "architecture-mandated",
+      "rationale": "Rollback, promotion and provenance all require that the thing running can be named. :latest with imagePullPolicy: Never names nothing.",
+      "implementation": [
+        ".github/workflows/build-substrate.yml",
+        ".github/workflows/build-mcp-hub.yml",
+        "infrastructure/k8s/"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "a build workflow",
+          "when": "it publishes",
+          "then": "it pushes to the registry with an immutable tag",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "a Deployment manifest",
+          "when": "it names an image",
+          "then": "it names a digest and pulls IfNotPresent",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "the registry",
+          "when": "an image is pushed",
+          "then": "it has storage bound and reachable",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-DEL-004",
+      "capability": "CAP-DEL",
+      "title": "A release's changes, the applications they touched and the verdicts that admitted them are typed records reachable from the release",
+      "status": "defective",
+      "priority": "P1",
+      "source": "analyst-proposed",
+      "rationale": "The north-star framing (CSDM, Ardoq, ServiceNow): an initiative relates to the records it changes. Measured at one revision: change_apply._ensure_change_edges (:592-616) writes arch.change --delivers--> arch.release and --affects--> arch.application, but resolve_release_binding (:532-545) finds the task via find_task_by_pr_url (:301-305), which reads content.pr_refs \u2014 set only by --bind-pr (dispatch.py:4971-4975) \u2014 while the normal PR exit writes content.pr_url (dispatch_steps.py:1145). At that read most done tasks carry pr_url, few pr_refs, and the newest changes carry affects but no delivers edges (changes fixture header records the counts); every change's evidence says 'dev.release has no writer yet'; dev.release is inventoried (bead-object-inventory.md:42) with no schema, machine or beads. PRIN-003.",
+      "implementation": [
+        "fd/activities/change_apply.py:301 find_task_by_pr_url (+pr_url, +attachment url), :592 _ensure_change_edges, --backfill-edges",
+        "substrate/src/schemas.py DevReleaseContent (new) + bead_rules.py ('dev','release') machine",
+        "fd/activities/change_apply.py (dev.release minting, gates edge)",
+        "scripts/gate_markers.py find_release_gate_verdict (reused)",
+        "hub/src/tools/factory_status.py:233 release_delivery (changes, verdicts)",
+        "scripts/release-manifest.py, scripts/release-notes.py",
+        "console/src/routes/ReleaseView.tsx"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "the committed fixture (done tasks with pr_url/pr_refs and their delivers edges; every change with evidence[0]; header: resolvable_by_pr_refs, resolvable_by_pr_url)",
+          "when": "resolve_release_binding runs for every change's PR url against the fixture store",
+          "then": "the number of changes resolving to a release equals the header's resolvable_by_pr_url, which is greater than resolvable_by_pr_refs",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "the same fixture in a counting store double",
+          "when": "--backfill-edges runs twice",
+          "then": "the first run creates exactly (resolvable_by_pr_url - existing_delivers_edges) delivers links and no duplicate affects links; the second run creates 0 (precondition recorded in the changes header: every change already carrying a delivers edge is pr_url-resolvable; where that does not hold the header records expected_new_delivers_edges directly and the assertion reads that)",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "synthetic merged PRs: one whose body carries 'Release-gate: MERGE', one whose only verdict is in a comment, and one with no verdict, in a store double that refuses a second dev.release for one PR",
+          "when": "the sweep runs twice",
+          "then": "one dev.release per verdict-carrying PR exists with {pr_url, pr_number, verdict, verdict_source \u2208 {body, comment}, bead_id, merged_at}, state verdict_recorded, and a gates edge to the PR's dev.task when one exists; the verdict-less PR gets no record and its change evidence says 'merged without a release-gate verdict'; the second sweep writes nothing",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-4",
+          "given": "a release with three changes in the fixture (two with verdict records, one without; touching two applications)",
+          "when": "release_delivery, release-notes.py and release-manifest.py run",
+          "then": "each lists the release's changes with change_type, the applications reached by affects, and the verdict per change or 'no verdict record'; ReleaseView renders the same list; an unreadable links read renders unknown, not an empty list",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-EXE-003",
+      "capability": "CAP-EXE",
+      "title": "Pausing stops work, not just future firings",
+      "status": "implemented",
+      "priority": "P1",
+      "source": "operating-record",
+      "rationale": "An operator who pauses the schedule believes the factory is stopped. A workflow already in flight can still claim work.",
+      "implementation": [
+        "apps/factory-dispatcher/schedule_status.py",
+        "apps/factory-dispatcher/README.md"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "a paused schedule with an in-flight workflow",
+          "when": "an operator asks whether the factory is quiet",
+          "then": "the answer is no",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "the safe stop procedure",
+          "when": "it is followed",
+          "then": "it is documented as pause-then-verify rather than pause alone",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-EXE-007",
+      "capability": "CAP-EXE",
+      "title": "A stopped factory says why: the breaker releases on recorded evidence, an absent premise is a recorded fault, and an idle tick announces its reason",
+      "status": "defective",
+      "priority": "P1",
+      "source": "analyst-proposed",
+      "rationale": "dispatch.py:6167 _DISPATCH_OUTCOME_NOTE_PREFIXES holds only failure prefixes and trailing_environmental_fault_streak (:6208) ignores guards.requeue_barrier_at (:447), so a bead latched at 3/3 stays latched after a successful forced run or a requeue (6706292f, 7e208eea): a728d995 (faults <date> 13:33-14:03Z, 'Worker finished in 1948s' 17:54:47Z, barrier 18:28:01Z) reads ('b07f6582e8def74c', 3) today; at the 17:41Z read fc8a5489 and 44d28ff9 were latched on one heartbeat-timeout signature (2d5ae89f\u2026) and 4c9d7218 had been forced off it by hand (latched header records the set at capture). The premise check is advisory (dispatch_steps.py:756-790; 0d1e952b). Nothing says the queue is empty by breaker; 'why is nothing running' is CLI-only (schedule_status.py:277-291). PRIN-008; <date> D2 announce-only.",
+      "implementation": [
+        "fd/queue_order.py (moved scanner; +WORKER_FINISHED_NOTE_PREFIX; stops at the barrier)",
+        "fd/dispatch.py:6362-6367 docstring; retry_policy.py:13-24 docstring",
+        "fd/activities/dispatch_steps.py:756 _record_absent_premise_paths (becomes a fault)",
+        "fd/failure_diagnosis.py (queue_nothing_selectable announce)",
+        "fd/schedule_status.py describe_idle_reason (new)"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "The notes with created_at <= header.requeue_barrier_note_at (the captured view; the capture runs later and holds later 'Worker finished in' notes and a later requeue barrier, each of which ends the streak alone), and: the committed fixture with the note named by header.requeue_barrier_note_id removed",
+          "when": "the streak scanner reads the notes",
+          "then": "it returns ('', 0) because the newest outcome note is the 'Worker finished in' status note (header.worker_finished_note_id, 2026-09-17T17:54:47Z), newer than the three fault notes",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "The notes with created_at <= header.requeue_barrier_note_at (the captured view; the capture runs later and holds later 'Worker finished in' notes and a later requeue barrier, each of which ends the streak alone), and: the same fixture with the note named by header.worker_finished_note_id removed",
+          "when": "the scanner reads the notes",
+          "then": "outcome notes older than the requeue barrier (resets_attempts, non-empty reason, 18:28:01Z) are not counted and the streak is 0",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "the unmodified fixture passed to the scanner",
+          "when": "the scan completes",
+          "then": "the input list is byte-identical afterwards and guards.prior_failures over it is unchanged",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-4",
+          "given": "a task whose content names a premise path absent from the clone, in the isolate activity against a store double",
+          "when": "isolate runs",
+          "then": "the bead is returned to pending with no attempt spent via record_environment_failure, reason prefixed 'Premise paths absent from the base ref:' with the sorted paths, signature stable across two runs; no worker is invoked",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-5",
+          "given": "a tick over the latched snapshot (hold classes present per header.latched_signatures and the held reasons); a second tick with one more bead latched on a signature already present; a third tick with a bead held on a class not previously present (e.g. blocking_question when the snapshot had none); a fourth with one selectable bead; FACTORY_ALERT_STATE_PATH pointing at tests/fixtures/alert-state-empty.json",
+          "when": "each tick ends",
+          "then": "PRECONDITION: header.selectable_ids == [] (the fixture builder drops every bead that is selectable at capture from tasks and lists it in header.excluded_selectable_ids); then the first tick posts factory_dispatcher.queue_nothing_selectable once (actionable; prompt names the hold classes and the verbs --task / --requeue --reason / answer the question); the second posts nothing (the sorted class SET is unchanged, so the fingerprint is); the third posts once (a new class); the fourth posts nothing; the id is registered in ALERT_INVENTORY and discovered by the *_ALERT_ID ratchet",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-6",
+          "given": "IdleInputs supplied as values: (a) schedule paused with the capacity note; (b) worker_revision 'unknown' (a failed read); (c) everything healthy but the queue empty by breaker; (d) the queue read failing; (e) worker_revision, base_ref and tunnel_keeper NOT_SERVED with everything else healthy and the queue non-empty",
+          "when": "describe_idle_reason is called",
+          "then": "(a) running false, reasons [[capacity_pause, note]]; (b) reasons [[worker_revision_unknown, \u2026]] and running 'unknown'; (c) reasons [[nothing_selectable, 'latched N']]; (d) running 'unknown' with the failed input named \u2014 never 'running' from a failed read; (e) running true, inputs_not_served [worker_revision, base_ref, tunnel_keeper], and no reason or healthy mark is synthesised for a not-served input",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-FAC-001",
+      "capability": "CAP-FAC",
+      "title": "Filed work carries the intent it satisfies",
+      "status": "partial",
+      "priority": "P0",
+      "source": "architecture-mandated",
+      "rationale": "The operating model states 'the bead travels with the PR, always' \u2014 a reviewer given only the diff can judge whether code is correct, but only the bead lets them judge whether it is the right code.",
+      "implementation": [
+        "apps/substrate/src/schemas.py (DevTaskContent.requirement_refs, .nfrs, .arch_impact)",
+        "apps/factory-dispatcher/file_task.py",
+        "apps/factory-dispatcher/dispatch.py:911"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "a dev.task spec carrying requirement_refs, nfrs and arch_impact",
+          "when": "it is filed",
+          "then": "all three reach the bead",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "a bead carrying those fields",
+          "when": "the dispatcher opens a PR for it",
+          "then": "the PR body renders all three",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "a malformed requirement reference",
+          "when": "the bead is created",
+          "then": "it is rejected",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-4",
+          "given": "a well-formed reference that resolves to no requirement in any registry",
+          "when": "the bead is created",
+          "then": "it is reported as dangling",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-5",
+          "given": "the population of open tasks",
+          "when": "traceability is measured",
+          "then": "the count carrying no reference is reported",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-FAC-002",
+      "capability": "CAP-FAC",
+      "title": "A task cannot widen its own boundary",
+      "status": "implemented",
+      "priority": "P0",
+      "source": "architecture-mandated",
+      "rationale": "The factory may not edit the gates that judge it. A task that could add its own forbidden paths could approve itself.",
+      "implementation": [
+        "apps/factory-dispatcher/file_task.py",
+        "apps/factory-dispatcher/contracts/task-intake-contract.json",
+        "apps/lifeops-console/src/lib/task-intake-contract.json"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "a spec whose forbidden_paths omits .github/workflows/**",
+          "when": "it is filed",
+          "then": "the path is appended automatically",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "a dev.task with no such forbidden path",
+          "when": "the substrate validates it",
+          "then": "it is rejected",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "the required and always-forbidden sets",
+          "when": "they are read",
+          "then": "they come from one declaration shared with the console",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-FAC-004",
+      "capability": "CAP-FAC",
+      "title": "A worker that changes nothing still explains itself",
+      "status": "implemented",
+      "priority": "P1",
+      "source": "operating-record",
+      "rationale": "In one run a worker exited 0 having changed nothing; the dispatcher raised 'worker changed nothing' and discarded stdout, so the run's only account of itself was destroyed. Diagnosing it cost a manual re-run outside the factory.",
+      "implementation": [
+        "apps/factory-dispatcher/dispatch.py"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "a worker that exits successfully having changed no files",
+          "when": "the dispatcher records the outcome",
+          "then": "the worker's own output is preserved",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-FAC-005",
+      "capability": "CAP-FAC",
+      "title": "Nothing merges that has not passed the release gate",
+      "status": "implemented",
+      "priority": "P0",
+      "source": "architecture-mandated",
+      "rationale": "Autonomy is earned per lane. A PR that is green is not a PR that is reviewed, and the four-hat gate is the only thing that judges whether a change moves the portfolio toward the strategy.",
+      "implementation": [
+        "GEMINI.md",
+        ".github/workflows/lint.yml"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "a factory-authored PR",
+          "when": "it is merged",
+          "then": "a release-gate verdict exists for it",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "a dev.task",
+          "when": "it is filed",
+          "then": "its autonomy defaults to propose and never to auto-merge",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "a PR body",
+          "when": "it is read",
+          "then": "it declares exactly one Change kind",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-FAC-006",
+      "capability": "CAP-FAC",
+      "title": "A retry knows why its predecessor failed",
+      "status": "implemented",
+      "priority": "P0",
+      "source": "operating-record",
+      "rationale": "fail_task writes the failure reason to the bead as a note of kind 'status', body 'Run failed: <reason>'; build_prompt surfaces only answered question pairs, selecting notes whose content carries kind == 'answer'. No selector in build_prompt matches kind == 'status', so the failure record is never read back and every attempt after the first begins from a standing start. record_capacity_failure writes the same kind with body 'Capacity backpressure: ...', and capacity is explicitly not a work failure, so a reader selecting on kind alone would misreport backpressure as failure. Measured <date>: 45 preserved failure patches across 16 beads, 11 beads at three or more attempts, and cd5e27ce failing six times against a spec later shown unsatisfiable by construction. PC-FAC-004 covers the write side of this record and an earlier change made it richer; nothing covered the read side. See ARCHITECTURE.md Amendment 29 (RATIFIED <date>). Burnt down the same day by an earlier change; AC-1..AC-3 re-measured below.",
+      "implementation": [
+        "apps/factory-dispatcher/guards.py",
+        "apps/factory-dispatcher/dispatch.py"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "a task whose previous attempt failed",
+          "when": "the next attempt's prompt is built",
+          "then": "it carries the recorded reason that attempt failed",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "a task with several failed attempts",
+          "when": "the next attempt's prompt is built",
+          "then": "the reasons appear oldest first and are attributed to the attempt that produced them",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "a task on its first attempt",
+          "when": "the prompt is built",
+          "then": "no failure history is claimed and the prompt is unchanged from today",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-4",
+          "given": "the retry decision has moved to a workflow engine",
+          "when": "an attempt is retried by that engine",
+          "then": "the failure reasons still reach the attempt, because the engine re-executes with the same input",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-INF-001",
+      "capability": "CAP-INF",
+      "title": "Model calls go through one client",
+      "status": "implemented",
+      "priority": "P1",
+      "source": "derived-from-implementation",
+      "rationale": "Six modules each construct their own LiteLLM URL, headers, payload and timeout. A change to auth, model routing or timeout policy has six places to miss.",
+      "implementation": [
+        "apps/mcp-hub/src/tools/vision.py:70",
+        "apps/mcp-hub/src/workflows/morning_brief.py:161",
+        "apps/mcp-hub/src/workflows/financial_insights.py:323",
+        "apps/mcp-hub/src/workflows/bank_sync.py:648",
+        "apps/mcp-hub/src/workflows/bank_sync.py:904",
+        "apps/mcp-hub/src/workflows/budget_pulse.py"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "an LLM call anywhere on the platform",
+          "when": "it is made",
+          "then": "it goes through one client rather than a hand-rolled POST",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "an LLM call",
+          "when": "it completes",
+          "then": "its cost is recorded",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-INF-003",
+      "capability": "CAP-INF",
+      "title": "Model work is attributable to the task that caused it",
+      "status": "partial",
+      "priority": "P1",
+      "source": "analyst-proposed",
+      "rationale": "Cost recorded in aggregate answers what was spent. It does not answer what a given piece of work cost, which is the number an eval floor and a merge rule both need.",
+      "implementation": [
+        "apps/mcp-hub/src/tools/cost.py:150",
+        "apps/factory-dispatcher/dispatch.py:137"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "an LLM call",
+          "when": "its cost is logged",
+          "then": "the record names the task or workflow that caused it",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "a bead written by the dispatcher",
+          "when": "its provenance is read",
+          "then": "tokens and cost_usd reflect what was actually spent",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-SUB-001",
+      "capability": "CAP-SUB",
+      "title": "Execution bookkeeping does not live in bead content",
+      "status": "implemented",
+      "priority": "P0",
+      "source": "architecture-mandated",
+      "rationale": "ARCHITECTURE.md Pillar 10: attempt counts, lease holders, timeouts and retry bookkeeping MUST NOT be written into bead content. A bead states intent; a workflow engine states execution.",
+      "implementation": [
+        "apps/substrate/src/schemas.py:246",
+        "apps/factory-dispatcher/dispatch.py:1347",
+        "apps/factory-dispatcher/guards.py:299"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "a dev.task bead",
+          "when": "its content is read",
+          "then": "it carries no attempts, max_attempts, lease holder or timeout field",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "a task that fails and is retried",
+          "when": "the retry budget is consulted",
+          "then": "the budget comes from the workflow engine's retry policy, not from bead content",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "the conformance job",
+          "when": "it runs",
+          "then": "it reports zero PILLAR10 warnings",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-SUB-002",
+      "capability": "CAP-SUB",
+      "title": "Agent-authored beads carry complete provenance",
+      "status": "implemented",
+      "priority": "P0",
+      "source": "derived-from-implementation",
+      "rationale": "A bead written by a model with no attribution is indistinguishable from one a human wrote, which makes every later trust judgement guesswork.",
+      "implementation": [
+        "apps/substrate/src/schemas.py:808",
+        "apps/substrate/src/schemas.py (BeadProvenance)"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "a bead whose created_by names a known agent writer",
+          "when": "it is created with empty provenance",
+          "then": "the write is rejected",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "a provenance record",
+          "when": "it is validated",
+          "then": "worker, model, prompt_ref, tokens, cost_usd and duration_s are all required and extra keys are forbidden",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "a bead written by a writer the validator does not recognise as an agent",
+          "when": "it is created with no provenance",
+          "then": "the omission is detected and reported",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-SUB-003",
+      "capability": "CAP-SUB",
+      "title": "The edge vocabulary is closed and validated",
+      "status": "implemented",
+      "priority": "P1",
+      "source": "architecture-mandated",
+      "rationale": "A graph whose edge types are free text cannot be queried with confidence: a typo creates a new relationship rather than an error.",
+      "implementation": [
+        "apps/substrate/src/schemas.py:853"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "a bead_link with an undocumented link_type",
+          "when": "it is created",
+          "then": "it is rejected",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "the documented edge vocabulary",
+          "when": "it is compared with the edge types the EA loader actually writes",
+          "then": "they agree",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-SUB-004",
+      "capability": "CAP-SUB",
+      "title": "A declared state machine governs every write that changes state",
+      "status": "partial",
+      "priority": "P1",
+      "source": "architecture-mandated",
+      "rationale": "ARCHITECTURE.md Sec 3.1 names the legal edges of a bead's lifecycle. A machine that is declared but never consulted is documentation, not a control: it reads as a guarantee to everyone downstream while permitting the edge it forbids. The gap only becomes visible when something writes an illegal edge and nothing objects, which is a bad moment to learn the control was advisory.",
+      "implementation": [
+        "apps/substrate/src/routes.py:127",
+        "apps/substrate/src/routes.py:224",
+        "apps/substrate/src/routes.py:281",
+        "apps/substrate/src/routes.py:324"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "a bead whose (namespace, type) has a declared state machine",
+          "when": "PATCH /beads/{id} requests a transition the machine does not declare",
+          "then": "the write is rejected with 422 and nothing is committed",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "a bead whose (namespace, type) has a declared state machine",
+          "when": "POST /beads/{id}/transition requests an undeclared transition",
+          "then": "it is rejected with 422 before the conditional UPDATE runs",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "a dev.task whose review ended without the work shipping",
+          "when": "an exit from review is required",
+          "then": "the machine declares one that is neither done nor a silent return to the queue",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-4",
+          "given": "every (namespace, type) pair the platform actively writes",
+          "when": "STATE_MACHINES is consulted",
+          "then": "each has a declared machine, so no vertical's lifecycle is unconstrained",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-TRU-001",
+      "capability": "CAP-TRU",
+      "title": "Any merged change can be reverted by one measured command",
+      "status": "absent",
+      "priority": "P0",
+      "source": "architecture-mandated",
+      "rationale": "G4 makes a proven revert path a precondition of automatic merge. Configured is not measured: a revert whose duration nobody has timed is an assertion.",
+      "implementation": [
+        "scripts/rollback.sh"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "a deployed component",
+          "when": "a rollback is attempted",
+          "then": "a prior version exists to return to",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "the rollback script",
+          "when": "no digest exists to roll back to",
+          "then": "it refuses honestly rather than reporting success",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "a revert",
+          "when": "it has been performed at least once",
+          "then": "its duration is recorded",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-4",
+          "given": "a change",
+          "when": "auto-merge eligibility is evaluated",
+          "then": "revertibility is a checkable property rather than a claim in a document",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "PC-TRU-002",
+      "capability": "CAP-TRU",
+      "title": "A secret never reaches the repository or a log",
+      "status": "implemented",
+      "priority": "P0",
+      "source": "operating-record",
+      "rationale": "Two substrate keys were exposed and rotated in August 2026. The control that failed was a scanner configuration, not the scanner.",
+      "implementation": [
+        ".gitleaks.toml",
+        ".github/workflows/secret-scan.yml",
+        "scripts/tests/test_gitleaks_rules.py"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "a commit containing a credential",
+          "when": "CI runs",
+          "then": "the scan fails",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "the scanner configuration",
+          "when": "it extends a base ruleset",
+          "then": "the extension does not silently disable the rules it inherits",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    }
+  ],
+  "open_questions_for_owner": [],
+  "audit_limitations": [
+    "This is an example registry; nothing in it was measured."
+  ],
+  "nfr_category_mapping": {
+    "reliability": "ISO 25010 reliability",
+    "security": "ISO 25010 security",
+    "maintainability": "ISO 25010 maintainability"
+  }
+}

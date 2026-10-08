@@ -1,0 +1,17 @@
+# Registered knowledge sources for the KnowledgeIngestion workflow.
+#
+# Registering a source here is a PR, so intake is reviewable. The workflow files exactly one
+# extraction dev.task per unfiled source and, once that task's PR merges, lands its candidates as
+# proposed arch.principle beads.
+#
+# Entry fields:
+#   id        - stable slug; also the filename stem for the takeaways doc the extraction produces
+#   kind      - one of: book-takeaways, audit, incident-record, external-doc
+#   reference - repo path or free-text pointer to the material
+#   title     - human label for the extraction task's title
+#   summary   - one or two sentences of context for the worker's intent
+#   filed     - advisory only; the workflow's idempotency check is a live substrate query
+#
+# The exporting operator's own sources stay with the operator. Add yours below.
+
+sources: []

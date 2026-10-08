@@ -1,0 +1,470 @@
+{
+  "header": {
+    "fixture": "queue-synthetic-2026-09-23",
+    "built_by": "outer-loop/claude (R26.12 B0a, attended), by hand -- no store read",
+    "built_at_main_revision": "15aa20cdb442dd296d11a96ea42ddec34d007f1d",
+    "now": "2026-10-08T12:00:00Z",
+    "built_from": "the SHAPE of tests/fixtures/queue-2026-09-23-latched.json (tasks {id, state, created_at, updated_at, content: [lane, title, predecessor_bead_ids, outcome_ref, source_bead_ids, scope.paths, requirement_refs, budget]}, notes_by_task, links (delivers), releases {id, state, content: [ref, opened_at, target_at, sprints, declared_balance, outcomes]}, all_task_ids_by_state), plus a top-level claimable_since per task for the injected provider; design docs/plans/2026-09-23-design-r2612-steerable-and-legible.md, section 'queue-synthetic-2026-09-23.json'",
+    "policy": {
+      "urgency_bands": {
+        "medium": 0.33,
+        "high": 0.66
+      },
+      "aging_days": 14
+    },
+    "impact": "medium (default)",
+    "expected_ranked": [
+      "AG",
+      "X",
+      "AF",
+      "P",
+      "Q",
+      "Y"
+    ],
+    "expected_held": {
+      "D": "predecessor P unlanded",
+      "Z": "release RC not in_flight"
+    },
+    "arithmetic": "ARITHMETIC at now: RB elapsed 7/12 = 0.58 -> medium; RA 7/37 = 0.19 -> low; impact medium -> RB own P3, RA own P4. age_days AG 15, X 2, AF 1, P 6, Q 10, Y 5 -> aged_steps AG 1, others 0. Inheritance P <- D (P3). effective_priority: AG P2; X, AF, P P3; Q, Y P4. k1b within P3: X, AF (10-13) < P (11-07). k3: X (10-06) < AF (10-07T12); Q (09-28) < Y (10-03). Result [AG, X, AF, P, Q, Y]; six selectable, two held; every RB bead precedes every RA bead; created_at order disagrees with rank order (Q, Y created before X, AF).",
+    "arithmetic_conventions": "Dates without a time are 00:00:00Z. elapsed = whole days from opened_at to now over whole days opened_at..target_at (7/12, 7/37); with now's 12:00 counted it is 7.5/12 = 0.625 and 7.5/37 = 0.203, which land in the same bands. age_days = floor(days from claimable_since to now); aged_steps = floor(age_days / aging_days), at most 3, each step raising priority one level (P3 -> P2). claimable_since = created_at unless stated. The urgency x impact matrix at impact medium: urgency low -> P4, medium -> P3, high -> P2. Inheritance: a bead takes the best effective priority of the pending beads naming it in predecessor_bead_ids (P <- D). k1b: within one priority, the earlier release target_at first; k3: then the earlier claimable_since.",
+    "releases_note": "RA and RB in_flight; RC planned (2026-11-01..2026-12-13).",
+    "tasks_note": "every task pending, no notes, scope.paths non-empty, no blocking question.",
+    "verification": {
+      "by": "scratchpad build_synthetic.py at build time (independent recomputation, not the module under test)",
+      "guards_is_runnable": {
+        "selectable": [
+          "AF",
+          "AG",
+          "P",
+          "Q",
+          "X",
+          "Y"
+        ],
+        "held_reasons": {
+          "D": "waiting for predecessor bead P to land (state=pending)",
+          "Z": "delivers RC (planned), not in_flight"
+        }
+      },
+      "elapsed": {
+        "RA": {
+          "elapsed_whole_days": 0.1892,
+          "elapsed_exact": 0.2027,
+          "band_whole": "low",
+          "band_exact": "low"
+        },
+        "RB": {
+          "elapsed_whole_days": 0.5833,
+          "elapsed_exact": 0.625,
+          "band_whole": "medium",
+          "band_exact": "medium"
+        },
+        "RC": {
+          "elapsed_whole_days": -0.5714,
+          "elapsed_exact": -0.5595,
+          "band_whole": "low",
+          "band_exact": "low"
+        }
+      },
+      "age_days": {
+        "AG": 15,
+        "X": 2,
+        "AF": 1,
+        "P": 6,
+        "Q": 10,
+        "Y": 5,
+        "D": 3
+      },
+      "aged_steps": {
+        "AG": 1,
+        "X": 0,
+        "AF": 0,
+        "P": 0,
+        "Q": 0,
+        "Y": 0,
+        "D": 0
+      },
+      "effective_priority": {
+        "AG": "P2",
+        "X": "P3",
+        "AF": "P3",
+        "P": "P3",
+        "Q": "P4",
+        "Y": "P4",
+        "D": "P3"
+      },
+      "held_not_ranked": "D and Z are held, so they carry no rank; D is listed above only as the inheritance source (own P3 -> P)",
+      "ranked_recomputed": [
+        "AG",
+        "X",
+        "AF",
+        "P",
+        "Q",
+        "Y"
+      ],
+      "created_at_order_of_ranked": [
+        "AG",
+        "Q",
+        "P",
+        "Y",
+        "X",
+        "AF"
+      ],
+      "all_asserts_passed": true
+    }
+  },
+  "tasks": [
+    {
+      "id": "AG",
+      "state": "pending",
+      "created_at": "2026-09-01T00:00:00Z",
+      "updated_at": "2026-09-01T00:00:00Z",
+      "claimable_since": "2026-09-23T12:00:00Z",
+      "content": {
+        "lane": "feature",
+        "title": "synthetic bead AG (RB)",
+        "predecessor_bead_ids": [],
+        "outcome_ref": "O-1",
+        "source_bead_ids": [],
+        "scope": {
+          "paths": [
+            "apps/factory-dispatcher/queue_order.py"
+          ]
+        },
+        "requirement_refs": [
+          "PC-EXE-005/AC-1"
+        ],
+        "budget": {
+          "max_usd": 1.0,
+          "max_tokens": 100000,
+          "max_agent_minutes": 10
+        }
+      }
+    },
+    {
+      "id": "X",
+      "state": "pending",
+      "created_at": "2026-10-06T00:00:00Z",
+      "updated_at": "2026-10-06T00:00:00Z",
+      "claimable_since": "2026-10-06T00:00:00Z",
+      "content": {
+        "lane": "feature",
+        "title": "synthetic bead X (RB)",
+        "predecessor_bead_ids": [],
+        "outcome_ref": "O-1",
+        "source_bead_ids": [],
+        "scope": {
+          "paths": [
+            "apps/factory-dispatcher/queue_order.py"
+          ]
+        },
+        "requirement_refs": [
+          "PC-EXE-005/AC-1"
+        ],
+        "budget": {
+          "max_usd": 1.0,
+          "max_tokens": 100000,
+          "max_agent_minutes": 10
+        }
+      }
+    },
+    {
+      "id": "AF",
+      "state": "pending",
+      "created_at": "2026-10-07T00:00:00Z",
+      "updated_at": "2026-10-07T00:00:00Z",
+      "claimable_since": "2026-10-07T12:00:00Z",
+      "content": {
+        "lane": "feature",
+        "title": "synthetic bead AF (RB)",
+        "predecessor_bead_ids": [],
+        "outcome_ref": "O-1",
+        "source_bead_ids": [],
+        "scope": {
+          "paths": [
+            "apps/factory-dispatcher/queue_order.py"
+          ]
+        },
+        "requirement_refs": [
+          "PC-EXE-005/AC-1"
+        ],
+        "budget": {
+          "max_usd": 1.0,
+          "max_tokens": 100000,
+          "max_agent_minutes": 10
+        }
+      }
+    },
+    {
+      "id": "P",
+      "state": "pending",
+      "created_at": "2026-10-02T00:00:00Z",
+      "updated_at": "2026-10-02T00:00:00Z",
+      "claimable_since": "2026-10-02T00:00:00Z",
+      "content": {
+        "lane": "feature",
+        "title": "synthetic bead P (RA)",
+        "predecessor_bead_ids": [],
+        "outcome_ref": "O-1",
+        "source_bead_ids": [],
+        "scope": {
+          "paths": [
+            "apps/factory-dispatcher/queue_order.py"
+          ]
+        },
+        "requirement_refs": [
+          "PC-EXE-005/AC-1"
+        ],
+        "budget": {
+          "max_usd": 1.0,
+          "max_tokens": 100000,
+          "max_agent_minutes": 10
+        }
+      }
+    },
+    {
+      "id": "Q",
+      "state": "pending",
+      "created_at": "2026-09-28T00:00:00Z",
+      "updated_at": "2026-09-28T00:00:00Z",
+      "claimable_since": "2026-09-28T00:00:00Z",
+      "content": {
+        "lane": "feature",
+        "title": "synthetic bead Q (RA)",
+        "predecessor_bead_ids": [],
+        "outcome_ref": "O-1",
+        "source_bead_ids": [],
+        "scope": {
+          "paths": [
+            "apps/factory-dispatcher/queue_order.py"
+          ]
+        },
+        "requirement_refs": [
+          "PC-EXE-005/AC-1"
+        ],
+        "budget": {
+          "max_usd": 1.0,
+          "max_tokens": 100000,
+          "max_agent_minutes": 10
+        }
+      }
+    },
+    {
+      "id": "Y",
+      "state": "pending",
+      "created_at": "2026-10-03T00:00:00Z",
+      "updated_at": "2026-10-03T00:00:00Z",
+      "claimable_since": "2026-10-03T00:00:00Z",
+      "content": {
+        "lane": "feature",
+        "title": "synthetic bead Y (RA)",
+        "predecessor_bead_ids": [],
+        "outcome_ref": "O-1",
+        "source_bead_ids": [],
+        "scope": {
+          "paths": [
+            "apps/factory-dispatcher/queue_order.py"
+          ]
+        },
+        "requirement_refs": [
+          "PC-EXE-005/AC-1"
+        ],
+        "budget": {
+          "max_usd": 1.0,
+          "max_tokens": 100000,
+          "max_agent_minutes": 10
+        }
+      }
+    },
+    {
+      "id": "D",
+      "state": "pending",
+      "created_at": "2026-10-05T00:00:00Z",
+      "updated_at": "2026-10-05T00:00:00Z",
+      "claimable_since": "2026-10-05T00:00:00Z",
+      "content": {
+        "lane": "feature",
+        "title": "synthetic bead D (RB)",
+        "predecessor_bead_ids": [
+          "P"
+        ],
+        "outcome_ref": "O-1",
+        "source_bead_ids": [],
+        "scope": {
+          "paths": [
+            "apps/factory-dispatcher/queue_order.py"
+          ]
+        },
+        "requirement_refs": [
+          "PC-EXE-005/AC-1"
+        ],
+        "budget": {
+          "max_usd": 1.0,
+          "max_tokens": 100000,
+          "max_agent_minutes": 10
+        }
+      }
+    },
+    {
+      "id": "Z",
+      "state": "pending",
+      "created_at": "2026-09-01T00:00:00Z",
+      "updated_at": "2026-09-01T00:00:00Z",
+      "claimable_since": "2026-09-01T00:00:00Z",
+      "content": {
+        "lane": "feature",
+        "title": "synthetic bead Z (RC)",
+        "predecessor_bead_ids": [],
+        "outcome_ref": "O-1",
+        "source_bead_ids": [],
+        "scope": {
+          "paths": [
+            "apps/factory-dispatcher/queue_order.py"
+          ]
+        },
+        "requirement_refs": [
+          "PC-EXE-005/AC-1"
+        ],
+        "budget": {
+          "max_usd": 1.0,
+          "max_tokens": 100000,
+          "max_agent_minutes": 10
+        }
+      }
+    }
+  ],
+  "notes_by_task": {
+    "AG": [],
+    "X": [],
+    "AF": [],
+    "P": [],
+    "Q": [],
+    "Y": [],
+    "D": [],
+    "Z": []
+  },
+  "links": [
+    {
+      "source_id": "AG",
+      "target_id": "RB"
+    },
+    {
+      "source_id": "X",
+      "target_id": "RB"
+    },
+    {
+      "source_id": "AF",
+      "target_id": "RB"
+    },
+    {
+      "source_id": "P",
+      "target_id": "RA"
+    },
+    {
+      "source_id": "Q",
+      "target_id": "RA"
+    },
+    {
+      "source_id": "Y",
+      "target_id": "RA"
+    },
+    {
+      "source_id": "D",
+      "target_id": "RB"
+    },
+    {
+      "source_id": "Z",
+      "target_id": "RC"
+    }
+  ],
+  "releases": [
+    {
+      "id": "RA",
+      "state": "in_flight",
+      "content": {
+        "ref": "RA",
+        "opened_at": "2026-10-01",
+        "target_at": "2026-11-07",
+        "sprints": [
+          "A1",
+          "A2",
+          "A3"
+        ],
+        "declared_balance": {
+          "feature": 100,
+          "enabling": 0,
+          "blocking": 0,
+          "risk": 0,
+          "security": 0
+        },
+        "outcomes": [
+          {
+            "id": "O-1",
+            "work_class": "feature"
+          }
+        ]
+      }
+    },
+    {
+      "id": "RB",
+      "state": "in_flight",
+      "content": {
+        "ref": "RB",
+        "opened_at": "2026-10-01",
+        "target_at": "2026-10-13",
+        "sprints": [
+          "B1"
+        ],
+        "declared_balance": {
+          "feature": 100,
+          "enabling": 0,
+          "blocking": 0,
+          "risk": 0,
+          "security": 0
+        },
+        "outcomes": [
+          {
+            "id": "O-1",
+            "work_class": "feature"
+          }
+        ]
+      }
+    },
+    {
+      "id": "RC",
+      "state": "planned",
+      "content": {
+        "ref": "RC",
+        "opened_at": "2026-11-01",
+        "target_at": "2026-12-13",
+        "sprints": [
+          "C1",
+          "C2",
+          "C3"
+        ],
+        "declared_balance": {
+          "feature": 100,
+          "enabling": 0,
+          "blocking": 0,
+          "risk": 0,
+          "security": 0
+        },
+        "outcomes": [
+          {
+            "id": "O-1",
+            "work_class": "feature"
+          }
+        ]
+      }
+    }
+  ],
+  "all_task_ids_by_state": {
+    "AG": "pending",
+    "X": "pending",
+    "AF": "pending",
+    "P": "pending",
+    "Q": "pending",
+    "Y": "pending",
+    "D": "pending",
+    "Z": "pending"
+  }
+}

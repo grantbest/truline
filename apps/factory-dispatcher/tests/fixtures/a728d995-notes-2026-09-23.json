@@ -1,0 +1,505 @@
+{
+  "header": {
+    "fixture": "a728d995-notes-2026-09-23",
+    "captured_at": "2026-09-25T20:44:42Z",
+    "main_revision": "15aa20cdb442dd296d11a96ea42ddec34d007f1d",
+    "captured_by": "outer-loop/claude (R26.12 B0a, attended)",
+    "capture_method": "set -a; . ~/.factory-dispatcher/env; set +a; venv/bin/python with sys.path += apps/factory-dispatcher; substrate.default_store(); GET only (httpx.request wrapped to refuse any non-GET); every population paged by offset at limit 200 until a short page (dev.task, dev.note per parent_id, arch.release, arch.change, arch.requirement_conformance, dev.release, arch.observation); links via GET /beads/{id}/links (unpaged route).",
+    "date_in_filename": "The filename keeps the 2026-09-23 date the design (docs/plans/2026-09-23-design-r2612-steerable-and-legible.md, 'Fixtures the outer loop commits with the first specs (D7)') and the PC-* acceptance criteria name; the capture itself is dated by captured_at.",
+    "task_id": "a728d995-3c70-46b0-bc84-4352bfcaa1a8",
+    "task_state_at_capture": "done",
+    "task_updated_at": "2026-09-23T20:41:56.037772Z",
+    "note_count": 42,
+    "expected_streak_today": {
+      "signature": "b07f6582e8def74c",
+      "streak": 3
+    },
+    "expected_streak_rule": "dispatch.trailing_environmental_fault_streak(list_notes(task_id)) at capture, on the full stored notes",
+    "expected_streak_from_fixture": {
+      "signature": "b07f6582e8def74c",
+      "streak": 3
+    },
+    "fault_note_ids": [
+      "f5eb428c-a2ce-4049-9861-764877e25246",
+      "677ce0a3-05ba-4e53-920c-5e3145b634d2",
+      "0dd98715-b2b2-4ef2-a582-af4c3d2da779"
+    ],
+    "fault_note_rule": "notes carrying environmental_fault_signature created on 2026-09-17",
+    "worker_finished_note_id": "077c48cc-baad-4aed-9922-b0d07e53c42a",
+    "worker_finished_note_at": "2026-09-17T17:54:47.711910Z",
+    "worker_finished_notes_all": [
+      {
+        "id": "fdc42bb0-e7bb-417d-ad97-110a4ab1db68",
+        "created_at": "2026-09-16T01:49:24.529374Z"
+      },
+      {
+        "id": "077c48cc-baad-4aed-9922-b0d07e53c42a",
+        "created_at": "2026-09-17T17:54:47.711910Z"
+      },
+      {
+        "id": "a802c611-7855-4e6d-8478-b7c66804dfeb",
+        "created_at": "2026-09-23T19:22:50.097459Z"
+      },
+      {
+        "id": "263031bf-ddf8-49f3-aa9c-a03fa0ce779e",
+        "created_at": "2026-09-23T20:13:02.765399Z"
+      }
+    ],
+    "requeue_barrier_note_id": "967bff03-96f1-4e30-a9a8-2554c90cf934",
+    "requeue_barrier_note_at": "2026-09-17T18:28:01.381349Z",
+    "requeue_barrier_reason": "PR #908 returned DO-NOT-MERGE; findings absorbed and AC-3 rewritten. TWO BLOCKERS. (1) ea_observation.CREATED_BY and ea_dependency.CREATED_BY are the SAME string, so the retraction loop at ea_dependency.py:528-532 deletes the application->ci edges land_ci_records writes -- proven by execution (deleted link ids = ['link-app-to-ci']), and guaranteed to loop because land_ci_records runs at line 1266 and land_dependency_posture at 1282 inside one observe_ea_model call. Measured blast radius from production: 63 such edges exist, all by factory-dispatcher/ea-observer. Fix: give the dependency writer its OWN created_by AND restrict the retraction loop and final_targets to targets that are arch.application; add a test seeding an app->ci edge under the observer's own identity and asserting it survives. (2) THE OUTER LOOP'S FAULT: AC-3 as re-specified this morning was UNSATISFIABLE -- it forbade the live store, forbade the repo, and named a snapshot carrying posture but not workload identity, while requiring the observer be exercised against the cluster; content.workload.objects is store-resident only. AC-3 IS REWRITTEN: the worker no longer reports after-counts at all and SHALL NOT be penalised for their absence; the outer loop runs the live comparison at the gate. AC-3 also now requires the target-type narrowing to have a PRODUCTION CALLER (finding 3: it had none, living only in an uncommitted script), and corrects its own false claim that zero application->ci edges exist -- there are 63, so the F-E coherence case is common, not narrow. Preserved work KEPT: the gate judged this materially better than #863, with carried findings F1/F1b/F3 genuinely fixed and ratchets fired rather than credited. Build on it. Finding 5 (_owner_by_object duplicating ea_observation._owner_lookup) is STRUCTURAL and must NOT ride this behavioral bead.",
+    "resets_attempts_notes_all": [
+      {
+        "id": "e02a4c73-8bb2-4cbd-8d07-d364886438f0",
+        "created_at": "2026-09-17T13:13:11.504650Z",
+        "requeue_reason": "Release condition met 2026-09-17: PR #866 merged, so the dated dependency-posture snapshot AC-3 cites now exists on main at apps/factory-dispatcher/tasks/snapshots/2026-09-15-application-dependency-posture.json. The worker can measure against the committed snapshot without reading the live store (D7). PR #863's blocking gate findings F1 (every computed edge's method must name its target application) and F1b (the writer must be able to retract) remain binding via acceptance[5]."
+      },
+      {
+        "id": "967bff03-96f1-4e30-a9a8-2554c90cf934",
+        "created_at": "2026-09-17T18:28:01.381349Z",
+        "requeue_reason": "PR #908 returned DO-NOT-MERGE; findings absorbed and AC-3 rewritten. TWO BLOCKERS. (1) ea_observation.CREATED_BY and ea_dependency.CREATED_BY are the SAME string, so the retraction loop at ea_dependency.py:528-532 deletes the application->ci edges land_ci_records writes -- proven by execution (deleted link ids = ['link-app-to-ci']), and guaranteed to loop because land_ci_records runs at line 1266 and land_dependency_posture at 1282 inside one observe_ea_model call. Measured blast radius from production: 63 such edges exist, all by factory-dispatcher/ea-observer. Fix: give the dependency writer its OWN created_by AND restrict the retraction loop and final_targets to targets that are arch.application; add a test seeding an app->ci edge under the observer's own identity and asserting it survives. (2) THE OUTER LOOP'S FAULT: AC-3 as re-specified this morning was UNSATISFIABLE -- it forbade the live store, forbade the repo, and named a snapshot carrying posture but not workload identity, while requiring the observer be exercised against the cluster; content.workload.objects is store-resident only. AC-3 IS REWRITTEN: the worker no longer reports after-counts at all and SHALL NOT be penalised for their absence; the outer loop runs the live comparison at the gate. AC-3 also now requires the target-type narrowing to have a PRODUCTION CALLER (finding 3: it had none, living only in an uncommitted script), and corrects its own false claim that zero application->ci edges exist -- there are 63, so the F-E coherence case is common, not narrow. Preserved work KEPT: the gate judged this materially better than #863, with carried findings F1/F1b/F3 genuinely fixed and ratchets fired rather than credited. Build on it. Finding 5 (_owner_by_object duplicating ea_observation._owner_lookup) is STRUCTURAL and must NOT ride this behavioral bead."
+      },
+      {
+        "id": "a3542544-5e16-48b0-aef7-dede984a183d",
+        "created_at": "2026-09-23T19:50:54.636127Z",
+        "requeue_reason": "DO-NOT-MERGE at #997 on an enrollment refusal the spec caused: AC-7(a) applied one new identity to edges AND observation beads, and SOURCE_CLASS_WRITERS['observed'] refuses it at create and PATCH. AC-7(a) narrowed 2026-09-23 to edge identity only (observations under ea_observation.CREATED_BY), doubles must refuse what the store refuses, AC-8 carries the gate's M1/M3. #997's diff is preserved as the baseline; every carried #863/#908 finding was addressed there."
+      }
+    ],
+    "notes_after_the_requeue_barrier": 14,
+    "changed_since_design": "The bead is now 'done' (it was pending and latched at 2026-09-23). Its note list has grown past the 2026-09-17 events the ACs name: 14 notes follow the 18:28:01Z barrier (later dispatches, reviews and the merge). None of them is a dispatch-outcome note, so expected_streak_today over the FULL list equals streak_through_barrier (the 2026-09-23 shape) -- the B3 defect itself: the streak ignores both the barrier and every later 'Worker finished in' note. The header ids the breaker-exit ACs remove are the ones the design names.",
+    "streak_through_barrier": {
+      "signature": "b07f6582e8def74c",
+      "streak": 3,
+      "note_count": 28,
+      "rule": "trailing_environmental_fault_streak over notes with created_at <= requeue_barrier_note_at"
+    },
+    "note_reduction": "Each note is {id, created_at, created_by, content: {kind, body_first_line = dispatch.redact_sensitive_output(body).splitlines()[0][:200], ...kind extras}}. status: + environmental_fault_signature, resets_attempts, preserved_choice, releases_work, expedite, class_of_service, expedite_reason, expedite_until (each only if present on the stored note) and requeue_reason (derived: for a resets_attempts note the text after guards._REQUEUE_REASON_MARKER 'Reason:' with the _REQUEUE_PRESERVED_SUFFIX_MARKER tail stripped, parsed from the FULL redacted body; else null). review: + verdict, url (+ pr_url when the stored note carries one). question: + blocking, answers_ref. answer: + answers_ref (+ releases_work when present -- guards.open_questions reads it on the answer, so it is kept there too). attachment: + url. Dropped: provenance, context, trust_tier, full bodies. To feed a reduced note to a guards/dispatch function that reads content.body, map body_first_line -> body; every prefix those functions test for is on the first line (verified at build: see header.reconstruction_check).",
+    "redaction": "no provenance, no worker/model fields, no full bodies; PR URLs kept"
+  },
+  "notes": [
+    {
+      "id": "dac25fb1-da9e-4560-af9a-1b03bbebce26",
+      "created_at": "2026-09-16T01:30:08.401695Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Claimed by factory-dispatcher/claude. Isolating a clone, checking pristine declared verification, and running `claude -p` with a 80m budget.",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "e5fbaa56-ec1a-4caa-8769-4e412de5a931",
+      "created_at": "2026-09-16T01:48:27.441903Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "comment",
+        "body_first_line": "Architect/SME design judgment (Amendment 30):"
+      }
+    },
+    {
+      "id": "4f360f21-5cd7-497d-a36b-ec505e21033f",
+      "created_at": "2026-09-16T01:49:24.469417Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "attachment",
+        "body_first_line": "Pull request opened for review: https://github.com/grantbest/homelabv2/pull/863",
+        "url": "https://github.com/grantbest/homelabv2/pull/863"
+      }
+    },
+    {
+      "id": "fdc42bb0-e7bb-417d-ad97-110a4ab1db68",
+      "created_at": "2026-09-16T01:49:24.529374Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Worker finished in 999s, 2 file(s) changed, containment held, all changes within scope. Declared verification: Bootstrap: created clone-local `venv/` from /opt/homebrew/bin/python3.12 and installed re",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "dd6c4733-123d-424e-bc70-0da22bf3f319",
+      "created_at": "2026-09-16T02:23:55.033992Z",
+      "created_by": "claude-outer-loop",
+      "content": {
+        "kind": "review",
+        "body_first_line": "Release gate returned DO-NOT-MERGE on PR #863 (2026-09-15). Absorbed here; PR closed.",
+        "verdict": "request-changes",
+        "url": null
+      }
+    },
+    {
+      "id": "e63caadc-0b7e-4043-961e-d1e4636227d8",
+      "created_at": "2026-09-16T02:24:15.715576Z",
+      "created_by": "claude-outer-loop",
+      "content": {
+        "kind": "question",
+        "body_first_line": "HELD -- do not dispatch. AC-3 of this bead is unmeetable as written, and the",
+        "blocking": true,
+        "answers_ref": null
+      }
+    },
+    {
+      "id": "c822dac2-66a9-4c4c-b7ef-48861057fcab",
+      "created_at": "2026-09-16T02:24:34.464920Z",
+      "created_by": "claude-outer-loop",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Review ended without shipping: PR #863 (https://github.com/grantbest/homelabv2/pull/863) was closed without merging. State moved review->failed so this work does not silently become runnable again.",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "1e97b48e-e6b0-423b-a814-14422798be3f",
+      "created_at": "2026-09-16T02:51:41.155876Z",
+      "created_by": "claude-outer-loop",
+      "content": {
+        "kind": "status",
+        "body_first_line": "HOLD NARROWED, NOT LIFTED. Blocking question e63caadc stays open and this bead must",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "7440cede-c0fb-4a16-9cef-cea0fc0db8b8",
+      "created_at": "2026-09-16T04:24:12.873023Z",
+      "created_by": "claude-outer-loop",
+      "content": {
+        "kind": "status",
+        "body_first_line": "NARROWING THE app->ci ZERO-EDGE DISAGREEMENT. This bead's snapshot records it as",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "1c435480-fe5f-4261-8dc9-86ea51d9793b",
+      "created_at": "2026-09-16T12:48:41.149985Z",
+      "created_by": "outer-loop",
+      "content": {
+        "kind": "comment",
+        "body_first_line": "HOLD PROGRESS 2026-09-16 -- NOT A RELEASE. The blocking question stands and this bead must still not"
+      }
+    },
+    {
+      "id": "783e2ad1-57c7-45b3-8119-479867f9ba60",
+      "created_at": "2026-09-16T13:25:42.688554Z",
+      "created_by": "outer-loop",
+      "content": {
+        "kind": "comment",
+        "body_first_line": "CORRECTION 2026-09-16 TO THIS BEAD'S OWN NOTES, BY THE OUTER LOOP THAT WROTE THEM."
+      }
+    },
+    {
+      "id": "c654b05a-4dc6-4756-a530-62d4ba95442c",
+      "created_at": "2026-09-17T13:13:04.755938Z",
+      "created_by": "outer-loop",
+      "content": {
+        "kind": "answer",
+        "body_first_line": "RELEASED 2026-09-17 BY THE OUTER LOOP. The condition this hold named is met.",
+        "answers_ref": "e63caadc-0b7e-4043-961e-d1e4636227d8",
+        "releases_work": true
+      }
+    },
+    {
+      "id": "e02a4c73-8bb2-4cbd-8d07-d364886438f0",
+      "created_at": "2026-09-17T13:13:11.504650Z",
+      "created_by": "operator",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Returned to pending by an operator, with the retry budget restarted. Recorded failures before this point were judged not to have been spent on this task's work. Reason: Release condition met 2026-09-1",
+        "resets_attempts": true,
+        "preserved_choice": "keep",
+        "requeue_reason": "Release condition met 2026-09-17: PR #866 merged, so the dated dependency-posture snapshot AC-3 cites now exists on main at apps/factory-dispatcher/tasks/snapshots/2026-09-15-application-dependency-posture.json. The worker can measure against the committed snapshot without reading the live store (D7). PR #863's blocking gate findings F1 (every computed edge's method must name its target application) and F1b (the writer must be able to retract) remain binding via acceptance[5]."
+      }
+    },
+    {
+      "id": "01584507-bad8-4fb3-9776-429e80111668",
+      "created_at": "2026-09-17T13:30:08.301349Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Claimed by factory-dispatcher/claude. Isolating a clone, checking pristine declared verification, and running `claude -p` with a 80m budget.",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "f5eb428c-a2ce-4049-9861-764877e25246",
+      "created_at": "2026-09-17T13:33:01.281077Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Environmental fault: Activity task failed: DispatchEnvironmentError: Declared verification command `PYTHONPATH=. python -m pytest apps/factory-dispatcher/tests/ -q` failed before the worker ran. The f",
+        "environmental_fault_signature": "b07f6582e8def74c",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "dd09a9e6-8ddb-45c6-a5c9-4347bda2c263",
+      "created_at": "2026-09-17T13:45:08.384079Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Claimed by factory-dispatcher/claude. Isolating a clone, checking pristine declared verification, and running `claude -p` with a 80m budget.",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "677ce0a3-05ba-4e53-920c-5e3145b634d2",
+      "created_at": "2026-09-17T13:48:30.829177Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Environmental fault: Activity task failed: DispatchEnvironmentError: Declared verification command `PYTHONPATH=. python -m pytest apps/factory-dispatcher/tests/ -q` failed before the worker ran. The f",
+        "environmental_fault_signature": "b07f6582e8def74c",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "b66e3c12-bdc5-486c-a45e-e19878e1957c",
+      "created_at": "2026-09-17T14:00:09.402166Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Claimed by factory-dispatcher/claude. Isolating a clone, checking pristine declared verification, and running `claude -p` with a 80m budget.",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "0dd98715-b2b2-4ef2-a582-af4c3d2da779",
+      "created_at": "2026-09-17T14:03:03.949660Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Environmental fault: Activity task failed: DispatchEnvironmentError: Declared verification command `PYTHONPATH=. python -m pytest apps/factory-dispatcher/tests/ -q` failed before the worker ran. The f",
+        "environmental_fault_signature": "b07f6582e8def74c",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "76c2cd44-afba-43d0-b8af-9c8da129f651",
+      "created_at": "2026-09-17T17:14:11.751862Z",
+      "created_by": "operator",
+      "content": {
+        "kind": "comment",
+        "body_first_line": "RE-SPECIFIED 2026-09-17 by the outer loop: the hold is discharged."
+      }
+    },
+    {
+      "id": "5f82d8d3-6859-4b66-8775-db94eb70ce0d",
+      "created_at": "2026-09-17T17:18:03.017214Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Claimed by factory-dispatcher/claude. Isolating a clone, checking pristine declared verification, and running `claude -p` with a 80m budget.",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "91a03ef1-62af-4ac2-83b8-2ac05e961c02",
+      "created_at": "2026-09-17T17:20:49.442081Z",
+      "created_by": "operator",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Preserved work from https://github.com/grantbest/homelabv2/pull/863 could not be applied before this attempt began, so dispatch proceeds from a plain main instead: applying https://github.com/grantbes",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "7f90ad6b-1338-4ac1-98dc-81b2a3201295",
+      "created_at": "2026-09-17T17:53:17.709661Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "comment",
+        "body_first_line": "Architect/SME design judgment (Amendment 30):"
+      }
+    },
+    {
+      "id": "054201ee-e628-4f27-86e7-93a0dac45fc0",
+      "created_at": "2026-09-17T17:54:47.661208Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "attachment",
+        "body_first_line": "Pull request opened for review: https://github.com/grantbest/homelabv2/pull/908",
+        "url": "https://github.com/grantbest/homelabv2/pull/908"
+      }
+    },
+    {
+      "id": "077c48cc-baad-4aed-9922-b0d07e53c42a",
+      "created_at": "2026-09-17T17:54:47.711910Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Worker finished in 1948s, 4 file(s) changed, containment held, all changes within scope. Declared verification: Bootstrap: created clone-local `venv/` from /opt/homebrew/bin/python3.12 and installed r",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "cc787d61-0536-4dd3-b34d-242ed880cd50",
+      "created_at": "2026-09-17T18:27:26.392622Z",
+      "created_by": "operator",
+      "content": {
+        "kind": "comment",
+        "body_first_line": "GATE FINDINGS ABSORBED 2026-09-17. PR #908 returned DO-NOT-MERGE and is closed. TWO BLOCKING FINDINGS, ONE OF WHICH IS A SPEC DEFECT THE OUTER LOOP OWNS."
+      }
+    },
+    {
+      "id": "1d625401-f375-47b9-8835-ac7824016b06",
+      "created_at": "2026-09-17T18:27:49.580503Z",
+      "created_by": "operator",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Review ended without shipping: PR #908 (https://github.com/grantbest/homelabv2/pull/908) was closed without merging. State moved review->failed so this work does not silently become runnable again.",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "967bff03-96f1-4e30-a9a8-2554c90cf934",
+      "created_at": "2026-09-17T18:28:01.381349Z",
+      "created_by": "operator",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Returned to pending by an operator, with the retry budget restarted. Recorded failures before this point were judged not to have been spent on this task's work. Reason: PR #908 returned DO-NOT-MERGE; ",
+        "resets_attempts": true,
+        "preserved_choice": "keep",
+        "requeue_reason": "PR #908 returned DO-NOT-MERGE; findings absorbed and AC-3 rewritten. TWO BLOCKERS. (1) ea_observation.CREATED_BY and ea_dependency.CREATED_BY are the SAME string, so the retraction loop at ea_dependency.py:528-532 deletes the application->ci edges land_ci_records writes -- proven by execution (deleted link ids = ['link-app-to-ci']), and guaranteed to loop because land_ci_records runs at line 1266 and land_dependency_posture at 1282 inside one observe_ea_model call. Measured blast radius from production: 63 such edges exist, all by factory-dispatcher/ea-observer. Fix: give the dependency writer its OWN created_by AND restrict the retraction loop and final_targets to targets that are arch.application; add a test seeding an app->ci edge under the observer's own identity and asserting it survives. (2) THE OUTER LOOP'S FAULT: AC-3 as re-specified this morning was UNSATISFIABLE -- it forbade the live store, forbade the repo, and named a snapshot carrying posture but not workload identity, while requiring the observer be exercised against the cluster; content.workload.objects is store-resident only. AC-3 IS REWRITTEN: the worker no longer reports after-counts at all and SHALL NOT be penalised for their absence; the outer loop runs the live comparison at the gate. AC-3 also now requires the target-type narrowing to have a PRODUCTION CALLER (finding 3: it had none, living only in an uncommitted script), and corrects its own false claim that zero application->ci edges exist -- there are 63, so the F-E coherence case is common, not narrow. Preserved work KEPT: the gate judged this materially better than #863, with carried findings F1/F1b/F3 genuinely fixed and ratchets fired rather than credited. Build on it. Finding 5 (_owner_by_object duplicating ea_observation._owner_lookup) is STRUCTURAL and must NOT ride this behavioral bead."
+      }
+    },
+    {
+      "id": "b086fe61-bdfe-4f6a-943e-723e1948dcc7",
+      "created_at": "2026-09-23T15:13:51.544959Z",
+      "created_by": "outer-loop/claude",
+      "content": {
+        "kind": "comment",
+        "body_first_line": "AC-7 ADDED 2026-09-23 BY THE OUTER LOOP, BEFORE FORCING. This bead is latched at 3/3 on the environmental breaker and was about to be forced. Reading the #908 verdict first: its Finding 1 (BLOCKING, p"
+      }
+    },
+    {
+      "id": "e0e4cecb-e828-489e-a48c-6911987ac325",
+      "created_at": "2026-09-23T19:05:41.852877Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Claimed by factory-dispatcher/claude. Isolating a clone, checking pristine declared verification, and running `claude -p` with a 80m budget.",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "af61d70d-3b17-4036-8cfd-26febb264f14",
+      "created_at": "2026-09-23T19:07:30.733912Z",
+      "created_by": "outer-loop/claude",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Preserved work from https://github.com/grantbest/homelabv2/pull/863, https://github.com/grantbest/homelabv2/pull/908 applied as this attempt's starting point, before the worker began.",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "c1be9f15-a02f-4383-8b64-182c364c4021",
+      "created_at": "2026-09-23T19:21:49.287220Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "comment",
+        "body_first_line": "Architect/SME design judgment (Amendment 30):"
+      }
+    },
+    {
+      "id": "13cafe28-4c67-4d8f-b310-203c057bdc5e",
+      "created_at": "2026-09-23T19:22:50.040171Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "attachment",
+        "body_first_line": "Pull request opened for review: https://github.com/grantbest/homelabv2/pull/997",
+        "url": "https://github.com/grantbest/homelabv2/pull/997"
+      }
+    },
+    {
+      "id": "a802c611-7855-4e6d-8478-b7c66804dfeb",
+      "created_at": "2026-09-23T19:22:50.097459Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Worker finished in 858s, 4 file(s) changed, containment held, all changes within scope. Declared verification: Bootstrap: created clone-local `venv/` from /opt/homebrew/bin/python3.12 and installed re",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "670cf675-91d1-44a3-a2ef-31b72c3d6e86",
+      "created_at": "2026-09-23T19:50:16.685419Z",
+      "created_by": "outer-loop/claude",
+      "content": {
+        "kind": "review",
+        "body_first_line": "GATE VERDICT ON PR #997 (third attempt): DO-NOT-MERGE at 7404c249, 2026-09-23 19:4xZ (https://github.com/grantbest/homelabv2/pull/997#issuecomment-5801783933). The PR is closed; the bead returns to fa",
+        "verdict": "request-changes",
+        "url": null
+      }
+    },
+    {
+      "id": "3dc25511-a753-4d71-af0d-3ba924697a12",
+      "created_at": "2026-09-23T19:50:20.460196Z",
+      "created_by": "operator",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Review ended without shipping: PR #997 (https://github.com/grantbest/homelabv2/pull/997) was closed without merging. State moved review->failed so this work does not silently become runnable again.",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "a3542544-5e16-48b0-aef7-dede984a183d",
+      "created_at": "2026-09-23T19:50:54.636127Z",
+      "created_by": "operator",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Returned to pending by an operator, with the retry budget restarted. Recorded failures before this point were judged not to have been spent on this task's work. Reason: DO-NOT-MERGE at #997 on an enro",
+        "resets_attempts": true,
+        "preserved_choice": "keep",
+        "requeue_reason": "DO-NOT-MERGE at #997 on an enrollment refusal the spec caused: AC-7(a) applied one new identity to edges AND observation beads, and SOURCE_CLASS_WRITERS['observed'] refuses it at create and PATCH. AC-7(a) narrowed 2026-09-23 to edge identity only (observations under ea_observation.CREATED_BY), doubles must refuse what the store refuses, AC-8 carries the gate's M1/M3. #997's diff is preserved as the baseline; every carried #863/#908 finding was addressed there."
+      }
+    },
+    {
+      "id": "d9c67dfe-9c20-4793-97ab-ca086152a63a",
+      "created_at": "2026-09-23T19:54:58.704806Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Claimed by factory-dispatcher/claude. Isolating a clone, checking pristine declared verification, and running `claude -p` with a 80m budget.",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "be385a10-933e-4632-84f2-7c3e34c4a849",
+      "created_at": "2026-09-23T19:58:38.241098Z",
+      "created_by": "operator",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Preserved work from https://github.com/grantbest/homelabv2/pull/863, https://github.com/grantbest/homelabv2/pull/908, https://github.com/grantbest/homelabv2/pull/997 applied as this attempt's starting",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "c7da8045-ec78-4083-a78c-16413c80a1ad",
+      "created_at": "2026-09-23T20:13:02.707548Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "attachment",
+        "body_first_line": "Pull request opened for review: https://github.com/grantbest/homelabv2/pull/1000",
+        "url": "https://github.com/grantbest/homelabv2/pull/1000"
+      }
+    },
+    {
+      "id": "263031bf-ddf8-49f3-aa9c-a03fa0ce779e",
+      "created_at": "2026-09-23T20:13:02.765399Z",
+      "created_by": "factory-dispatcher/claude",
+      "content": {
+        "kind": "status",
+        "body_first_line": "Worker finished in 804s, 4 file(s) changed, containment held, all changes within scope. Declared verification: Bootstrap: created clone-local `venv/` from /opt/homebrew/bin/python3.12 and installed re",
+        "requeue_reason": null
+      }
+    },
+    {
+      "id": "7f65db70-002d-4687-9e56-d611df6c281a",
+      "created_at": "2026-09-24T11:38:56.957381Z",
+      "created_by": "outer-loop/claude",
+      "content": {
+        "kind": "comment",
+        "body_first_line": "R26.09/O-3 CLOSE MEASUREMENT, recorded by the outer loop 2026-09-24 (main 340c5652). This is the"
+      }
+    }
+  ]
+}

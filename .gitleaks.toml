@@ -1,0 +1,20 @@
+# gitleaks configuration. `[extend] useDefault = true` keeps the built-in
+# ruleset; a config that declares [[rules]] without it REPLACES the defaults.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Known safe shapes"
+regexes = [
+  '''age1[a-z0-9]{58}''',
+  '''\$\{[A-Z_]+\}''',
+  '''\$\([A-Z_]+\)''',
+]
+
+[[rules]]
+id = "bare-hex-credential-assignment"
+description = "Bare 64-char hex assigned to a *_KEY / *_TOKEN / *_SECRET identifier"
+regex = '''(?i)\b[\w.-]*(?:key|token|secret)\b\s*[:=]\s*["'`]?([0-9a-f]{64})["'`]?'''
+secretGroup = 1
+keywords = ["key", "token", "secret"]
+tags = ["secret", "generic"]

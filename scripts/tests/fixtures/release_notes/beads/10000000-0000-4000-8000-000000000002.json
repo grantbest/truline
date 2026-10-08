@@ -1,0 +1,12 @@
+{
+  "id": "10000000-0000-4000-8000-000000000002",
+  "namespace": "dev",
+  "type": "task",
+  "state": "review",
+  "content": {
+    "title": "Risk work still under review",
+    "lane": "platform",
+    "outcome_ref": "O-2",
+    "pr_url": "https://github.com/grantbest/homelabv2/pull/702"
+  }
+}

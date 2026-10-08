@@ -1,0 +1,11 @@
+{
+  "snapshot_version": 1,
+  "snapshot_kind": "example",
+  "measured_by": "EXAMPLE FIXTURE -- not a live measurement",
+  "purpose": "Schema example for scripts/spec_record_coverage.py's --snapshot argument, committed under the dispatcher's test tree per CLAUDE.md decision record D7: a spec that needs store-shaped evidence names a fixture or snapshot the outer loop commits, and the check itself SHALL NEVER read the live store. This worker had no substrate credentials and no route to query the real dev.task population, so the titles below are illustrative placeholders shaped like the three classes the check distinguishes (a shipped/done bead, a still-queued/pending bead, a title with no bead at all) -- not a dump of production state. A real, dated snapshot for actual gate use is the outer loop's to commit and refresh, the same way apps/factory-dispatcher/tasks/snapshots/2026-09-15-application-dependency-posture.json was for a728d995. \"snapshot_kind\": \"example\" is load-bearing, not decoration: scripts/spec_record_coverage.py's load_snapshot() refuses (UntrustedSnapshotError, CLI exit 2) any snapshot that is not explicitly \"snapshot_kind\": \"measured\", so this file is now mechanically rejected instead of silently agreeing that these three placeholder rows are real bead state (the #931 F1 finding this fixture caused).",
+  "tasks": [
+    {"title": "Example: a spec whose work already shipped", "state": "done"},
+    {"title": "Example: a spec still queued and not yet actioned", "state": "pending"},
+    {"title": "Example: a spec that failed its attempt", "state": "failed"}
+  ]
+}

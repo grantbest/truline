@@ -1,0 +1,16 @@
+{
+  "number": 104,
+  "body": "Dispatched-bead id: 123e4567-e89b-12d3-a456-426614174002\nChange kind: structural\n\n## Verification Evidence\npython -m pytest scripts/tests/ -q\n",
+  "changed_files": [
+    ".github/workflows/build.yml"
+  ],
+  "ci_conclusion": "success",
+  "bead": {
+    "scope": {
+      "paths": [
+        ".github/**"
+      ],
+      "forbidden_paths": []
+    }
+  }
+}

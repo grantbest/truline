@@ -1,0 +1,1380 @@
+{
+  "header": {
+    "fixture": "queue-2026-09-23-latched",
+    "captured_at": "2026-09-25T20:44:42Z",
+    "capture_finished_at": "2026-09-25T20:45:22Z",
+    "main_revision": "15aa20cdb442dd296d11a96ea42ddec34d007f1d",
+    "captured_by": "outer-loop/claude (R26.12 B0a, attended)",
+    "capture_method": "set -a; . ~/.factory-dispatcher/env; set +a; venv/bin/python with sys.path += apps/factory-dispatcher; substrate.default_store(); GET only (httpx.request wrapped to refuse any non-GET); every population paged by offset at limit 200 until a short page (dev.task, dev.note per parent_id, arch.release, arch.change, arch.requirement_conformance, dev.release, arch.observation); links via GET /beads/{id}/links (unpaged route).",
+    "date_in_filename": "The filename keeps the 2026-09-23 date the design (docs/plans/2026-09-23-design-r2612-steerable-and-legible.md, 'Fixtures the outer loop commits with the first specs (D7)') and the PC-* acceptance criteria name; the capture itself is dated by captured_at.",
+    "changed_since_design": "At this capture 5 dev.task beads are pending (design read 11 at 2026-09-23T18:45Z). a728d995 is no longer pending (state done) and so is not latched; fc8a5489 is done; e1cf3515 is done. The only latched bead left is 44d28ff9 on the same heartbeat-timeout signature 2d5ae89f the design recorded. The beads selectable at this capture are excluded by construction (below), as the design requires; none of the pending set's hold reasons was edited.",
+    "design_state_2026_09_23": {
+      "pending_count": 11,
+      "latched": {
+        "2d5ae89f": [
+          "44d28ff9",
+          "fc8a5489"
+        ],
+        "b07f6582": [
+          "a728d995"
+        ]
+      },
+      "selectable_excluded": [
+        "e1cf3515"
+      ],
+      "source": "design 'STATE AT FILING (2026-09-23T18:45Z, main 9b0307c6)'"
+    },
+    "pending_ids": [
+      "6a83f5a5-de31-42af-b4c6-7b2501687b05",
+      "11f7792a-3c95-49f0-ad59-42f7ab28830d",
+      "44d28ff9-d344-45b5-a544-e206897f8b9a"
+    ],
+    "pending_count": 3,
+    "pending_count_in_store": 5,
+    "pending_ids_note": "pending_ids lists the pending beads CAPTURED in tasks, i.e. every pending bead minus excluded_selectable_ids, so 'every id in header.pending_ids appears exactly once across ranked + held' holds over the fixture; pending_count_in_store is the store's full pending population at capture.",
+    "latched_signatures": {
+      "2d5ae89f983cfb8b": [
+        "44d28ff9-d344-45b5-a544-e206897f8b9a"
+      ]
+    },
+    "latched_rule": "dispatch.trailing_environmental_fault_streak(list_notes(id)) returns (signature, streak) with signature non-empty and streak >= retry_policy.CONSECUTIVE_ENVIRONMENTAL_FAULT_LIMIT (3) -- pick_task's own test",
+    "latched_otherwise_held_ids": [],
+    "latched_with_later_exit_notes": {
+      "44d28ff9-d344-45b5-a544-e206897f8b9a": {
+        "last_fault_at": "2026-09-23T02:36:56.455850Z",
+        "requeue_barriers_after": [
+          "1f9f3e32-7fec-438f-ae14-e4447a849f1a",
+          "ab92e999-9fac-40ef-92c1-49a6d4a9a869"
+        ],
+        "worker_finished_after": [
+          "127eb3ab-22e4-469b-ac32-e62e4c4c0d0d",
+          "9e3e359f-a5dc-4d94-ac78-aa3b7a28c6b2"
+        ]
+      }
+    },
+    "latched_with_later_exit_notes_rule": "per latched id: the newest environmental-fault note's created_at, and the resets_attempts (requeue barrier) and 'Worker finished in' notes created after it -- the notes B3 makes end the streak; the breaker still holds the bead at capture",
+    "hold_reason_by_id": {
+      "6a83f5a5-de31-42af-b4c6-7b2501687b05": "waiting on blocking question 2cd68855-77cc-4231-ba11-b7fc09974e2e: HOLD \u2014 option (c) is the answer, and (c) MEANS HELD. This note exists because answering the prior question released this",
+      "11f7792a-3c95-49f0-ad59-42f7ab28830d": "waiting for predecessor bead 44d28ff9-d344-45b5-a544-e206897f8b9a to land (state=pending)",
+      "44d28ff9-d344-45b5-a544-e206897f8b9a": "latched"
+    },
+    "hold_class_by_id": {
+      "6a83f5a5-de31-42af-b4c6-7b2501687b05": "blocking_question",
+      "11f7792a-3c95-49f0-ad59-42f7ab28830d": "predecessor",
+      "44d28ff9-d344-45b5-a544-e206897f8b9a": "latched"
+    },
+    "hold_classes_present": [
+      "blocking_question",
+      "latched",
+      "predecessor"
+    ],
+    "hold_class_rule": "hold class is derived from the guards.is_runnable reason text by this fixture builder (no class vocabulary exists in code at main_revision; B4 creates one): 'latched' (is_runnable ok, streak >= limit); 'superseded' (reason starts 'superseded by bead'); 'predecessor' (any ordering_block_reason text); 'release_not_in_flight' ('delivers <ref> (<state>), not in_flight'); 'attempts_exhausted'; 'blocking_question' ('waiting on blocking question' or 'blocking question ... does not declare release'); 'no_scope'. A B4 vocabulary that names these differently maps onto them one-to-one.",
+    "predecessor_pairs": [
+      [
+        "11f7792a-3c95-49f0-ad59-42f7ab28830d",
+        "44d28ff9-d344-45b5-a544-e206897f8b9a"
+      ]
+    ],
+    "predecessor_pairs_rule": "[dependent_id, predecessor_id] for every captured pending bead whose guards.ordering_block_reason is non-empty, one pair per declared predecessor that is not in state 'done' (guards.SUCCESSFUL_TERMINAL_STATES) or not found",
+    "selectable_ids": [],
+    "excluded_selectable_ids": [
+      "c9cebed5-ae07-4e3e-b22b-7c82ec403a9a",
+      "115a37f5-a846-4045-8a29-78200cd28269"
+    ],
+    "excluded_selectable_rule": "SELECTABLE BEADS ARE EXCLUDED BY CONSTRUCTION: a pending bead with is_runnable ok and streak < limit at capture is dropped from tasks/notes_by_task/links and listed here, so selectable_ids is [] on every capture. Excluded, not asserted absent.",
+    "excluded_selectable_releases": {
+      "c9cebed5-ae07-4e3e-b22b-7c82ec403a9a": "R26.11",
+      "115a37f5-a846-4045-8a29-78200cd28269": "R26.09"
+    },
+    "r2611_pending_ids": [
+      "11f7792a-3c95-49f0-ad59-42f7ab28830d",
+      "44d28ff9-d344-45b5-a544-e206897f8b9a"
+    ],
+    "r2611_excluded_selectable_ids": [
+      "c9cebed5-ae07-4e3e-b22b-7c82ec403a9a"
+    ],
+    "is_runnable_inputs": "guards.is_runnable(task, list_notes(id), list_tasks() [all 479 dev.task beads], release_by_task_id=dispatch.resolve_task_release_states(store, pending)) -- the same call pick_task makes",
+    "reconstruction_check": {
+      "rule": "every hold_reason_by_id entry and every (signature, streak) re-derived from THIS FILE alone (tasks + all_task_ids_by_state as stub tasks + links/releases for release_by_task_id + notes_by_task with body_first_line mapped to body)",
+      "mismatches": []
+    },
+    "note_reduction": "Each note is {id, created_at, created_by, content: {kind, body_first_line = dispatch.redact_sensitive_output(body).splitlines()[0][:200], ...kind extras}}. status: + environmental_fault_signature, resets_attempts, preserved_choice, releases_work, expedite, class_of_service, expedite_reason, expedite_until (each only if present on the stored note) and requeue_reason (derived: for a resets_attempts note the text after guards._REQUEUE_REASON_MARKER 'Reason:' with the _REQUEUE_PRESERVED_SUFFIX_MARKER tail stripped, parsed from the FULL redacted body; else null). review: + verdict, url (+ pr_url when the stored note carries one). question: + blocking, answers_ref. answer: + answers_ref (+ releases_work when present -- guards.open_questions reads it on the answer, so it is kept there too). attachment: + url. Dropped: provenance, context, trust_tier, full bodies. To feed a reduced note to a guards/dispatch function that reads content.body, map body_first_line -> body; every prefix those functions test for is on the first line (verified at build: see header.reconstruction_check).",
+    "redaction": "no provenance, no worker/model fields, no full bodies; PR URLs kept",
+    "counts": {
+      "tasks": 3,
+      "notes": 40,
+      "links": 2,
+      "releases": 5,
+      "all_task_ids_by_state": 479,
+      "all_task_states": {
+        "done": 435,
+        "superseded": 38,
+        "pending": 5,
+        "failed": 1
+      }
+    },
+    "no_expected_values": "The header records what was captured; no expected value is written here or in any AC -- ACs read header fields."
+  },
+  "tasks": [
+    {
+      "id": "6a83f5a5-de31-42af-b4c6-7b2501687b05",
+      "state": "pending",
+      "created_at": "2026-09-07T03:17:43.875068Z",
+      "updated_at": "2026-09-19T21:10:04.801611Z",
+      "content": {
+        "lane": "code-health",
+        "title": "A MERGE verdict on the code-health lane executes without a person, behind a buffer",
+        "predecessor_bead_ids": [],
+        "source_bead_ids": [],
+        "release_ref_waived": "Waived 2026-09-19 by the outer loop (updating the 2026-09-06 A34 reverse-filing waiver, kept below): this bead is the Operator's HOLD of 2026-09-08 and 2026-09-15 on unattended code-health merging \u2014 Amendment 34 stays PROPOSED with a decision date of 2026-10-04 (decision record 2026-09-19 D1); it delivers no release until that decision and is not dispatchable. Previous reason: Amendment 34 is drafted this sprint (2026-09-06 sprint plan, sprint 39) and names the release outcome its mechanization binds to; this bead files gated on a blocking question that releases only when A34 is PROPOSED and the Operator directs the staged entry. Filing ahead of the amendment is the reverse-filing pattern the 2026-08-30 record established: on the board for visibility, unclaimable until its gate answers.",
+        "budget": {
+          "max_usd": 6.0,
+          "max_tokens": 750000,
+          "max_agent_minutes": 90
+        },
+        "scope": {
+          "paths": [
+            "apps/factory-dispatcher/",
+            "scripts/",
+            "apps/mcp-hub/"
+          ]
+        }
+      }
+    },
+    {
+      "id": "11f7792a-3c95-49f0-ad59-42f7ab28830d",
+      "state": "pending",
+      "created_at": "2026-09-20T04:18:20.073862Z",
+      "updated_at": "2026-09-20T13:30:39.907010Z",
+      "content": {
+        "lane": "code-health",
+        "title": "The codex worker entry is deleted: a retired rollback lever to a cancelled subscription protects nothing, and the README still calls it the default worker",
+        "predecessor_bead_ids": [
+          "f2392c33-6dc2-4c10-afd7-c6b7f3e0b016",
+          "44d28ff9-d344-45b5-a544-e206897f8b9a"
+        ],
+        "outcome_ref": "O-1",
+        "source_bead_ids": [],
+        "budget": {
+          "max_usd": 3.0,
+          "max_tokens": 400000,
+          "max_agent_minutes": 45
+        },
+        "scope": {
+          "paths": [
+            "apps/factory-dispatcher/README.md",
+            "apps/factory-dispatcher/containment.py",
+            "apps/factory-dispatcher/dispatch.py",
+            "apps/factory-dispatcher/guards.py",
+            "apps/factory-dispatcher/launchd/com.gastown.factory-dispatcher-worker.plist.template",
+            "apps/factory-dispatcher/requirements.txt",
+            "apps/factory-dispatcher/tests/test_claude_worker.py",
+            "apps/factory-dispatcher/tests/test_dispatch.py",
+            "apps/factory-dispatcher/tests/test_file_task.py",
+            "apps/factory-dispatcher/tests/test_gate_containment.py",
+            "apps/factory-dispatcher/tests/test_launchd_agent.py",
+            "apps/factory-dispatcher/tests/test_required_worker_executables.py",
+            "apps/factory-dispatcher/tests/test_worker_retirement.py"
+          ]
+        }
+      }
+    },
+    {
+      "id": "44d28ff9-d344-45b5-a544-e206897f8b9a",
+      "state": "pending",
+      "created_at": "2026-09-20T04:34:21.619059Z",
+      "updated_at": "2026-09-25T17:23:32.997645Z",
+      "content": {
+        "lane": "code-health",
+        "title": "The base-revision check re-runs on every retry because its memo is never read, and the memo it would read is parsed out of a string the worker can write into",
+        "predecessor_bead_ids": [],
+        "outcome_ref": "O-7",
+        "source_bead_ids": [],
+        "budget": {
+          "max_usd": 3.0,
+          "max_tokens": 400000,
+          "max_agent_minutes": 45
+        },
+        "scope": {
+          "paths": [
+            "apps/factory-dispatcher/activities/dispatch_steps.py",
+            "apps/factory-dispatcher/dispatch.py",
+            "apps/factory-dispatcher/tests/"
+          ]
+        }
+      }
+    }
+  ],
+  "notes_by_task": {
+    "6a83f5a5-de31-42af-b4c6-7b2501687b05": [
+      {
+        "id": "1b232aea-1913-4482-8103-29b722fe24dd",
+        "created_at": "2026-09-07T03:17:44.237670Z",
+        "created_by": "outer-loop-po-lane",
+        "content": {
+          "kind": "question",
+          "body_first_line": "Amendment 34 is PROPOSED (merged 2026-09-06, PR #667). Does the Operator direct stage 1 \u2014 the flag-off dry run producing ~/.factory-dispatcher/a34-dry-run.jsonl \u2014 and name the evidence window? Per the amendm",
+          "blocking": true,
+          "answers_ref": null
+        }
+      },
+      {
+        "id": "b47e8b6d-4796-4901-b2a8-e0c59e0d6df5",
+        "created_at": "2026-09-07T22:06:36.767198Z",
+        "created_by": "grant/outer-loop-claude",
+        "content": {
+          "kind": "answer",
+          "body_first_line": "releases_work: true. Stage 1 is directed: run the flag-off dry run producing ~/.factory-dispatcher/a34-dry-run.jsonl per Amendment 34's Mechanization clause. Evidence window: 2026-09-07 through 2026-0",
+          "answers_ref": "1b232aea-1913-4482-8103-29b722fe24dd",
+          "releases_work": true
+        }
+      },
+      {
+        "id": "86f73cdd-c837-42b9-bf7d-d3195f0f1660",
+        "created_at": "2026-09-07T22:15:05.803250Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Claimed by factory-dispatcher/claude. Isolating a clone, checking pristine declared verification, and running `claude -p` with a 80m budget.",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "0f853812-f103-494c-aa3b-4f86307677f8",
+        "created_at": "2026-09-07T22:15:07.258024Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Stale base ref: Activity task failed: BaseRefStaleError: base ref is behind its tracking remote; refused to clone: main local=0edd7ddf8d50d5f10359dd76ee49418b64825d6a tracking origin/main=6fc18d2f5cea",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "a35e60f6-482d-4739-8f3e-b8dd25e699ee",
+        "created_at": "2026-09-08T00:30:05.144189Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Claimed by factory-dispatcher/claude. Isolating a clone, checking pristine declared verification, and running `claude -p` with a 80m budget.",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "56ff4a35-804a-4e24-b416-c07d3aa6eed6",
+        "created_at": "2026-09-08T00:47:12.718310Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "comment",
+          "body_first_line": "Architect/SME design judgment (Amendment 30):"
+        }
+      },
+      {
+        "id": "54720600-a988-4b6f-9509-5135b5705047",
+        "created_at": "2026-09-08T00:47:56.073612Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "attachment",
+          "body_first_line": "Pull request opened for review: https://github.com/grantbest/homelabv2/pull/704",
+          "url": "https://github.com/grantbest/homelabv2/pull/704"
+        }
+      },
+      {
+        "id": "adea2681-3e99-4968-9be7-89259eab2647",
+        "created_at": "2026-09-08T00:47:56.123538Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Worker finished in 935s, 9 file(s) changed, containment held, all changes within scope. Declared verification: Bootstrap: created clone-local `venv/` from /opt/homebrew/bin/python3.12 and installed re",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "534b4d57-d4c4-463e-b881-bd580aed186b",
+        "created_at": "2026-09-08T01:15:06.064187Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Claimed by factory-dispatcher/claude. Isolating a clone, checking pristine declared verification, and running `claude -p` with a 80m budget.",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "5abc995a-d5d2-40ba-bd86-3088404668a0",
+        "created_at": "2026-09-08T01:36:40.756406Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "comment",
+          "body_first_line": "Architect/SME design judgment (Amendment 30):"
+        }
+      },
+      {
+        "id": "146c21db-1692-4871-9dc7-94652b602b95",
+        "created_at": "2026-09-08T01:37:25.033469Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "attachment",
+          "body_first_line": "Pull request opened for review: https://github.com/grantbest/homelabv2/pull/707",
+          "url": "https://github.com/grantbest/homelabv2/pull/707"
+        }
+      },
+      {
+        "id": "c6d0ad9f-864b-46e7-a35a-bcb4d1cba280",
+        "created_at": "2026-09-08T01:37:25.103576Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Worker finished in 1200s, 9 file(s) changed, containment held, all changes within scope. Declared verification: Bootstrap: created clone-local `venv/` from /opt/homebrew/bin/python3.12 and installed r",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "247273e0-44eb-4783-82b2-0b780173c2ae",
+        "created_at": "2026-09-08T01:48:14.107618Z",
+        "created_by": "outer-loop-claude",
+        "content": {
+          "kind": "question",
+          "body_first_line": "Two factory attempts at the stage-1 executor have failed the gate \u2014 attempt 1 on a demonstrated verdict inversion and a fail-open protected-path seam, attempt 2 as a full regeneration consuming none o",
+          "blocking": true,
+          "answers_ref": null
+        }
+      },
+      {
+        "id": "0b3a0dbe-e6f4-4d36-963d-bc1bac4ad35e",
+        "created_at": "2026-09-09T00:10:18.918684Z",
+        "created_by": "claude-outer-loop/ea-session",
+        "content": {
+          "kind": "answer",
+          "body_first_line": "the Operator's decision on blocking question 247273e0, taken 2026-09-08 in session: HOLD until OPS-82's retry-resumption mechanism lands, then retry A34-1 as its first real test. Rationale: A34-1 has demonst",
+          "answers_ref": "247273e0"
+        }
+      },
+      {
+        "id": "3161e583-1659-4b20-b88c-cfbebf34da4d",
+        "created_at": "2026-09-14T09:16:49.131534Z",
+        "created_by": "outer-loop/claude",
+        "content": {
+          "kind": "status",
+          "body_first_line": "OUTER-LOOP OBSERVATION 2026-09-14, TWO FACTS ABOUT THIS BEAD'S FENCE. NOT A DECISION, NOT A RELEASE --",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "223cc217-1ade-496b-9839-e42d8ab8c387",
+        "created_at": "2026-09-15T23:35:04.861856Z",
+        "created_by": "outer-loop/claude",
+        "content": {
+          "kind": "answer",
+          "body_first_line": "ANSWERED 2026-09-15: option (c) \u2014 hold A34-1 until the regeneration-pattern fix lands, then let the improved worker try. Answered by the outer loop under the Operator's standing instruction to act on the rec",
+          "answers_ref": "247273e0-44eb-4783-82b2-0b780173c2ae",
+          "releases_work": true
+        }
+      },
+      {
+        "id": "2cd68855-77cc-4231-ba11-b7fc09974e2e",
+        "created_at": "2026-09-15T23:35:24.744211Z",
+        "created_by": "outer-loop/claude",
+        "content": {
+          "kind": "question",
+          "body_first_line": "HOLD \u2014 option (c) is the answer, and (c) MEANS HELD. This note exists because answering the prior question released this bead into the runnable queue, where the very next dispatcher tick would have st",
+          "blocking": true,
+          "answers_ref": null
+        }
+      },
+      {
+        "id": "bd125d0f-dd94-49ba-b18b-48977ab289fb",
+        "created_at": "2026-09-19T21:12:13.022526Z",
+        "created_by": "outer-loop/release-close-2026-09-19",
+        "content": {
+          "kind": "status",
+          "body_first_line": "release_ref_waived updated 2026-09-19 (W0-10 of the sprints 54-56 plan): the A34 reverse-filing waiver of 2026-09-06 was stale; it now names the Operator's 2026-09-08/09-15 hold and A34's decision date 2026-",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "c9a891d8-4f46-4b7a-96de-06b6873e3000",
+        "created_at": "2026-09-23T15:20:06.449295Z",
+        "created_by": "outer-loop/claude",
+        "content": {
+          "kind": "comment",
+          "body_first_line": "CORRECTION TO THIS FENCE'S STATED CONDITION, 2026-09-23 -- NOT AN ANSWER, AND DELIBERATELY NOT AN ANSWER. The hold above names two release conditions: (1) the regeneration-pattern fix has landed on ma"
+        }
+      }
+    ],
+    "11f7792a-3c95-49f0-ad59-42f7ab28830d": [],
+    "44d28ff9-d344-45b5-a544-e206897f8b9a": [
+      {
+        "id": "34d34ca1-523d-42bb-953c-11189c40cd69",
+        "created_at": "2026-09-23T02:00:03.646259Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Claimed by factory-dispatcher/claude. Isolating a clone, checking pristine declared verification, and running `claude -p` with a 45m budget.",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "f9fab093-0a0a-4768-973c-fc0cba8f7fb0",
+        "created_at": "2026-09-23T02:08:31.579558Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Environmental fault: Activity task timed out: activity Heartbeat timeout Task returned to pending without incrementing attempts. Failure class: environment.",
+          "environmental_fault_signature": "2d5ae89f983cfb8b",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "3c3d4685-39c4-4856-87c8-39e6291b2be9",
+        "created_at": "2026-09-23T02:15:03.176807Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Claimed by factory-dispatcher/claude. Isolating a clone, checking pristine declared verification, and running `claude -p` with a 45m budget.",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "fe5bd365-391d-4444-9997-839206b5ca37",
+        "created_at": "2026-09-23T02:25:55.929015Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Environmental fault: Activity task timed out: activity Heartbeat timeout Task returned to pending without incrementing attempts. Failure class: environment.",
+          "environmental_fault_signature": "2d5ae89f983cfb8b",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "5f590c68-1ab7-4712-905e-d9f1b6352f4e",
+        "created_at": "2026-09-23T02:30:03.140045Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Claimed by factory-dispatcher/claude. Isolating a clone, checking pristine declared verification, and running `claude -p` with a 45m budget.",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "656d3c92-603f-4a05-bee7-6c7eaf18339c",
+        "created_at": "2026-09-23T02:36:56.455850Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Environmental fault: Activity task timed out: activity Heartbeat timeout Task returned to pending without incrementing attempts. Failure class: environment. This is the same fault 3 consecutive times ",
+          "environmental_fault_signature": "2d5ae89f983cfb8b",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "bccf4dae-2e23-4ea7-b605-fded78c8a7af",
+        "created_at": "2026-09-23T21:10:35.997444Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Claimed by factory-dispatcher/claude. Isolating a clone, checking pristine declared verification, and running `claude -p` with a 45m budget.",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "952bfed9-2ad0-49c6-b4b5-01888e07d999",
+        "created_at": "2026-09-23T21:25:51.294485Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "comment",
+          "body_first_line": "Architect/SME design judgment (Amendment 30):"
+        }
+      },
+      {
+        "id": "846f067b-b6b2-41e9-a0c4-ecef5a74ff55",
+        "created_at": "2026-09-23T21:26:52.169012Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "attachment",
+          "body_first_line": "Pull request opened for review: https://github.com/grantbest/homelabv2/pull/1004",
+          "url": "https://github.com/grantbest/homelabv2/pull/1004"
+        }
+      },
+      {
+        "id": "127eb3ab-22e4-469b-ac32-e62e4c4c0d0d",
+        "created_at": "2026-09-23T21:26:52.226971Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Worker finished in 808s, 3 file(s) changed, containment held, all changes within scope. Declared verification: Bootstrap: created clone-local `venv/` from /opt/homebrew/bin/python3.12 and installed re",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "879ff725-3294-48b4-b147-da6ef80f82aa",
+        "created_at": "2026-09-23T22:11:10.963660Z",
+        "created_by": "outer-loop/claude",
+        "content": {
+          "kind": "review",
+          "body_first_line": "GATE VERDICT ON PR #1004 (first real attempt after three environmental latches): MERGE-WITH-CHANGES at 31f94245, 2026-09-23 22:0xZ (https://github.com/grantbest/homelabv2/pull/1004#issuecomment-580378",
+          "verdict": "request-changes",
+          "url": null
+        }
+      },
+      {
+        "id": "4376d4cf-41b7-48c5-a100-66cb05fcf035",
+        "created_at": "2026-09-23T22:11:13.904044Z",
+        "created_by": "operator",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Review ended without shipping: PR #1004 (https://github.com/grantbest/homelabv2/pull/1004) was closed without merging. State moved review->failed so this work does not silently become runnable again.",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "1f9f3e32-7fec-438f-ae14-e4447a849f1a",
+        "created_at": "2026-09-23T22:11:15.283003Z",
+        "created_by": "operator",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Returned to pending by an operator, with the retry budget restarted. Recorded failures before this point were judged not to have been spent on this task's work. Reason: MERGE-WITH-CHANGES at #1004: th",
+          "resets_attempts": true,
+          "preserved_choice": "keep",
+          "requeue_reason": "MERGE-WITH-CHANGES at #1004: the could_not_start reason (Could not start: line) is a third worker-shapeable channel inside the trusted prefix; add it to _UNTRUSTED_DETAIL_SECTION_MARKERS, add the shape-faithful regression test the gate proved fail-before/pass-after, restate AC-1 in the body. Everything else on #1004 is kept as the baseline."
+        }
+      },
+      {
+        "id": "e8d13266-86a1-4189-9fb1-af0186fb4c14",
+        "created_at": "2026-09-25T16:58:50.579781Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Claimed by factory-dispatcher/claude. Isolating a clone, checking pristine declared verification, and running `claude -p` with a 45m budget.",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "49d08732-8627-409d-96f5-99bf10a4f47c",
+        "created_at": "2026-09-25T17:01:33.438265Z",
+        "created_by": "operator",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Preserved work from https://github.com/grantbest/homelabv2/pull/1004 applied as this attempt's starting point, before the worker began.",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "f3de7abe-f0b4-44e4-973c-100787cc3448",
+        "created_at": "2026-09-25T17:09:42.461643Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "comment",
+          "body_first_line": "Architect/SME design judgment (Amendment 30):"
+        }
+      },
+      {
+        "id": "85cd8d01-2254-41e9-b57d-dcbbe3fbc142",
+        "created_at": "2026-09-25T17:10:46.564905Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "attachment",
+          "body_first_line": "Pull request opened for review: https://github.com/grantbest/homelabv2/pull/1022",
+          "url": "https://github.com/grantbest/homelabv2/pull/1022"
+        }
+      },
+      {
+        "id": "9e3e359f-a5dc-4d94-ac78-aa3b7a28c6b2",
+        "created_at": "2026-09-25T17:10:46.739236Z",
+        "created_by": "factory-dispatcher/claude",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Worker finished in 489s, 3 file(s) changed, containment held, all changes within scope. Declared verification: Bootstrap: created clone-local `venv/` from /opt/homebrew/bin/python3.12 and installed re",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "c8c33d8d-d6bb-4b91-9714-4c24e6fafbf7",
+        "created_at": "2026-09-25T17:23:29.087033Z",
+        "created_by": "outer-loop/claude",
+        "content": {
+          "kind": "review",
+          "body_first_line": "RELEASE GATE on PR #1022 at a058e1a1: MERGE-WITH-CHANGES (fresh-context gate, 2026-09-25 ~17:2xZ; the full verdict is the PR comment). #1004's three changes: the 'Could not start:' channel is CLOSED, ",
+          "verdict": "request-changes",
+          "url": null
+        }
+      },
+      {
+        "id": "9a35554f-817d-48da-b055-e64427af06fe",
+        "created_at": "2026-09-25T17:23:32.024601Z",
+        "created_by": "operator",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Review ended without shipping: PR #1022 (https://github.com/grantbest/homelabv2/pull/1022) was closed without merging. State moved review->failed so this work does not silently become runnable again.",
+          "requeue_reason": null
+        }
+      },
+      {
+        "id": "ab92e999-9fac-40ef-92c1-49a6d4a9a869",
+        "created_at": "2026-09-25T17:23:32.943430Z",
+        "created_by": "operator",
+        "content": {
+          "kind": "status",
+          "body_first_line": "Returned to pending by an operator, with the retry budget restarted. Recorded failures before this point were judged not to have been spent on this task's work. Reason: MERGE-WITH-CHANGES at #1022 (a0",
+          "resets_attempts": true,
+          "preserved_choice": "keep",
+          "requeue_reason": "MERGE-WITH-CHANGES at #1022 (a058e1a1): anchor the memo at note start (fourth channel via py_compile), plus three items; see the latest review note; keep the preserved diff"
+        }
+      }
+    ]
+  },
+  "links": [
+    {
+      "source_id": "11f7792a-3c95-49f0-ad59-42f7ab28830d",
+      "target_id": "bc08ff7a-f8e6-49c0-ba99-5c7ba523f0ee"
+    },
+    {
+      "source_id": "44d28ff9-d344-45b5-a544-e206897f8b9a",
+      "target_id": "bc08ff7a-f8e6-49c0-ba99-5c7ba523f0ee"
+    }
+  ],
+  "releases": [
+    {
+      "id": "e08a853e-fac2-48fa-816a-c719511e4046",
+      "state": "planned",
+      "content": {
+        "ref": "R26.13",
+        "opened_at": "2026-11-16",
+        "target_at": "2026-12-27",
+        "sprints": [
+          "58",
+          "59",
+          "60"
+        ],
+        "declared_balance": {
+          "risk": 9,
+          "feature": 50,
+          "blocking": 15,
+          "enabling": 17,
+          "security": 9
+        },
+        "outcomes": [
+          {
+            "id": "O-1",
+            "work_class": "feature"
+          },
+          {
+            "id": "O-2",
+            "work_class": "risk"
+          },
+          {
+            "id": "O-3",
+            "work_class": "enabling"
+          },
+          {
+            "id": "O-4",
+            "work_class": "feature"
+          },
+          {
+            "id": "O-5",
+            "work_class": "security"
+          },
+          {
+            "id": "O-6",
+            "work_class": "blocking"
+          }
+        ]
+      }
+    },
+    {
+      "id": "2d261341-498c-42d8-8392-0cdbb6559928",
+      "state": "planned",
+      "content": {
+        "ref": "R26.12",
+        "opened_at": "2026-10-06",
+        "target_at": "2026-11-15",
+        "sprints": [
+          "55",
+          "56",
+          "57"
+        ],
+        "declared_balance": {
+          "risk": 15,
+          "feature": 40,
+          "blocking": 7,
+          "enabling": 30,
+          "security": 8
+        },
+        "outcomes": [
+          {
+            "id": "O-1",
+            "work_class": "enabling"
+          },
+          {
+            "id": "O-2",
+            "work_class": "feature"
+          },
+          {
+            "id": "O-3",
+            "work_class": "feature"
+          },
+          {
+            "id": "O-4",
+            "work_class": "blocking"
+          },
+          {
+            "id": "O-5",
+            "work_class": "enabling"
+          },
+          {
+            "id": "O-6",
+            "work_class": "feature"
+          },
+          {
+            "id": "O-7",
+            "work_class": "risk"
+          },
+          {
+            "id": "O-8",
+            "work_class": "feature"
+          },
+          {
+            "id": "O-9",
+            "work_class": "blocking"
+          },
+          {
+            "id": "O-10",
+            "work_class": "security"
+          }
+        ]
+      }
+    },
+    {
+      "id": "bc08ff7a-f8e6-49c0-ba99-5c7ba523f0ee",
+      "state": "in_flight",
+      "content": {
+        "ref": "R26.11",
+        "opened_at": "2026-09-22",
+        "target_at": "2026-11-01",
+        "sprints": [
+          "54",
+          "55",
+          "56"
+        ],
+        "declared_balance": {
+          "risk": 15,
+          "feature": 0,
+          "blocking": 10,
+          "enabling": 55,
+          "security": 20
+        },
+        "outcomes": [
+          {
+            "id": "O-1",
+            "work_class": "enabling"
+          },
+          {
+            "id": "O-2",
+            "work_class": "enabling"
+          },
+          {
+            "id": "O-3",
+            "work_class": "risk"
+          },
+          {
+            "id": "O-4",
+            "work_class": "enabling"
+          },
+          {
+            "id": "O-5",
+            "work_class": "enabling"
+          },
+          {
+            "id": "O-6",
+            "work_class": "security"
+          },
+          {
+            "id": "O-7",
+            "work_class": "blocking"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dbaec634-2b24-441d-a8e8-e00e90c4eb72",
+      "state": "planned",
+      "content": {
+        "ref": "R26.10",
+        "opened_at": "2026-11-01",
+        "target_at": "2026-12-13",
+        "sprints": [
+          "57",
+          "58",
+          "59"
+        ],
+        "declared_balance": {
+          "risk": 40,
+          "feature": 0,
+          "blocking": 20,
+          "enabling": 40,
+          "security": 0
+        },
+        "outcomes": [
+          {
+            "id": "O-1",
+            "work_class": "enabling"
+          },
+          {
+            "id": "O-2",
+            "work_class": "risk"
+          },
+          {
+            "id": "O-3",
+            "work_class": "risk"
+          },
+          {
+            "id": "O-4",
+            "work_class": "blocking"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dcf93ebf-f5e6-41a7-86a7-e4cad46e1752",
+      "state": "in_flight",
+      "content": {
+        "ref": "R26.09",
+        "opened_at": "2026-09-13",
+        "target_at": "2026-10-05",
+        "sprints": [
+          "51",
+          "52",
+          "53"
+        ],
+        "declared_balance": {
+          "risk": 15,
+          "feature": 35,
+          "blocking": 10,
+          "enabling": 30,
+          "security": 10
+        },
+        "outcomes": [
+          {
+            "id": "O-1",
+            "work_class": "feature"
+          },
+          {
+            "id": "O-2",
+            "work_class": "feature"
+          },
+          {
+            "id": "O-3",
+            "work_class": "enabling"
+          },
+          {
+            "id": "O-4",
+            "work_class": "feature"
+          },
+          {
+            "id": "O-5",
+            "work_class": "risk"
+          },
+          {
+            "id": "O-6",
+            "work_class": "security"
+          },
+          {
+            "id": "O-7",
+            "work_class": "risk"
+          },
+          {
+            "id": "O-8",
+            "work_class": "blocking"
+          },
+          {
+            "id": "O-9",
+            "work_class": "feature"
+          },
+          {
+            "id": "O-10",
+            "work_class": "feature"
+          }
+        ]
+      }
+    }
+  ],
+  "all_task_ids_by_state": {
+    "43c98a00-077d-4877-b1af-9d71b74f9b02": "done",
+    "0771813c-2c09-4617-bca8-83802aca46af": "done",
+    "f02149ef-d383-4b59-a8a8-c2a69808eb1c": "done",
+    "94880f6a-169d-433f-b4d4-15a1edf2b6ca": "done",
+    "eedea44d-8215-4c8d-ac31-4611c0603ddc": "done",
+    "2e40f727-206d-460e-ae98-a11816dc8bc2": "done",
+    "0be029c5-aaa5-49c9-b06d-9be42a9704b5": "done",
+    "98aa92d9-212b-443e-a964-1b14a482bc0d": "done",
+    "74344e6b-1c5e-4020-b235-4205b66d0730": "done",
+    "582db12a-c564-4e46-8aed-1a499b8a4c56": "done",
+    "3a113b9b-ee82-4841-9708-478fb37fa98c": "done",
+    "dadddf0c-5e7c-4fed-b06d-31bfe028baa0": "done",
+    "dbc0557a-c8f0-4fda-abc1-91343ba9af8b": "done",
+    "3ef87c98-19dc-4be2-97ea-b9147ba3bead": "done",
+    "c0e3322d-c197-4729-902e-0dfe7896fcf5": "done",
+    "26e2aa0e-7927-4292-b1e5-11c2da80f17e": "done",
+    "2dc0e58d-ad3d-481e-a7a1-5354dd321198": "done",
+    "a654cf8e-5e43-4724-8e9d-adaabd334194": "done",
+    "76cd66b1-fb6c-4bd3-be9b-412af010bb86": "done",
+    "57f8025d-509f-4315-aa87-0603e9a2e060": "done",
+    "d84dccb5-660d-42d4-b5be-0ecd859ea64a": "done",
+    "086aca0e-2ee4-4572-90ee-1fbf180d353f": "done",
+    "bd1b38d2-51c1-4788-87cd-674f77629219": "done",
+    "7b0ada75-a198-4d33-a32f-716ce92a40ff": "done",
+    "0c1d921c-09a0-4f1a-940f-55a8ff0c8782": "done",
+    "9bf4727d-e86d-4c7c-9f97-483e236e9394": "done",
+    "e62626ea-192e-46e3-be79-3622ba167b04": "done",
+    "89f9b03e-4f15-48a6-b24c-5a1fdd3b2c75": "done",
+    "42b95902-7e4d-4df7-82dd-153dc22b882c": "done",
+    "e6f90142-f29d-4a05-a047-e52bac293489": "done",
+    "fa0dcc93-85a3-421d-a11f-f3886c0dc4b6": "done",
+    "8bed674e-cc29-4cc4-9c14-24a4ee30c50f": "done",
+    "35a0ef87-600c-45a0-9e6a-326030e14413": "done",
+    "fac85004-d031-4926-946d-d1187ced91c8": "done",
+    "79d4b9ae-ef60-48bf-b1b9-25a53ab87236": "done",
+    "6367f30d-e789-4751-b9ed-1eb42e61a083": "done",
+    "cd5e27ce-dd22-4461-a8cc-31b6786bca4c": "superseded",
+    "cd3b76af-be84-4ac8-a86d-f66f04b4512e": "done",
+    "95c448f5-d0f0-46a6-8535-2272e2ac933c": "done",
+    "f8237e30-e1cc-48d7-9a20-8e3cb2caa26b": "superseded",
+    "b387e1c7-76ee-4a4e-a4c9-0874746eab9e": "done",
+    "9c9eb353-168a-4491-b0d6-b88b4787bace": "done",
+    "b374a878-6c08-4352-93d3-cfb5e38a7c37": "done",
+    "25e90fda-7f1e-4c69-8470-a7f42917ec3f": "done",
+    "1a13a769-7f0b-42ce-95c0-37afd881cd83": "done",
+    "c5a34a49-0c01-4830-8279-b57792221850": "done",
+    "2a573206-bed2-4cf0-a247-6393333dfe07": "done",
+    "2bd08612-d774-40d6-b174-990b5b894a9d": "done",
+    "ac4e8441-8d76-4199-868e-ace75a6fd96b": "done",
+    "afe2be13-c334-4738-b103-77f1f5276b11": "done",
+    "4cdd7692-f1c6-44af-a090-a2caec1225a6": "done",
+    "e314f6a3-c8f7-4c52-b5d9-fdf40cb4ec77": "done",
+    "cc1caea3-90db-48a0-a33f-0c13176c864f": "done",
+    "62dfbc02-5b67-4745-9254-b840cc824a1e": "done",
+    "2b3c4e01-a2fa-48b6-98bd-a1d18a20559e": "done",
+    "cf4803f2-bc4e-45ee-9c55-33cebaa9b76c": "done",
+    "1775ac8f-dad8-42a5-a8ff-27e250471e01": "done",
+    "d72f1242-d6fe-4693-a5ce-3750a66f4633": "superseded",
+    "3b2e03bd-3609-4a15-8c9c-5728ce537da1": "done",
+    "d6d3cee7-79f0-4a13-9537-04c81057b24f": "done",
+    "af25fbdd-56cb-472e-a3d4-5fb071b5da45": "done",
+    "a2e8468e-b531-45a2-a223-f6e5f90c864c": "done",
+    "71fb26bb-d0f3-4e27-b342-03f46e025932": "done",
+    "1eef771a-9393-4505-86e2-0f906009d1aa": "done",
+    "e217e1fb-f6df-4ae7-aedf-b8b5ffed3c9b": "done",
+    "6de7306b-c378-4258-82fd-375b61912390": "done",
+    "919f91bc-de10-4c1f-81b1-437b7dea63d5": "done",
+    "cf138694-37c1-4216-a19b-b5e1f832f143": "done",
+    "d464cbbc-3da4-4268-b603-b2eb7333c088": "done",
+    "10e71c25-8253-4f02-b541-faddd33e7b5a": "done",
+    "f1f00e36-175e-47f8-b43c-5e3beb1d8446": "done",
+    "a994f440-0b0e-423d-b5c6-c0da2581f37a": "done",
+    "f9bf84a5-bb47-4390-8d9b-d1983c37c686": "done",
+    "3f8ca3dc-41bc-467a-8b5e-a8bd714d5d5c": "done",
+    "8658c951-ea71-4079-9f73-cd7c83c1eae3": "done",
+    "ae43f31d-0755-4314-b5ab-774b4940a3d2": "done",
+    "4fcaf456-9368-4d4f-94a7-39f18d25a1cf": "done",
+    "57bbb4e6-a711-4362-b544-acd2ae27e4e0": "done",
+    "c6764243-f881-40b0-9c74-37e56d531788": "done",
+    "aeca5d90-1a25-4acb-a5ed-ad06097cfa82": "superseded",
+    "24f494d4-73f7-4adf-9d8c-4f41a66325ab": "superseded",
+    "330fac75-6add-4ed6-8eb0-e01ff4bceac9": "done",
+    "fe0058e9-0a6a-4e48-9ffe-ce78bab39958": "done",
+    "a0ebf68a-2851-4c36-848f-fd2be35904ac": "done",
+    "478e5d34-e81e-4f33-8a71-14fe003915d9": "done",
+    "026dcced-df1f-4c75-b61b-b2bea0f6bccc": "done",
+    "a9e1f06f-32f1-463b-b58d-8948d0538cdf": "done",
+    "1bb9aab8-70fd-4e91-a2a1-a5d23acd8e33": "done",
+    "dbd8a8ef-192c-4735-a651-d335639aba52": "done",
+    "c533d817-70bc-4219-b947-4109fb3e9e43": "done",
+    "f7211a83-3053-4dff-80e3-d79c9409500b": "done",
+    "b94047a4-8773-4dd0-81e0-237a6ba504e0": "done",
+    "c8f38f50-b3ef-40cb-a50b-ddd0dc408045": "done",
+    "2397a926-155a-4dc5-ae77-9ae691832333": "done",
+    "e1947615-f069-4593-9644-fa77697589ce": "done",
+    "bbb54df9-933f-412d-aca3-52634d8bea23": "done",
+    "6390722f-149f-4ebc-a7ef-58abb681fb02": "done",
+    "1ad8d447-6ff7-4ca3-a735-ce69dbec3ae4": "done",
+    "7aa127ca-2289-41ae-8253-d7d31a47854d": "done",
+    "e5bbe35d-9321-455d-8c07-810e4112d989": "done",
+    "162bc6fd-ff39-459f-a333-8515d407da9f": "done",
+    "fe152420-c5f2-4cb9-b7c9-24badb3545be": "done",
+    "c2b8a7e8-4cae-48cd-b24b-79af2afbd998": "done",
+    "d318595c-3f6f-46c4-989b-1a811a3b55a5": "done",
+    "b93c42f7-3254-48ef-a181-1626607ef114": "done",
+    "22af3c3d-9f2a-473d-9500-b260d5b5df12": "done",
+    "8d044c58-208c-454a-a9a1-c24c7fcdb166": "done",
+    "2ec777c7-7614-4dd2-abd6-0f07da73ebd5": "done",
+    "2703c6a6-bce7-4966-a4e5-65341b6f6b1f": "done",
+    "7e387f5f-4a17-4005-a894-571e2fd67ff6": "done",
+    "feb5b345-b2a9-4b6d-aa68-13ee1bca5314": "done",
+    "a3c2ad3b-13c0-4aca-87b0-a81670c237c2": "done",
+    "ea4d6a93-8ec6-40e4-8321-598021622e95": "done",
+    "97518f01-97b9-4309-9bbb-bccc8e85e940": "done",
+    "070afe98-d52c-4c7a-8160-7dcb6bbe3047": "done",
+    "e017a3fd-f09d-4d75-b1e6-429406de5d91": "done",
+    "20025031-75c0-4ac2-b1d0-135b60988137": "done",
+    "07a99270-d79d-44b7-8c62-24efc6cf9a88": "done",
+    "77580b55-e144-4cf7-b020-7135ace67ef9": "done",
+    "59ca1642-de9b-41dd-a62f-feac44b7caf5": "done",
+    "03150cf3-6591-4387-8830-9af04bbe939d": "done",
+    "ad2bd972-9375-4233-8806-c43f1d521802": "done",
+    "4adfbe12-15fc-46f6-a22d-f0e2f864d95e": "done",
+    "e089521b-a114-49f3-afe4-1c1dcc235ce0": "done",
+    "5c306351-ea83-4ead-b6c9-b6f05e4461ce": "done",
+    "fc8de365-fd36-4362-b6af-2cc460e54dbf": "done",
+    "6a17e48c-3ea3-4257-887e-b2c1c932eba3": "done",
+    "f32a8247-6d5d-469a-bc18-866b9a4c69d2": "done",
+    "0877e2c2-b9fc-425e-af46-5d77adefbecf": "done",
+    "c9ea9841-17d7-493f-93f6-dc473abef4be": "done",
+    "36b67239-04fb-43be-a235-9dbd138c9b78": "done",
+    "8180ac9e-30c3-4d05-b85f-38ffa71e2032": "done",
+    "f5504a60-3e45-475b-92ed-8edd2f5d87ff": "superseded",
+    "79e329fa-d06b-486e-ad51-69c71feaf7d0": "superseded",
+    "fa85d3f4-81d9-454c-bfed-5d1543c8c1d4": "done",
+    "d205f6c2-fe4b-462b-87a8-516399971b59": "done",
+    "d0404bc2-9463-4edf-8fc3-7ba0834b26ad": "done",
+    "22fb7280-2137-420b-8aa9-b098f9fa8e77": "done",
+    "494f3744-0195-4fb6-b5db-3a9e21961e4c": "done",
+    "7f9d5b62-0abc-42a5-bfe3-7898163f480e": "done",
+    "e05733ee-ef5a-451f-a68d-4e4a57ab0278": "done",
+    "9a6b4651-3127-4926-8112-65fda3c705ae": "done",
+    "67b5620a-84e1-420b-b352-db4c2c6810f7": "done",
+    "7fafb95f-9927-4d8c-84ff-dbc20d737cd3": "done",
+    "7897a771-6417-4943-9b67-280931f17eb8": "done",
+    "39255896-c64f-4ae4-973b-0dda18548877": "done",
+    "37c0f8ab-07e3-4001-8d5f-ea4a194b5930": "done",
+    "b4338922-2ce9-4983-99db-e68f8bd3b025": "superseded",
+    "b5c92be9-c401-43af-9874-e603c4789e86": "done",
+    "0b80ebb7-2b05-4c2e-9df8-8a061606d1ab": "done",
+    "cd2540e4-d75a-4101-b836-43c1e840c466": "done",
+    "f515d3f3-d53b-40ab-b821-5d5db979d17a": "done",
+    "d7791462-fbdc-47d4-a22e-dda0c7480463": "done",
+    "4cd8d335-c67d-4233-a5c9-47ff8ee12a79": "done",
+    "da3eafce-acbd-4d25-8df7-48ab3655a618": "done",
+    "7156673f-edbc-41c9-bd5c-3d0e7fd9dee2": "done",
+    "05262e55-5ea0-4caf-962e-d1d3003bdebd": "superseded",
+    "dfd1b090-6cf4-48ec-afe8-27e7d8869a9b": "done",
+    "95526492-2107-48e0-a1ab-60b9a0cd028b": "done",
+    "fa2de209-e1a9-4809-9d37-918bb6f0360b": "done",
+    "f9fc8ff9-ba13-4f81-9c24-c2b64278ca91": "superseded",
+    "d4077da0-d3a2-44d4-81c2-e7bb00cb1a82": "done",
+    "8df35338-2127-40b7-a6c0-8f297fe75604": "done",
+    "ef70d9fa-a182-486a-b173-5e2ef982e454": "done",
+    "f83f3de2-c0b2-40cf-a23a-66dd92a42391": "done",
+    "9cedacad-901d-4122-b78d-f908e9e24fc4": "done",
+    "6848eac9-c482-4345-bd86-e7ce3ce06417": "done",
+    "177d06bd-d57d-48c9-8428-3d365431603e": "done",
+    "51d73cb7-2680-40bd-909f-9158824fdb13": "done",
+    "fe7e9b36-fa83-4fc6-9bf8-19e31872ed58": "done",
+    "d34628ff-bbd3-43ad-afe5-04062c4bd29d": "done",
+    "eb3a6e58-05a0-48ee-8213-45c99045a8b9": "done",
+    "658a1d8a-528b-4590-a3a9-17264874b7fa": "done",
+    "1dc4947f-aec1-41f7-8d60-8ba7dbd12a0b": "done",
+    "5379af41-e823-4493-9146-5edecbc2dc29": "done",
+    "aa776f95-2566-4e69-97d6-51a76b6db98b": "done",
+    "3dcdfd08-d35d-4b6b-87e0-570e11b2a8f2": "done",
+    "465cbe23-b36a-4021-8563-6a4b4926d7e8": "done",
+    "54ed219f-6a00-4288-bd56-c70eee464d46": "done",
+    "e40d9799-e094-4298-a198-f83e0ef4057b": "done",
+    "57e0a70e-6041-4f45-a289-d174324ee78e": "done",
+    "1c561e15-4465-4b91-bf64-71828a82b540": "done",
+    "d907514f-0449-497d-b94b-4cf831101e92": "done",
+    "6a1dfda7-e5e1-4c6b-a237-26faf33b1dbb": "done",
+    "41fed2cf-02f7-4a29-9305-9efd0a7dd126": "done",
+    "3bb9ca8f-1412-47eb-8b19-033e34025b30": "done",
+    "528540b1-2954-4beb-8054-6cba5b777850": "done",
+    "acdba572-4b8c-4ed2-baae-4bb71dd60f68": "done",
+    "21e5156a-4045-4bf2-99ec-a8bc1ace3e40": "done",
+    "2b31776b-4d8b-4849-bd56-9ef1da4f17f7": "done",
+    "fc5f6506-a02f-466a-b120-d8591402a2d6": "done",
+    "1971d5d6-cd4c-4264-8c2a-f05308de48a6": "done",
+    "a0901514-780e-44fb-b4b6-cdde04ed19d0": "done",
+    "8f0614cd-e25a-4548-ad61-46e413656ff4": "done",
+    "96dcf07f-0e19-4826-949f-779b6ab1c92a": "done",
+    "410171ad-8142-4c74-8b1c-d9c79806d2be": "done",
+    "93611c90-ef06-45c8-98b2-b1855652d36c": "done",
+    "d91dae13-d6f3-4028-a697-6257da69cc39": "done",
+    "5d8f57c4-5952-45ec-ae88-292be39da113": "done",
+    "3895f9bc-1f1a-4dd0-92ea-3ad79d92ebe1": "done",
+    "51a2957b-1277-4833-a9bf-c2c5ce0eca5e": "done",
+    "cf842085-6e70-416c-b6ce-b38a8e55ac00": "done",
+    "4f7be6a8-3420-4260-88b0-031d393094db": "done",
+    "9c081423-399d-4c10-8688-93d265331b76": "done",
+    "e3b24dd5-b433-4bb6-be1c-c7ebdd2de056": "done",
+    "88dc08bd-7ad3-4df5-8fcd-a9903a65d873": "done",
+    "8281f714-5f95-4469-80f5-7011aaa4f2d3": "done",
+    "dd319509-564b-4da2-b761-66bc4bad9d77": "done",
+    "9353814b-e6f5-4f43-bc02-f39059bab274": "done",
+    "a3e235d5-f2c9-40ad-bd21-cc9fff562f71": "done",
+    "41590531-997d-4321-9378-54620de5fd80": "done",
+    "c50a4894-5c59-46b8-8522-b5cc3f5b999e": "done",
+    "9ff76c4e-b3c1-464c-8fe2-060889c5fa66": "done",
+    "289d36af-6eae-4446-8cb9-04e00732b4d5": "done",
+    "facd293f-6a47-4d2d-ba73-028f7bd3b193": "superseded",
+    "f92757bf-e633-4f55-9a28-f481823cd35b": "superseded",
+    "98fd7336-4d9d-4ee1-aa34-a819cf898b54": "superseded",
+    "708ee53d-f562-4cb5-af02-149326243d88": "superseded",
+    "37620a2e-601b-478f-9b25-9b442e9e8367": "superseded",
+    "d52f1f21-fcca-4ea1-bb08-de7388fc3429": "superseded",
+    "6980362c-db6e-43ef-ac53-6323898c84a2": "superseded",
+    "7ec78879-5c75-4309-b03e-525c28d79b00": "superseded",
+    "d4d8dd92-b34e-4bcf-ae27-3635778f8904": "superseded",
+    "0304d2d7-c54a-47b7-bb95-e7206e51bad6": "superseded",
+    "5268f008-f863-461b-bc98-8713a62894ae": "superseded",
+    "0172ef6c-b37f-4e2f-a205-b8e7134d9b9d": "done",
+    "6bb65daa-1670-4f9d-9c16-58b7dbd5af03": "done",
+    "40a20e7f-5c6b-4dac-9274-debd62f83975": "superseded",
+    "86400de6-a7f0-4f26-a90e-cbc08b589b72": "done",
+    "b9ef9523-989f-40bb-8c54-7f03ff281b3a": "done",
+    "d1fbc00b-fd28-49a4-b582-a8b79ced89bb": "done",
+    "9e6bdd3c-c5d8-4366-8cc4-45fb091bc7bb": "done",
+    "c00f682e-cf8a-46d7-a4ca-b0de9dd4d24a": "done",
+    "751bf004-77ee-4b51-9cef-d32b089d5255": "done",
+    "c8072460-bba8-45fd-bbc7-5d23760c2eb3": "done",
+    "60b54dd9-0dff-4323-a3cc-9a1934ce25e6": "done",
+    "60031b02-87bd-49f5-91bd-9428683f5487": "done",
+    "d394d1c5-3d81-48f3-9f0a-f8d1cc692f9c": "done",
+    "e1dc6f72-2206-453a-81d4-c3e120926c6a": "done",
+    "7afc9395-2138-4b32-adc1-051b66ba7bd7": "done",
+    "99e1fc7d-9588-4ea9-8e57-8b03aad08b90": "done",
+    "dd94791a-f1fb-499b-8f09-1f61a64fc065": "done",
+    "d0298bd7-24dc-4b93-835a-5c87c1d4a4b6": "done",
+    "8e760fd3-7fd8-424a-b682-c2b678c0720c": "done",
+    "73fde9dc-95c3-4d3e-be56-e6470fab4131": "done",
+    "77f80e14-8490-43ea-a2fb-d570b30dbc81": "done",
+    "8a8e5523-0dfc-46c6-a04a-73cfbc15bbe7": "done",
+    "789d4a45-5fed-4942-bc99-6070e9e6c4d4": "done",
+    "683e027a-2c35-4804-a640-462ad3b9bb88": "done",
+    "54add0aa-80f8-4fca-a29d-32c1c680380b": "done",
+    "cfbf7584-ad7f-47f0-aa0c-2d01977ab0a7": "done",
+    "d5139ac1-8df3-4d15-9fa7-a101a3316dcb": "done",
+    "120d9e2c-3bc7-476e-aa12-a4bcfb1845a5": "done",
+    "796a5883-5dc7-49db-8635-dbb3694cb8c6": "done",
+    "2e29364c-72bc-437e-b54b-b4091df30332": "done",
+    "c2062d58-2980-4959-a1be-1e9a0013258a": "done",
+    "d22534b0-0a48-44c8-864a-5770326b8cb6": "done",
+    "60ede0e7-3246-4227-b307-d9d82ab83adc": "done",
+    "0c34972c-6448-4115-9042-04b67103452a": "done",
+    "e1f4049c-d338-46f4-b527-dee0d2741e86": "done",
+    "316cbb6e-e352-4721-9df1-693d1eba2000": "superseded",
+    "0a830ed1-e0e7-42ce-9d27-b557f6282be2": "done",
+    "a6a58729-06e6-4604-9088-a2164ebdf79c": "done",
+    "9a4857dd-ad65-4e05-a7d1-293bb3f53d12": "superseded",
+    "32847fd0-ddce-45d1-acfd-6958a3c6caae": "done",
+    "96715beb-97db-4053-a83b-c27b38265dba": "done",
+    "1067d667-d57c-4c48-8e10-893f6f267aaf": "done",
+    "6458a1ce-6e5c-4b74-9080-69417eb97369": "done",
+    "b1bb3902-387d-44b6-b029-273c43fbe77a": "done",
+    "de17ff31-6033-41fb-ae7b-766d5d35690d": "done",
+    "9b849e34-4c0f-4787-9eea-d114531bc210": "done",
+    "30fd2556-19a8-4567-a526-6230c0054438": "done",
+    "bb2bf0e5-ec6d-4166-9718-36192fded1be": "done",
+    "38e85e2c-dedf-4852-8298-8d72e71859b2": "done",
+    "5a5b4b7f-b091-4db5-9648-a540df997ae4": "done",
+    "1e3bacae-ad66-4dbc-927d-7f8d569c4afb": "done",
+    "5c4bdbab-23bc-4c5a-a780-d1b371589a17": "done",
+    "9a79819c-9641-42b9-87b0-1feaba1a40ed": "done",
+    "e4e2af49-e418-4235-8b24-719898acb5c7": "done",
+    "9bb158eb-88cf-4ad1-a0a5-24de819aa44c": "superseded",
+    "ff3ed6c1-1e48-474f-90ac-c555e22e42dc": "done",
+    "5dcb50cf-ad1d-41fc-b785-2f06350c1878": "superseded",
+    "ef62ce13-3e1a-4bd3-addf-e0933edb4bc1": "done",
+    "3b523490-e5cb-4aee-b35f-bb626a1aa11c": "done",
+    "7330eb1b-660a-4901-be1a-e6c99508558f": "done",
+    "29f393eb-2dcd-41a3-a094-55c43908c4a6": "done",
+    "6f047546-1201-492f-96b4-3fea707228fd": "done",
+    "6a83f5a5-de31-42af-b4c6-7b2501687b05": "pending",
+    "27ca8cd5-29d1-4a73-a747-3a15be277ffa": "done",
+    "d00067ad-ee9b-41d1-b8a4-3a36249fc02a": "done",
+    "04e0c66b-b440-4e5b-8d91-e7147e8710f8": "done",
+    "eec6e699-7b95-4760-b5d9-ef341879a1bd": "done",
+    "7d5884b1-ae75-4fe7-a7ec-b62a2416ea88": "done",
+    "07ba4e9d-7280-4cbe-97fd-4340417f5295": "done",
+    "76ced3f7-f369-43d1-aa8c-f83d62faba55": "done",
+    "9f47bf5f-3c6c-446a-9cae-c27d9f7bebba": "done",
+    "deabaffe-a284-47fe-95fe-1413ddda584c": "done",
+    "750df888-52e2-4413-a078-ff5cc28d700b": "done",
+    "8258c303-0b62-4f5a-85a0-205f07a28c64": "done",
+    "efeca0a0-408d-4e5f-bec9-6e0809ee8cf0": "done",
+    "ae0aa196-e8f5-4472-a6b4-a31b6a81b029": "done",
+    "d91ea1e6-b0d9-446b-97c0-2743a4a0c6b2": "done",
+    "4d2ceef1-82ea-4d8c-b49e-54d494d693b6": "done",
+    "2c1ea64d-449b-4cb0-b75c-d6121923b94d": "done",
+    "1bd88406-20ed-4bff-82a0-16ea3d7bea36": "done",
+    "6bd75c14-3138-4d05-97b1-481ec8548765": "done",
+    "df30b9d4-f970-4675-a9af-9da0d613e982": "done",
+    "c28c28b7-3162-42d4-8f87-125ffb42cf33": "done",
+    "1674357b-7015-4cc4-9238-05efcd2099c3": "done",
+    "2bd7eacc-ac85-48af-ab92-d593edd6b782": "done",
+    "02743e46-f422-4ffc-9d9d-739b9a014272": "done",
+    "68f9ba77-a280-4e5e-86b3-5aac6d452ef5": "done",
+    "0e3a617c-024c-4a7f-9ec1-e25a51cd399e": "done",
+    "e01cc706-3ab0-4d09-b83d-9801e8c83f25": "done",
+    "41e21905-1cc1-4d79-b791-aa6885215c12": "done",
+    "9d1dd5e8-3bba-45e3-8fbc-662f415872e4": "done",
+    "9f891711-9205-4e6c-9dce-a7340b4f5264": "done",
+    "b8d467d5-b9fc-4f3b-a83e-4c686648cc7f": "done",
+    "79dd9c2d-629c-4cf6-bed0-5ce789ac680b": "done",
+    "ce681d93-13c5-42f9-b478-747408e28d41": "done",
+    "fa5b6b8e-b59a-42da-ab7c-c6f52341d316": "done",
+    "3271ce01-2cc0-44c8-8c40-e90222e1530f": "superseded",
+    "4f24656a-38c8-49ea-8a32-1d44f70dcf89": "done",
+    "a6e171c1-87f6-456c-a901-0d2abf393f21": "done",
+    "79a6fba7-1823-4958-b414-82b29effdb57": "superseded",
+    "567b6a98-478d-422e-b650-d8eb77733769": "done",
+    "e01797ff-c951-4318-be6b-5386b942cde6": "done",
+    "4c23647a-3abd-4ed4-822c-f49b30814756": "done",
+    "7a9c7fe1-9fdf-47a6-847b-8150c41dff96": "done",
+    "9e896b70-fe9e-4673-95a6-9e81a5b45c6b": "superseded",
+    "3fb44c3f-3962-45a3-8120-8d3034fe17e8": "done",
+    "3d2ef306-aca3-4755-82c2-2cb0cceb1fbe": "done",
+    "0ce6dea1-d7e3-4071-83a1-93bb0cde8edd": "done",
+    "a84b8a21-2149-4c9b-99f5-64c25d274e78": "done",
+    "8a38beb9-5833-4154-8732-e65b4d75e263": "done",
+    "0f5843f3-cf71-4da9-ab10-d522d9cdbff0": "done",
+    "dbed7bc2-2106-417a-8d7e-338142e5827e": "done",
+    "70b01c44-730f-46b3-8dbd-11ef451860da": "superseded",
+    "b9ba533f-1413-42c3-8b23-63aac86fcbb3": "done",
+    "f4038957-8fdc-43e1-b8a8-ddd74ca31cd8": "done",
+    "83cafa82-e1d5-451d-9731-e4f6cc51e3a3": "done",
+    "09029a3c-cf31-4fb6-980e-8be1e49b11dd": "done",
+    "0fd28e74-103f-49b5-8bdd-178218613194": "done",
+    "34876f89-6a39-4205-aed9-71a4cc32037c": "done",
+    "a66359b3-4871-442f-9af3-7066d5b424ff": "done",
+    "3b8ae415-6612-4799-9d7b-6a5c73cbdd25": "done",
+    "82233f61-8f59-47f2-9516-3594e4acf4cc": "done",
+    "3dcf28e8-400d-47d8-bb0e-ca38f9beda8c": "done",
+    "bc4baa01-904a-4af7-9092-de12069690dd": "done",
+    "625c4d12-96f1-4527-92dc-55557c9d6706": "done",
+    "a86f0ccf-1e1d-4466-9758-b902709dc3e7": "done",
+    "5cc65320-8e44-47ef-962c-e4006fcd0582": "done",
+    "5184eba3-fee1-4532-9b70-26c55edef792": "done",
+    "fc8a5489-d272-48fb-957a-a678de46354a": "done",
+    "da959d13-f372-48a6-a9e2-e4e821d578fa": "done",
+    "59b60ad2-d123-4afd-a65f-22906837080f": "done",
+    "0b219958-1f24-44d3-aa99-95346e622bc7": "done",
+    "a1a48a4b-d4c9-4bc8-af51-33a63b79f2c3": "done",
+    "65ad320b-43c9-4bab-9546-90e43a2a38a4": "superseded",
+    "0927230e-e79e-4592-b97f-c909d3b3a579": "done",
+    "7c6e310e-3b6c-46cd-aa1a-9a39f0cbbd06": "superseded",
+    "4a6384c6-8b61-480d-aaea-931b129bbc68": "superseded",
+    "73187400-f0f8-419a-89e4-493d95f62765": "done",
+    "0612dbdd-a409-4237-a773-909e59f4ceff": "done",
+    "a728d995-3c70-46b0-bc84-4352bfcaa1a8": "done",
+    "c5461a7b-34ea-4405-9ad8-7ed082df18b9": "done",
+    "97fd605d-c7d4-481e-b5e2-adf5f59d8f78": "done",
+    "d3fb9daf-b679-48ef-a12a-74fee1534cd4": "done",
+    "81264fa9-11c5-4f24-994e-21a6f3ac4cac": "done",
+    "c162acaf-8ad7-4ebb-aaad-d6ee857331de": "done",
+    "8d3fe8b3-00a2-46db-9bc3-4b9bde66b6a1": "done",
+    "a7344325-ae56-4f62-ba14-84ebeb5a776a": "done",
+    "2391e9cb-ee90-4bd2-8f05-17ba43747ee7": "done",
+    "0301ad9a-972b-4f94-8499-c8b227c61955": "done",
+    "09c0a971-fd23-4a86-b812-6f05c8fe7f2c": "done",
+    "da84fb8f-af36-421f-9d29-50cd2bc87bc6": "done",
+    "7321451a-34b4-4990-8152-fbd2e5324068": "failed",
+    "6f1fe56e-19eb-4af9-b248-6e54e1956352": "done",
+    "2eda42c9-f40a-4a6c-9541-30aec0c0ed5d": "done",
+    "603c231e-3c58-44e1-9e3c-08170dea5d29": "done",
+    "9af98ee7-137e-4859-96c5-e65b8f052c29": "done",
+    "1a1e275b-b147-4178-b20b-caf41a75505d": "superseded",
+    "3b884fe3-9106-4899-8425-3aaf84b37d14": "done",
+    "ad0a0f95-f859-4483-be84-978d72f6e796": "superseded",
+    "5bb23acc-d237-4c1c-b5c6-8f1c89aa41ce": "done",
+    "e5aacec0-52d8-4f4c-9001-2dc55f661776": "done",
+    "0cb37118-f202-44ad-a0ea-b2f2193bf52d": "done",
+    "8b5356b8-a1a3-4aff-ab01-bfa4c214a4a8": "done",
+    "7ea666af-5e5e-432a-9a07-1dc4c4dbc629": "superseded",
+    "2702d246-9348-40e0-9570-fac0b24467e3": "done",
+    "bc9af72a-6a7b-4ac3-b4bc-d1c2e13e4dad": "done",
+    "146945a7-1a23-44be-8837-23d820d105a2": "done",
+    "58d4816a-d60b-4114-8545-f0d269545b4c": "done",
+    "e3c4cbb4-9510-4c91-bcf4-34cd4ba6816f": "done",
+    "a371fb66-a1d1-4151-aab7-58cbd73faf4d": "done",
+    "cca0b5ee-aa33-43b9-9cc9-240fecc7ded5": "done",
+    "adfa90a0-6392-4e4d-bac2-001be38f7559": "done",
+    "e4435fc6-3bf1-4e3a-a037-cbf722a7b00b": "done",
+    "e10da185-75ae-4349-ba72-34191d36ffe8": "done",
+    "a45e44e2-7cb6-4070-bd48-c7a176a811e4": "done",
+    "dac6d126-f010-4bff-a362-4da4b237d357": "done",
+    "6aa27a4f-0200-41d6-b108-bc52588d461b": "done",
+    "95b909ca-6b03-4dec-a709-0cd27fb40959": "done",
+    "e6277c3c-bdc3-42bb-95cd-aed5b3f0470b": "done",
+    "a93a348d-fa31-442d-ab36-1aa662bec8cc": "done",
+    "9defb4c5-2297-4cd6-8c7b-bd3b56475458": "done",
+    "9849698b-b846-4950-b928-0987f311554d": "done",
+    "20706316-e6c4-4451-863a-d548c95f6041": "done",
+    "1f77b8d9-2e72-4cdc-87d3-0ae60ab0d687": "done",
+    "573f819a-5f80-48ea-8df6-ed37b21bd565": "done",
+    "9952650a-e540-460a-8fa9-856b5a3d8c58": "done",
+    "d643b5ab-94c8-42c3-aad8-4e943fabb8a0": "done",
+    "766f103e-3b09-4808-a583-80e13baa1620": "done",
+    "ac69d8ae-4050-4498-9c86-6f7efee56b00": "done",
+    "1c8f5cf6-11a8-452b-a54f-b5ad52ddf54f": "done",
+    "f5401cb2-1bda-4384-88c4-64b361188a75": "done",
+    "a54bb345-6701-4c24-89af-4bf61276683d": "done",
+    "8a07e6a3-5e82-40cf-861f-b7e2f17a1a44": "done",
+    "466dd117-ecd1-4a71-bf0e-569c9cf25ed3": "done",
+    "9ff8af2e-1df9-4f78-b11e-48eac449fae1": "done",
+    "33c697cd-1570-4fed-9e20-22bded3c6415": "done",
+    "7da71e4e-5a96-4498-848b-419e449e9fe2": "done",
+    "f991d321-c702-44d2-a651-5dee8e2a6c80": "done",
+    "47ee68b6-5d59-4975-a0c9-bde88b67daeb": "done",
+    "54bbfc73-0fa6-4d77-8e2c-4561518dfe11": "done",
+    "252d5e4b-476c-4448-9aa4-18bb49b474f2": "done",
+    "ba344835-b469-40bb-90b9-3bdab59e2222": "done",
+    "9c581695-03ed-4f0d-8f4b-96ab0192844c": "done",
+    "8d55c554-7a93-4a5a-a792-ccc0c5ce3cbf": "superseded",
+    "eab5d603-55d4-4597-aac6-cfdd017343da": "done",
+    "299f1248-9a01-4e9c-9a3e-fdda9f0d84c2": "done",
+    "f270850f-eaa6-407c-afff-40462eaa7793": "done",
+    "6f37c414-80b8-46df-a494-e2eac003a123": "done",
+    "2d0b766f-b7eb-490e-a339-35f5989141b2": "done",
+    "2880666d-52e6-4a9e-93f9-0914cff8f051": "done",
+    "aaafca85-13f7-42bb-a937-1b5491c28014": "done",
+    "c9cebed5-ae07-4e3e-b22b-7c82ec403a9a": "pending",
+    "5f3a3478-de9e-491c-af68-d8c133211868": "done",
+    "7faa4b01-5f87-4da2-8849-9fc6d6b57d17": "done",
+    "ccfe0a3b-a591-4272-ab9d-5c8a50da52fc": "done",
+    "824c352e-81eb-4b0f-bde8-ad2e22ee41ce": "done",
+    "72067fdb-5bc5-48c5-953e-e91c770576fb": "done",
+    "05a884ff-23b4-43c2-b97d-d46d654cbcb4": "done",
+    "676653e9-690f-41fb-8f78-0e6166572171": "done",
+    "ca6502b9-f744-488d-8f58-fa6dcb28774f": "done",
+    "d1f4eb4a-451a-4dd1-aded-e2338b5463e1": "done",
+    "6eb321e2-756c-4deb-b3da-1254b235e493": "done",
+    "80f4ace7-af55-49b9-a64f-41dcfe224173": "done",
+    "23613a60-ba3d-48f0-a13a-8c0b514cac59": "done",
+    "935ea8cd-3d7c-4f1e-8322-628590befb59": "done",
+    "e93d63a2-69a7-4515-b56e-c6325d03ddc1": "done",
+    "94049c65-d5c4-46b5-93f2-b9e75c071435": "done",
+    "2028b8b9-d96b-4633-8086-5a4b2030e08d": "done",
+    "9e5eccc7-f222-4d87-a20b-ed185f6382a5": "done",
+    "b9839010-d446-46e0-8421-46856f884cbe": "done",
+    "1c212f4e-a971-4ba0-98a5-80677afdd9ec": "done",
+    "bd0e0b58-ea70-45b2-8b03-dde868fd7546": "done",
+    "00317bff-4ca0-43d1-8a67-84592bf5b278": "done",
+    "914008d2-acbf-48e4-b2fe-e92250f7620a": "done",
+    "4ff3962a-373b-46a1-9bbf-537349126b0b": "done",
+    "af0e46a1-fb56-4744-aba4-82f6991e587c": "done",
+    "86b61295-5676-4622-a9cf-1c653bea1665": "done",
+    "f07f6b01-41e1-4a1e-a10d-50b31224d4d3": "done",
+    "e1cf3515-9303-4f70-be5e-db990d87b453": "done",
+    "115a37f5-a846-4045-8a29-78200cd28269": "pending",
+    "5e7a8940-24e7-4816-87b5-05260a2b4c05": "superseded",
+    "5bb82fd4-da7a-404e-96e6-0be0b3f8dc16": "done",
+    "11f7792a-3c95-49f0-ad59-42f7ab28830d": "pending",
+    "98890141-f073-4729-b307-f372d6463d9c": "done",
+    "cdceea58-4644-4e6f-87e0-f49b67211d4c": "done",
+    "f2392c33-6dc2-4c10-afd7-c6b7f3e0b016": "done",
+    "44d28ff9-d344-45b5-a544-e206897f8b9a": "pending",
+    "87177ada-4131-46d4-8cb2-d629d56baaea": "done",
+    "4c9d7218-702a-4cac-b37c-8a866c16b6be": "done",
+    "e14372cf-015f-4d4e-b3d2-570db2691476": "done",
+    "1f1f557e-8b73-4f89-82c3-bfd30c7bdd85": "done",
+    "d9272886-97c5-4b0a-a6de-ddb4f7881e43": "done",
+    "a104d24e-9980-4620-aa8f-71ac549ad1ee": "done",
+    "83bb9bb7-2d7b-4f15-8026-51b93615c5a2": "done"
+  }
+}

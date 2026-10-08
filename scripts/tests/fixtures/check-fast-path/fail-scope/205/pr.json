@@ -1,0 +1,18 @@
+{
+  "number": 205,
+  "body": "Dispatched-bead id: cccccccc-cccc-4ccc-8ccc-cccccccccccc\nChange kind: structural\n\n## Verification Evidence\npython -m pytest scripts/tests/ -q\n",
+  "changed_files": [
+    ".github/workflows/build.yml"
+  ],
+  "ci_conclusion": "success",
+  "bead": {
+    "id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+    "lane": "code-health",
+    "autonomy": "auto",
+    "risk_class": "structural",
+    "scope": {
+      "paths": ["scripts/**"],
+      "forbidden_paths": []
+    }
+  }
+}

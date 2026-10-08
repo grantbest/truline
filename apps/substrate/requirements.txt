@@ -1,0 +1,29 @@
+# Substrate dependencies.
+#
+# Ranges, not exact pins. These were pinned exactly and left untouched from
+# early 2024 until 2026-07-30, which made the platform spine the least
+# maintained dependency set in the estate — while holding the encryption
+# (ARCHITECTURE.md Amendment 24, Phase 2 currency pass).
+#
+# Convention: floor at the version verified against the suite, cap below the
+# next breaking bump. Semver-stable packages cap at the next major; 0.x
+# packages cap at the next minor, because a 0.x minor is their major.
+# Reproducibility comes from the image build, not from freezing these forever.
+
+fastapi>=0.141.1,<0.142
+uvicorn>=0.52.0,<0.53
+sqlalchemy>=2.0.51,<3
+psycopg2-binary>=2.9.12,<3
+pydantic>=2.13.4,<3
+pydantic-settings>=2.14.2,<3
+asyncpg>=0.31.0,<0.32
+alembic>=1.18.5,<2
+# Phase 4.3 (Semantic Substrate): Gemini embeddings + Qdrant REST client
+# are both reached via httpx — no SDK deps, keeps the image lean.
+httpx>=0.28.1,<0.29
+# Phase 5: Application Layer Encryption (Fernet) for bead content/context.
+# Amendment 11 mandates AES-256; Fernet is AES-128-CBC+HMAC, so this library
+# being current matters more here than anywhere else in the estate.
+cryptography>=49.0.0,<50
+# Phase 8 Architect: Redis-backed API caching for "Instant UI".
+redis[hiredis]>=8.1.0,<9

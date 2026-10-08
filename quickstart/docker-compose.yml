@@ -1,0 +1,95 @@
+# Quickstart: the store, the gateway and the console on one machine.
+#
+#   cp quickstart/env.example quickstart/.env   # then set SUBSTRATE_ENCRYPTION_KEY
+#   docker compose -f quickstart/docker-compose.yml up --build
+#   ./quickstart/seed.sh                          # one task bead on the board
+#   open http://localhost:8080/factory
+#
+# What this is NOT: a production deployment. Identity is in trust-headers mode
+# with a fixed local identity injected by the console's nginx, there is no
+# Cloudflare Access in front, and the factory worker (Temporal) is not started.
+# The deployment this tree was exported from runs on k3s with ArgoCD; see
+# README.md § Running it for what a real deployment must supply.
+
+name: truline-quickstart
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: alpha
+      POSTGRES_PASSWORD: alpha
+      POSTGRES_DB: substrate
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alpha -d substrate"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", ""]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  substrate:
+    build:
+      context: ../apps/substrate
+    environment:
+      DATABASE_URL: postgresql+asyncpg://alpha:alpha@postgres:5432/substrate
+      SUBSTRATE_API_KEY: ${SUBSTRATE_API_KEY:-local-dev-key}
+      SUBSTRATE_ENCRYPTION_KEY: ${SUBSTRATE_ENCRYPTION_KEY:?set a Fernet key in quickstart/.env (see env.example)}
+      REDIS_URL: redis://redis:6379/0
+      DISABLE_VECTOR_LISTENER: "1"        # no Qdrant in the quickstart; semantic search is off
+      SUBSTRATE_CORS_ORIGINS: http://localhost:8080
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/health')\""]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  mcp-hub:
+    build:
+      context: ..
+      dockerfile: apps/mcp-hub/Dockerfile
+    environment:
+      SUBSTRATE_URL: http://substrate:8000
+      SUBSTRATE_API_KEY: ${SUBSTRATE_API_KEY:-local-dev-key}
+      MCP_HUB_IDENTITY_MODE: trust-headers   # the console's nginx injects a fixed local identity
+      MCP_HUB_PUBLIC_URL: http://localhost:8001
+      LIFEOPS_CONSOLE_PUBLIC_URL: http://localhost:8080
+    ports:
+      - "8001:8000"
+    depends_on:
+      substrate:
+        condition: service_healthy
+
+  console:
+    build:
+      context: ../apps/lifeops-console
+    environment:
+      MCP_HUB_URL: http://mcp-hub:8000
+      FINANCE_REPORTING_URL: http://mcp-hub:8000   # the reports proxy needs a resolvable upstream; the finance service is not in the quickstart
+    volumes:
+      # The quickstart's nginx template adds the local identity headers on the
+      # proxied paths. Everything else is the image's own template.
+      - ./console-nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      - mcp-hub
+
+volumes:
+  pgdata:

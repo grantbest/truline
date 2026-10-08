@@ -1,0 +1,29 @@
+# Example business layer — one capability, kept deliberately small.
+#
+# Validated by ../../../scripts/ea-conformance.py. See ../../README.md for
+# what this file is for and how to run the check against it.
+
+version: 1
+generated: 2026-09-12
+namespace: arch
+type: capability
+
+capabilities:
+
+  - ref: cap.example
+    state: active
+    content:
+      name: Example Capability
+      description: >
+        A minimal example capability, realized by app.example below, so the
+        conformance checker's structural and consistency rules have
+        something real to validate.
+      layer: demand
+      owner: example-owner
+      evidence: ["docs/README.md"]
+      assessed_at: 2026-09-01
+      maturity: operating
+      supports: []
+      supports_none_reason:
+        dated: 2026-09-01
+        reason: "Top-level example capability; nothing above it to support."

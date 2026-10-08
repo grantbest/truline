@@ -1,0 +1,116 @@
+{
+  "pods": {
+    "apiVersion": "v1",
+    "kind": "List",
+    "items": [
+      {
+        "metadata": {
+          "name": "substrate-8d1a9e7c3-m5n8v",
+          "namespace": "platform-substrate-prod",
+          "creationTimestamp": "2026-08-24T09:02:00Z",
+          "labels": {"app": "substrate"},
+          "ownerReferences": [
+            {"apiVersion": "apps/v1", "kind": "ReplicaSet", "name": "substrate-8d1a9e7c3", "controller": true}
+          ]
+        },
+        "status": {
+          "phase": "Running",
+          "startTime": "2026-08-24T09:02:00Z",
+          "conditions": [
+            {"type": "Ready", "status": "True", "lastTransitionTime": "2026-08-24T09:02:31Z"}
+          ],
+          "containerStatuses": [
+            {
+              "name": "substrate",
+              "image": "zot.local:30500/substrate@sha256:9f2c6b1a4e7d0358bcaa1f6e2d9c4b7a58e3f1d0c6a9b2e4f7d1c8a3b6e0f9d2",
+              "ready": true,
+              "started": true,
+              "state": {"running": {"startedAt": "2026-08-24T09:02:31Z"}}
+            }
+          ]
+        }
+      },
+      {
+        "metadata": {
+          "name": "mcp-hub-9e2b0f8d4-p7q1r",
+          "namespace": "platform-mcp-prod",
+          "creationTimestamp": "2026-08-24T09:03:10Z",
+          "labels": {"app": "mcp-hub"},
+          "ownerReferences": [
+            {"apiVersion": "apps/v1", "kind": "ReplicaSet", "name": "mcp-hub-9e2b0f8d4", "controller": true}
+          ]
+        },
+        "status": {
+          "phase": "Running",
+          "startTime": "2026-08-24T09:03:10Z",
+          "conditions": [
+            {"type": "Ready", "status": "True", "lastTransitionTime": "2026-08-24T09:03:40Z"}
+          ],
+          "containerStatuses": [
+            {
+              "name": "mcp-hub",
+              "image": "zot.local:30500/mcp-hub@sha256:1a3d5f7b9e0c2a4d6f8b0e2c4a6d8f0b2e4c6a8d0f2b4e6a8c0d2f4b6e8a0c2d",
+              "ready": true,
+              "started": true,
+              "state": {"running": {"startedAt": "2026-08-24T09:03:40Z"}}
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "cronjobs": {
+    "apiVersion": "batch/v1",
+    "kind": "List",
+    "items": [
+      {
+        "metadata": {"name": "pg-backup", "namespace": "platform-backup"},
+        "spec": {"schedule": "0 3 * * *"},
+        "status": {
+          "lastScheduleTime": "2026-08-24T03:00:11Z",
+          "lastSuccessfulTime": "2026-08-24T03:00:52Z"
+        }
+      },
+      {
+        "metadata": {"name": "pg-restore-drill", "namespace": "platform-backup"},
+        "spec": {"schedule": "30 4 * * *"},
+        "status": {
+          "lastScheduleTime": "2026-08-24T04:30:05Z",
+          "lastSuccessfulTime": "2026-08-24T04:31:20Z"
+        }
+      }
+    ]
+  },
+  "jobs": {
+    "apiVersion": "batch/v1",
+    "kind": "List",
+    "items": [
+      {
+        "metadata": {
+          "name": "pg-backup-29124800",
+          "namespace": "platform-backup",
+          "creationTimestamp": "2026-08-24T03:00:11Z",
+          "ownerReferences": [
+            {"apiVersion": "batch/v1", "kind": "CronJob", "name": "pg-backup", "controller": true}
+          ]
+        },
+        "status": {"succeeded": 1}
+      }
+    ]
+  },
+  "applications": {
+    "apiVersion": "v1",
+    "kind": "List",
+    "items": [
+      {
+        "apiVersion": "argoproj.io/v1alpha1",
+        "kind": "Application",
+        "metadata": {"name": "truline-apps", "namespace": "argocd"},
+        "status": {
+          "health": {"status": "Healthy"},
+          "sync": {"status": "Synced", "revision": "6691edc"}
+        }
+      }
+    ]
+  }
+}

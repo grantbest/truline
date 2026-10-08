@@ -1,0 +1,8 @@
+{
+  "number": 501,
+  "title": "Generate release manifest",
+  "body": "Summary\n\nDispatched from dev.task 11111111-1111-4111-8111-111111111111 by factory-dispatcher/codex.\n\nChange kind: behavioral\n",
+  "url": "https://github.com/grantbest/homelabv2/pull/501",
+  "headRefName": "factory/release-manifest",
+  "baseRefName": "main"
+}

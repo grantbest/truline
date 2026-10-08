@@ -1,0 +1,27 @@
+# Runtime: the substrate client only. Everything else the dispatcher needs
+# (git, gh, claude) is an external binary, deliberately — driving the vendor CLIs
+# is what makes a worker $0 marginal on a flat subscription.
+httpx>=0.27
+temporalio>=1.28.0,<2
+# activities/ea_apply.py loads scripts/ea-load.py, which parses docs/architecture/model/*.yaml.
+PyYAML>=6.0
+
+# Tests
+pytest>=8.0
+pytest-cov>=7.1,<8
+
+# Lint: verification_dependency_args() folds every apps/*/requirements.txt
+# into the one clone-local venv bootstrap_verification_env() builds, so
+# pinning ruff here is what makes `python -m ruff check apps/` a command a
+# spec can legally declare — the clone can otherwise read ruff.toml's rules
+# but not run them. Pinned, not floating, and pinned to match
+# .github/workflows/lint.yml's `pip install ruff==...` exactly: a linter in
+# the verification clone that disagrees with the one CI enforces would pass
+# work that the required status check then refuses. Kept in sync by
+# tests/test_lint_dependency.py, not by hand — see that file before bumping
+# either pin alone.
+ruff==0.15.21
+# beadstore.py imports the substrate schema modules since R26.06 (#663);
+# undeclared, a venv rebuilt from this file bricks dispatch at import
+# (release-gate advisory on #663).
+pydantic>=2.13.4,<3

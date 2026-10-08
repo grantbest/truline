@@ -1,0 +1,29 @@
+{
+  "number": 109,
+  "body": "Dispatched by the factory from `dev.task` [`55555555-5555-4555-8555-555555555555`](55555555-5555-4555-8555-555555555555).\n\n**This PR was written by an agent and checked by the dispatcher.** The dispatcher\nruns declared verification in the isolated clone before opening a PR. It\nbootstraps a clone-local `venv/` from the repo's Python dependency declarations\nand adds `PyYAML` because the committed EA/checker scripts import `yaml` without\nowning that dependency in a requirements file. That path is slower than relying\non the host interpreter, but it keeps task specs faithful and makes\n`venv/bin/python ...`, `python ...`, and `python3 ...` declarations resolve\ninside the clone.\n\nChange kind: behavioral\n\n## Intent\n\nProve the release-gate tooling recognises the dispatcher's live PR body.\n\n## Acceptance criteria\n\n- Both gate scripts extract the originating bead id from this body.\n\n## Declared scope\n\nAllowed: scripts/**\nForbidden: (none)\n\nDispatcher scope verdict: **PASS: 1 changed file(s) within declared scope**\n\n## Verification the task asked for\n\n- `python -m pytest scripts/tests/ -q`\n\n## Dispatcher verification\n\n```\n$ python -m pytest scripts/tests/ -q\n196 passed in 4.76s\n```\n\n## Worker's own report\n\n```\nImplemented the change and ran the declared verification inside the clone.\n```\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+  "changed_files": [
+    "scripts/release-manifest.py"
+  ],
+  "ci_conclusion": "success",
+  "bead": {
+    "id": "55555555-5555-4555-8555-555555555555",
+    "namespace": "dev",
+    "type": "task",
+    "state": "review",
+    "content": {
+      "title": "The gate reads the dispatcher's own handwriting",
+      "lane": "platform",
+      "risk_class": "low",
+      "intent": "Prove the release-gate tooling recognises the dispatcher's live PR body.",
+      "acceptance": [
+        "Both gate scripts extract the originating bead id from this body."
+      ],
+      "scope": {
+        "paths": [
+          "scripts/**"
+        ],
+        "forbidden_paths": []
+      }
+    }
+  }
+}

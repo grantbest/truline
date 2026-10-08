@@ -1,0 +1,74 @@
+{
+  "_note": "Shape of the 2026-09-12 S51-3 second-filing incident: kubectl's current-context (EA_OBSERVER_CLUSTER, before the operator's fix) stamped every observed workload 'default', while every declared arch.application workload.objects[] entry carries 'cluster-a' -- disjoint cluster strings, so every owner lookup fails on the cluster key alone.",
+  "observed_cluster": "default",
+  "deployments": {
+    "apiVersion": "v1",
+    "kind": "List",
+    "items": [
+      {
+        "metadata": {"namespace": "platform-core", "name": "x"},
+        "status": {"replicas": 1, "readyReplicas": 1}
+      }
+    ]
+  },
+  "statefulsets": {
+    "apiVersion": "v1",
+    "kind": "List",
+    "items": [
+      {
+        "metadata": {"namespace": "platform-core", "name": "postgres"},
+        "status": {"replicas": 1, "readyReplicas": 1}
+      }
+    ]
+  },
+  "argocd_applications": {
+    "apiVersion": "v1",
+    "kind": "List",
+    "items": [
+      {
+        "metadata": {"name": "platform-core"},
+        "status": {
+          "resources": [
+            {"namespace": "platform-core", "kind": "Deployment", "name": "x"},
+            {"namespace": "platform-core", "kind": "StatefulSet", "name": "postgres"}
+          ]
+        }
+      }
+    ]
+  },
+  "namespaces": {
+    "apiVersion": "v1",
+    "kind": "List",
+    "items": [{"metadata": {"name": "platform-core"}}]
+  },
+  "declared_applications": [
+    {
+      "id": "bead-app-live",
+      "state": "operate",
+      "content": {
+        "ref": "app.live",
+        "workload": {
+          "runtime": "kubernetes",
+          "objects": [
+            {
+              "cluster": "cluster-a",
+              "namespace": "platform-core",
+              "kind": "Deployment",
+              "name": "x",
+              "manifest": "infrastructure/k8s/platform-core/x.yaml",
+              "managed_by": "argocd"
+            },
+            {
+              "cluster": "cluster-a",
+              "namespace": "platform-core",
+              "kind": "StatefulSet",
+              "name": "postgres",
+              "manifest": "infrastructure/k8s/platform-core/postgres.yaml",
+              "managed_by": "argocd"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

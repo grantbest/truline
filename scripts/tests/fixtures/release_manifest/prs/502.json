@@ -1,0 +1,8 @@
+{
+  "number": 502,
+  "title": "Tidy manifest fixtures",
+  "body": "Structural cleanup for test fixtures.\n\ndev.task: 33333333-3333-4333-8333-333333333333\n\nChange kind: structural\n",
+  "url": "https://github.com/grantbest/homelabv2/pull/502",
+  "headRefName": "factory/manifest-fixtures",
+  "baseRefName": "main"
+}

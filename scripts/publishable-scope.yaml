@@ -1,0 +1,20 @@
+# What "publishable" means for scripts/private_identifiers.py in this tree:
+# everything. This repository IS the published artifact. The one exclusion is
+# the check's own test module, which seeds synthetic identifier-shaped
+# literals as fixtures; the targets below claim everything else so no later
+# exclusion can quietly shadow a published path.
+excluded_paths:
+  - path: "scripts/tests/test_private_identifiers.py"
+    reason: "this check's own test module; seeds synthetic identifier-shaped literals (a fake account_number, an AKIA-shaped key) as fixtures for the patterns it tests."
+
+publication_targets:
+  - name: "truline"
+    outcome: "R26.15/O-2"
+    paths:
+      - "apps/**"
+      - "docs/**"
+      - ".claude/**"
+      - ".github/**"
+      - "scripts/*"
+      - "scripts/tests/fixtures/**"
+      - "*"

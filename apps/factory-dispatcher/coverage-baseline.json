@@ -1,0 +1,26 @@
+{
+  "suite": "factory-dispatcher",
+  "measured_at": "2026-10-03T14:42:36Z",
+  "measured_revision": "3b1efa671108330adfdc7873c34a4759c80b93cf",
+  "python": "3.12",
+  "line_coverage_pct": 94.68,
+  "fail_under_pct": 94.18,
+  "deselected_darwin_only_tests": [
+    "tests/test_containment.py::test_os_blocks_writes_outside_workspace_and_allows_inside",
+    "tests/test_containment.py::test_unresolved_var_workspace_writes_are_allowed",
+    "tests/test_containment.py::test_worker_profile_sandbox_denies_git_control_writes_but_allows_ordinary_git",
+    "tests/test_containment.py::test_verification_profile_sandbox_denies_git_control_writes_but_allows_ordinary_git",
+    "tests/test_containment.py::test_git_add_inside_a_linked_worktree_succeeds_under_the_verification_profile",
+    "tests/test_containment.py::test_hostile_pep517_backend_cannot_write_outside_the_contained_set",
+    "tests/test_containment.py::test_planted_conftest_is_denied_writes_and_the_state_dir_read",
+    "tests/test_containment.py::test_worker_profile_denies_reading_anywhere_under_the_state_dir",
+    "tests/test_containment.py::test_mach_deny_services_are_actually_reachable_unsandboxed_on_this_host",
+    "tests/test_containment.py::test_both_profiles_deny_reading_every_credential_path_and_kubeconfig_target",
+    "tests/test_containment.py::test_network_rules_scope_to_port_22_and_every_loopback_port_but_the_tunnel",
+    "tests/test_containment.py::test_job_creation_is_denied_or_the_result_is_reported",
+    "tests/test_containment.py::test_keep_condition_legs_succeed_under_both_profiles",
+    "tests/test_gate_containment.py::TestGateContainmentProbes"
+  ],
+  "command": "cd apps/factory-dispatcher && python -m pytest tests/ -q --deselect tests/test_containment.py::test_os_blocks_writes_outside_workspace_and_allows_inside --deselect tests/test_containment.py::test_unresolved_var_workspace_writes_are_allowed --deselect tests/test_containment.py::test_worker_profile_sandbox_denies_git_control_writes_but_allows_ordinary_git --deselect tests/test_containment.py::test_verification_profile_sandbox_denies_git_control_writes_but_allows_ordinary_git --deselect tests/test_containment.py::test_git_add_inside_a_linked_worktree_succeeds_under_the_verification_profile --deselect tests/test_containment.py::test_hostile_pep517_backend_cannot_write_outside_the_contained_set --deselect tests/test_containment.py::test_planted_conftest_is_denied_writes_and_the_state_dir_read --deselect tests/test_containment.py::test_worker_profile_denies_reading_anywhere_under_the_state_dir --deselect tests/test_containment.py::test_mach_deny_services_are_actually_reachable_unsandboxed_on_this_host --deselect tests/test_containment.py::test_both_profiles_deny_reading_every_credential_path_and_kubeconfig_target --deselect tests/test_containment.py::test_network_rules_scope_to_port_22_and_every_loopback_port_but_the_tunnel --deselect tests/test_containment.py::test_job_creation_is_denied_or_the_result_is_reported --deselect tests/test_containment.py::test_keep_condition_legs_succeed_under_both_profiles --deselect tests/test_gate_containment.py::TestGateContainmentProbes --cov=. --cov-precision=2 --cov-fail-under=94.18",
+  "measured_on": "coverage-ratchet workflow run 37127016856 (the self-hosted Linux CI runner, Python 3.12)"
+}

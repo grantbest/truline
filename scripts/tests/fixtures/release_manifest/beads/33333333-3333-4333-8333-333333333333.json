@@ -1,0 +1,15 @@
+{
+  "id": "33333333-3333-4333-8333-333333333333",
+  "namespace": "dev",
+  "type": "task",
+  "state": "review",
+  "content": {
+    "title": "Tidy manifest fixtures",
+    "lane": "factory",
+    "risk_class": "low",
+    "intent": "Keep fixture layout readable.",
+    "acceptance": [
+      {"id": "AC-1", "statement": "Tests remain offline."}
+    ]
+  }
+}

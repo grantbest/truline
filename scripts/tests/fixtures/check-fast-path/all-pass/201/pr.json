@@ -1,0 +1,78 @@
+{
+  "number": 201,
+  "body": "Dispatched-bead id: 66666666-6666-4666-8666-666666666666\nChange kind: structural\n\n## Verification Evidence\npython -m pytest scripts/tests/ -q\n",
+  "changed_files": [
+    "scripts/check-fast-path.py",
+    "scripts/tests/test_check_fast_path.py"
+  ],
+  "ci_conclusion": [
+    {
+      "name": "Validate PR Change Kind",
+      "conclusion": "success"
+    },
+    {
+      "name": "PR base reaches trunk",
+      "conclusion": "success"
+    },
+    {
+      "name": "Repo hygiene guard",
+      "conclusion": "success"
+    },
+    {
+      "name": "Repo invariants",
+      "conclusion": "success"
+    },
+    {
+      "name": "EA model conformance",
+      "conclusion": "success"
+    },
+    {
+      "name": "K8s schema validation",
+      "conclusion": "success"
+    },
+    {
+      "name": "K8s best practices",
+      "conclusion": "success"
+    },
+    {
+      "name": "Python lint",
+      "conclusion": "success"
+    },
+    {
+      "name": "Dockerfile lint",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenAPI Contract Check",
+      "conclusion": "success"
+    },
+    {
+      "name": "Console Unit Tests",
+      "conclusion": "success"
+    },
+    {
+      "name": "Python Unit & Contract Tests",
+      "conclusion": "success"
+    },
+    {
+      "name": "Scan for secrets",
+      "conclusion": "success"
+    },
+    {
+      "name": "YAML syntax",
+      "conclusion": "success"
+    }
+  ],
+  "bead": {
+    "id": "66666666-6666-4666-8666-666666666666",
+    "lane": "code-health",
+    "autonomy": "auto",
+    "risk_class": "structural",
+    "scope": {
+      "paths": [
+        "scripts/**"
+      ],
+      "forbidden_paths": []
+    }
+  }
+}

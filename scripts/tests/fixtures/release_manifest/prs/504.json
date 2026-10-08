@@ -1,0 +1,8 @@
+{
+  "number": 504,
+  "title": "Secret scrub fixture https://sentinel-substrate.example.invalid",
+  "body": "This body includes sentinel-substrate-api-key-value only as a fixture assertion.\n\nDispatched from dev.task 44444444-4444-4444-8444-444444444444 by factory-dispatcher/codex.\n\nChange kind: behavioral\n",
+  "url": "https://github.com/grantbest/homelabv2/pull/504",
+  "headRefName": "factory/secret-scrub",
+  "baseRefName": "main"
+}

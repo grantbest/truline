@@ -1,0 +1,15 @@
+{
+  "ref": "R00.99",
+  "name": "Charter with no substrate mirror",
+  "objective": "Exercise the refusal path when a charter exists in git but the release bead has not been mirrored yet.",
+  "opened_at": "2026-08-20",
+  "declared_balance": {"enabling": 100},
+  "outcomes": [
+    {
+      "id": "O-1",
+      "statement": "Never reached: the run refuses before rendering any outcome.",
+      "work_class": "enabling",
+      "requirement_refs": []
+    }
+  ]
+}

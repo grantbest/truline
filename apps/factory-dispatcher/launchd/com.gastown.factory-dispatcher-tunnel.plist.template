@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Air LaunchAgent for a factory kubectl port-forward tunnel (PQ-3).
+
+  Every unattended factory drain — the Temporal worker and the dispatcher's
+  substrate calls alike — sits on top of a bare `kubectl port-forward`. Before
+  this template existed, a dead tunnel stalled the factory silently: nothing
+  restarted it, and the worker's own tunnel-loss alert only reaches a log file
+  when DISCORD_WEBHOOK_URL is unset. KeepAlive here means launchd restarts the
+  forward without operator action; it does not fix that alert gap.
+
+  ProgramArguments invokes kubectl directly, not through /bin/sh -c: a tunnel
+  needs no env sourcing, no cwd, and no secrets, so there is nothing a shell
+  would add.
+
+  Do not put secrets in this plist. LaunchAgent plists in ~/Library/LaunchAgents
+  are world-readable enough that credentials must stay out of ProgramArguments
+  entirely. A kubeconfig PATH is not a secret, so when the installer is given
+  a kubeconfig flag it renders an explicit "kubeconfig PATH" argument pair
+  below; this host deliberately has no default kubectl context, so relying on
+  an "ambient kubeconfig" here means every launchd-spawned restart fails
+  identically forever. When no kubeconfig flag is given, install-tunnel has
+  already confirmed a usable default context exists before writing this file,
+  so the omission here is a verified choice, not an assumption.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>$LABEL</string>
+  <key>ProgramArguments</key>
+  <array>
+$PROGRAM_ARGUMENTS_XML
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+  <key>StandardOutPath</key>
+  <string>$STDOUT_PATH</string>
+  <key>StandardErrorPath</key>
+  <string>$STDERR_PATH</string>
+</dict>
+</plist>

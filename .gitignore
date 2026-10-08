@@ -1,0 +1,79 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+tfplan
+current_state.json
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Infisical CLI workspace metadata
+.infisical.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+temp_venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+# schemathesis pulls in hypothesis, so any pytest run in a venv that has it
+# leaves a .hypothesis/ example database behind. Untracked but not ignored
+# meant one `git add -A` away from tripping the repo hygiene guard.
+.hypothesis/
+
+# Node
+node_modules/
+.next/
+dist/
+
+# OS / editor
+.DS_Store
+.env
+.env.*
+worker.env
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Secrets (never commit these)
+*.pem
+*.key
+secrets.json
+ai-stack-temp.yaml
+*-temp.yaml
+*-decrypted.yaml
+*-plaintext.yaml
+
+# Local spikes / scratch
+google_oauth_helper.py
+# Harness state stays local, but .claude/skills/ is versioned source:
+# skills are gate-reviewed harness config (doctrine layer, 2026-08-17).
+.claude/*
+!.claude/skills/
+
+# Worker / runtime state (generated, not source)
+apps/execution-state.json
+apps/**/*.tsbuildinfo
+
+# Kustomize render dumps
+infrastructure/k8s/json/
+*.rendered.yaml
+kustomize-build*.yaml
+
+
+# local gate-review packets (headless release-gate materials)
+.gate-review/

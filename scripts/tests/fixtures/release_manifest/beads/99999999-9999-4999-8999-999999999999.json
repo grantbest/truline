@@ -1,0 +1,14 @@
+{
+  "id": "99999999-9999-4999-8999-999999999999",
+  "namespace": "dev",
+  "type": "task",
+  "state": "review",
+  "content": {
+    "title": "Second delivering task",
+    "lane": "platform",
+    "risk_class": "behavioral",
+    "intent": "Deliver the second outcome of R90.01.",
+    "acceptance": ["Does the second thing."],
+    "pr_url": "https://github.com/grantbest/homelabv2/pull/510"
+  }
+}

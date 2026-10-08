@@ -1,0 +1,2 @@
+# Paths admitted to still carry a private identifier. This tree was exported
+# clean on its first commit; the list starts empty and only ever shrinks.

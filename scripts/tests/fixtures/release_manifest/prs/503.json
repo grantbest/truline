@@ -1,0 +1,8 @@
+{
+  "number": 503,
+  "title": "No bead in body",
+  "body": "This PR body forgot the originating bead.\n\nChange kind: behavioral\n",
+  "url": "https://github.com/grantbest/homelabv2/pull/503",
+  "headRefName": "factory/no-bead",
+  "baseRefName": "main"
+}

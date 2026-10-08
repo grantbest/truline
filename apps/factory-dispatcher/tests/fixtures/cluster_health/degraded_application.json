@@ -1,0 +1,33 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "argoproj.io/v1alpha1",
+      "kind": "Application",
+      "metadata": {"name": "truline-apps", "namespace": "argocd"},
+      "status": {
+        "health": {
+          "status": "Degraded",
+          "message": "one or more objects failed to apply"
+        },
+        "sync": {"status": "Synced", "revision": "10b5205"},
+        "conditions": [
+          {
+            "type": "ComparisonError",
+            "message": "six workloads pinned to zot.local:30500/*@sha256:000...0 cannot be pulled"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "argoproj.io/v1alpha1",
+      "kind": "Application",
+      "metadata": {"name": "truline-gaming", "namespace": "argocd"},
+      "status": {
+        "health": {"status": "Healthy"},
+        "sync": {"status": "Synced", "revision": "10b5205"}
+      }
+    }
+  ]
+}

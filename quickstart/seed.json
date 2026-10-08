@@ -1,0 +1,10 @@
+{"namespace":"dev","type":"task","state":"pending","trust_tier":"derived","created_by":"quickstart",
+ "content":{"lane":"code-health","title":"Quickstart: your first task bead",
+  "intent":"Prove the board, the store and the gateway are wired: this bead should be visible in the console under the factory board.",
+  "context_refs":["README.md"],
+  "acceptance":["The factory board lists this task in state pending."],
+  "verification":{"commands":["curl -s localhost:8000/health"]},
+  "scope":{"paths":["README.md"],"forbidden_paths":[".github/workflows/**","apps/**"]},
+  "risk_class":"structural",
+  "budget":{"max_agent_minutes":5,"max_usd":0.5,"max_tokens":20000},
+  "release_ref_waived":"quickstart demo: no release is chartered in a fresh store"}}

@@ -1,0 +1,15 @@
+{
+  "id": "44444444-4444-4444-8444-444444444444",
+  "namespace": "dev",
+  "type": "task",
+  "state": "review",
+  "content": {
+    "title": "Secret scrub sentinel",
+    "lane": "platform",
+    "risk_class": "medium",
+    "intent": "The document must not include https://sentinel-substrate.example.invalid or sentinel-substrate-api-key-value.",
+    "acceptance": [
+      "Sentinel values are absent from the emitted markdown."
+    ]
+  }
+}

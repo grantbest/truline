@@ -1,0 +1,23 @@
+[project]
+name = "substrate-client"
+version = "0.1.0"
+description = "The one Python client for the substrate's BeadStore surface -- the union of apps/factory-dispatcher/substrate.py and scripts/substrate_client.py, behind the 11-method BeadStore protocol, plus a generic create_bead and search"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/substrate_client"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

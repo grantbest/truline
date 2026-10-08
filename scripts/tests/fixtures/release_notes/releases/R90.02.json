@@ -1,0 +1,10 @@
+{
+  "id": "release-R90-02",
+  "namespace": "arch",
+  "type": "release",
+  "state": "in_flight",
+  "content": {
+    "ref": "R90.02",
+    "name": "Fixture release for release-notes"
+  }
+}

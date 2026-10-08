@@ -1,0 +1,61 @@
+{
+  "arch_service_derived": {
+    "by_writer": {
+      "ea-load": 6
+    },
+    "count": 6
+  },
+  "decision": "KEEP -- ratified 2026-09-24",
+  "derived_by_created_by": {
+    "ea-load": 6,
+    "factory-dispatcher/change-apply": 277,
+    "factory-dispatcher/doctrine-staleness": 6,
+    "factory-dispatcher/ea-apply": 1,
+    "factory-dispatcher/release-status": 172,
+    "factory-dispatcher/requirements-apply": 1,
+    "factory-dispatcher/spec-record-reconcile": 1,
+    "factory-dispatcher/staleness-report": 1213,
+    "requirements-load": 271
+  },
+  "derived_by_type": {
+    "change": 276,
+    "observation": 1395,
+    "requirement_conformance": 271,
+    "service": 6
+  },
+  "measured_against": "production substrate, GET-only, paginated across every arch type",
+  "measured_at": "2026-09-24T22:05:36+00:00",
+  "measured_by": "outer-loop/claude",
+  "prior_observation_2026_09_17": {
+    "arch_beads": 1617,
+    "authored": 29,
+    "derived": 1325,
+    "observed": 167,
+    "unset": 96
+  },
+  "purpose": "D7 snapshot supplied by the outer loop for dev.task c9cebed5 (D-C KEEP ratification). The worker measures against THIS FILE, never the live store.",
+  "totals": {
+    "arch_beads": 2317,
+    "by_source_class": {
+      "<unset>": 188,
+      "authored": 14,
+      "derived": 1948,
+      "observed": 167
+    }
+  },
+  "unset_source_class": {
+    "by_type": {
+      "application": 32,
+      "capability": 63,
+      "incident": 1,
+      "principle": 21,
+      "requirement": 71
+    },
+    "by_writer": {
+      "claude:outer-loop": 1,
+      "ea-load": 95,
+      "principles-sync": 21,
+      "requirements-load": 71
+    }
+  }
+}

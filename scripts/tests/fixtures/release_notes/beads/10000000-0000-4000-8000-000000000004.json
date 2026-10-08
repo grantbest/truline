@@ -1,0 +1,10 @@
+{
+  "id": "10000000-0000-4000-8000-000000000004",
+  "namespace": "dev",
+  "type": "task",
+  "state": "done",
+  "content": {
+    "title": "Orphan work, no outcome_ref",
+    "lane": "platform"
+  }
+}

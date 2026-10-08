@@ -1,0 +1,132 @@
+# QUICKSTART VARIANT of apps/lifeops-console/nginx.conf. The only change is the
+# X-Truline-* identity headers on the two mcp-hub proxies; regenerate it from the
+# original when that file changes.
+# nginx config for the LifeOps Console container.
+#
+# Two responsibilities:
+#   1. Serve the SPA bundle. Unknown paths fall back to index.html so
+#      client-side routing (BrowserRouter) works on hard reloads and
+#      direct links.
+#   2. Proxy /substrate/* to mcp-hub. Browser stays same-origin, mcp-hub
+#      injects the real Substrate API key (the browser never sees it).
+#
+# The mcp-hub URL is parameterized via $MCP_HUB_URL so kustomize overlays
+# can flip dev vs prod without rebuilding the image. envsubst at container
+# start materializes this template into /etc/nginx/conf.d/default.conf.
+
+server {
+    listen 80 default_server;
+    server_name _;
+
+    # Static SPA. Build output is in /usr/share/nginx/html.
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Cache hashed assets aggressively; vite hashes the filename so a new
+    # build always produces a new URL.
+    location ~* \.(?:js|css|woff2?|ttf|png|jpg|svg|ico)$ {
+        expires 1y;
+        access_log off;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
+    # index.html must NOT be cached — otherwise a deploy that ships new
+    # asset hashes leaves users on a stale shell pointing at gone files.
+    location = /index.html {
+        add_header Cache-Control "no-store, must-revalidate";
+        expires 0;
+    }
+
+    # The React route is /reports, while the Dash app is mounted at /reports/.
+    # Without this exact match, nginx treats /reports as a directory candidate
+    # and emits a slash-adding redirect to /reports/ before React can render
+    # the console shell.
+    location = /reports {
+        add_header Cache-Control "no-store, must-revalidate";
+        expires 0;
+        try_files /index.html =404;
+    }
+
+    # SPA fallback. Anything not on disk → index.html.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Proxy /api/ to mcp-hub (versioned capability endpoints & substrate proxy)
+    location /api/ {
+        proxy_pass         ${MCP_HUB_URL}/api/;
+        # QUICKSTART ONLY: a fixed local identity. In a real deployment Cloudflare
+        # Access authenticates the user and mcp-hub verifies the assertion.
+        proxy_set_header   X-Truline-Client      quickstart;
+        proxy_set_header   X-Truline-Client-Type human;
+        proxy_set_header   X-Truline-Scopes      "*";
+        proxy_set_header   X-Truline-Email       dev@example.org;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   X-Truline-Client      $http_x_truline_client;
+        proxy_set_header   X-Truline-Client-Type $http_x_truline_client_type;
+        proxy_set_header   X-Truline-Email       $http_x_truline_email;
+        proxy_set_header   X-Truline-Scopes      $http_x_truline_scopes;
+
+        # Substrate's semantic search can take a few seconds (LLM embed).
+        proxy_read_timeout 60s;
+        proxy_send_timeout 60s;
+
+        # Don't let nginx buffer streamed responses (future-proof for SSE).
+        proxy_buffering    off;
+    }
+
+    # Stable browser-facing Substrate proxy. Keep this alongside /api/ so the
+    # console and mcp-hub can roll independently without stranding an SPA bundle
+    # on a route the current backend image does not serve.
+    location /substrate/ {
+        proxy_pass         ${MCP_HUB_URL}/substrate/;
+        # QUICKSTART ONLY: a fixed local identity. In a real deployment Cloudflare
+        # Access authenticates the user and mcp-hub verifies the assertion.
+        proxy_set_header   X-Truline-Client      quickstart;
+        proxy_set_header   X-Truline-Client-Type human;
+        proxy_set_header   X-Truline-Scopes      "*";
+        proxy_set_header   X-Truline-Email       dev@example.org;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   X-Truline-Client      $http_x_truline_client;
+        proxy_set_header   X-Truline-Client-Type $http_x_truline_client_type;
+        proxy_set_header   X-Truline-Email       $http_x_truline_email;
+        proxy_set_header   X-Truline-Scopes      $http_x_truline_scopes;
+
+        proxy_read_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_buffering    off;
+    }
+
+    # Phase 8: finance-reporting (Plotly Dash) microservice, embedded in the
+    # console's Reports tab via an iframe.
+    # Use ^~ to ensure this prefix match takes precedence over any regex blocks.
+    location ^~ /reports/ {
+        proxy_pass         ${FINANCE_REPORTING_URL};
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+
+        # First load aggregates ~2 years of beads in pandas — give it room.
+        proxy_read_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_buffering    off;
+    }
+
+    # Health probe target for k8s liveness/readiness.
+    location = /healthz {
+        access_log off;
+        return 200 "ok\n";
+        add_header Content-Type text/plain;
+    }
+}

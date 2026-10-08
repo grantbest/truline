@@ -1,0 +1,24 @@
+# Scanner candidates that must not be filed, by dedupe key, with the reason.
+#
+# A suppression is a standing decision, not a mute button. Each entry states why
+# so it can be revisited rather than inherited — an entry nobody can justify is
+# an entry to delete.
+#
+# This does NOT hide the candidate. The dry run still reports it under
+# "SUPPRESSED", so a suppression that has outlived its reason stays visible.
+
+suppress:
+  requirement-gaps:PC-TRU-001: >-
+    The rollback path is gated on G1a — six build-*.yml workflows pushing to zot
+    by :<git-sha> — which is CI-scoped and therefore forbidden to the factory.
+    The scanner reads the registry verdict and correctly calls this factory-doable
+    from scope alone, but no worker can satisfy it: scripts/rollback.sh can only
+    refuse honestly while every first-party image is :latest with
+    imagePullPolicy: Never and no digest exists to roll back to. Filing it buys a
+    guaranteed failed attempt at 30 agent-minutes and ~$2.00. Remove this entry
+    when G1a lands; PC-TRU-001 is then real work and should be filed.
+    Chartered 2026-08-30 as R26.02/O-11, carried from R26.01/O-2 which closed
+    NOT DELIVERED. G1a itself is PC-DEL-001, chartered as R26.02/O-10 and
+    suppressed by computed scope rather than by an entry here — every path it
+    names is one the factory may not touch. Neither is factory work today; both
+    are recorded in docs/plans/2026-08-30-decision-record-the-backlog-is-filed-in-reverse.md.

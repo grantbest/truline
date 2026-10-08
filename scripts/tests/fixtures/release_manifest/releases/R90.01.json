@@ -1,0 +1,14 @@
+{
+  "id": "release-R90.01",
+  "namespace": "arch",
+  "type": "release",
+  "state": "in_flight",
+  "content": {
+    "ref": "R90.01",
+    "name": "Fixture release",
+    "objective": "Exercise --release selection in the manifest builder.",
+    "outcomes": [
+      {"id": "O-1", "statement": "PRs are selected from delivers edges."}
+    ]
+  }
+}

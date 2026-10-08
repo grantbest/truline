@@ -1,0 +1,102 @@
+{
+ "header": {
+  "captured_at": "2026-09-25",
+  "extracted_by": "ast.parse + node.lineno/end_lineno over the blob named by source_blob_sha1",
+  "purpose": "R26.12 B2 (queue_order.py move) verbatim-move reference, committed by the outer loop (D7: no store read). Each unit is the exact source text of a top-level definition in apps/factory-dispatcher/dispatch.py at source_revision (or, for 'pick_task.for', pick_task's single `for task in pending:` statement), cut from that blob by ast.parse lineno/end_lineno. The B2 test parses each unit's source and the same-named node in apps/factory-dispatcher/queue_order.py with the SAME interpreter and compares ast.dump() of the two (no ast.dump text is stored here, because its format changes between Python versions). 'pick_task' is recorded by line range only, for reference; B2 changes it. The outer loop re-derives every unit from `git show <source_revision>:apps/factory-dispatcher/dispatch.py` at the gate.",
+  "source_blob_sha1": "dca232c03eea0601c86b6bca54458b1a9b877e8a",
+  "source_line_count": 7173,
+  "source_path": "apps/factory-dispatcher/dispatch.py",
+  "source_revision": "15aa20cdb442dd296d11a96ea42ddec34d007f1d",
+  "store_read": "none"
+ },
+ "units": {
+  "ALREADY_SATISFIED_CLAIM_NOTE_PREFIX": {
+   "kind": "assignment",
+   "lines": [
+    6352,
+    6352
+   ],
+   "source": "ALREADY_SATISFIED_CLAIM_NOTE_PREFIX = \"Already-satisfied claim:\""
+  },
+  "CAPACITY_BACKPRESSURE_NOTE_PREFIX": {
+   "kind": "assignment",
+   "lines": [
+    6351,
+    6351
+   ],
+   "source": "CAPACITY_BACKPRESSURE_NOTE_PREFIX = \"Capacity backpressure:\""
+  },
+  "ENVIRONMENTAL_FAULT_NOTE_PREFIX": {
+   "kind": "assignment",
+   "lines": [
+    6350,
+    6350
+   ],
+   "source": "ENVIRONMENTAL_FAULT_NOTE_PREFIX = \"Environmental fault:\""
+  },
+  "ENVIRONMENTAL_FAULT_SIGNATURE_FIELD": {
+   "kind": "assignment",
+   "lines": [
+    6374,
+    6374
+   ],
+   "source": "ENVIRONMENTAL_FAULT_SIGNATURE_FIELD = \"environmental_fault_signature\""
+  },
+  "RUN_FAILED_NOTE_PREFIX": {
+   "kind": "assignment",
+   "lines": [
+    6349,
+    6349
+   ],
+   "source": "RUN_FAILED_NOTE_PREFIX = guards.FAILURE_NOTE_PREFIX"
+  },
+  "_DISPATCH_OUTCOME_NOTE_PREFIXES": {
+   "kind": "assignment",
+   "lines": [
+    6363,
+    6368
+   ],
+   "source": "_DISPATCH_OUTCOME_NOTE_PREFIXES = (\n    RUN_FAILED_NOTE_PREFIX,\n    ENVIRONMENTAL_FAULT_NOTE_PREFIX,\n    CAPACITY_BACKPRESSURE_NOTE_PREFIX,\n    ALREADY_SATISFIED_CLAIM_NOTE_PREFIX,\n)"
+  },
+  "_is_dispatch_outcome_note": {
+   "kind": "function",
+   "lines": [
+    6390,
+    6401
+   ],
+   "source": "def _is_dispatch_outcome_note(note: dict[str, Any]) -> bool:\n    \"\"\"Whether ``note`` records the terminal outcome of one dispatch attempt.\n\n    Excludes pure narration \u2014 a claim note, a PR-opened note, an operator\n    action \u2014 so trailing_environmental_fault_streak walks only the notes that\n    actually decide \"consecutive.\"\n    \"\"\"\n    content = note.get(\"content\") or {}\n    if content.get(\"kind\") != \"status\":\n        return False\n    body = str(content.get(\"body\") or \"\")\n    return any(body.startswith(prefix) for prefix in _DISPATCH_OUTCOME_NOTE_PREFIXES)"
+  },
+  "_next_environmental_fault_streak": {
+   "kind": "function",
+   "lines": [
+    6438,
+    6443
+   ],
+   "source": "def _next_environmental_fault_streak(\n    notes: Iterable[dict[str, Any]], signature: str\n) -> int:\n    \"\"\"The streak length THIS occurrence would extend to, if recorded now.\"\"\"\n    prior_signature, prior_streak = trailing_environmental_fault_streak(notes)\n    return prior_streak + 1 if prior_signature == signature else 1"
+  },
+  "pick_task": {
+   "kind": "function_whole",
+   "lines": [
+    4203,
+    4244
+   ],
+   "note": "the whole pre-move pick_task, for reference only; B2 changes it"
+  },
+  "pick_task.for": {
+   "kind": "statement",
+   "lines": [
+    4228,
+    4243
+   ],
+   "source": "    for task in pending:\n        notes = sub.list_notes(task[\"id\"])\n        verdict = guards.is_runnable(task, notes, all_tasks, release_by_task_id=release_by_task_id)\n        if not verdict.ok:\n            print(f\"  skip {task['id'][:8]} \u2014 {verdict.reason}\")\n            continue\n        signature, streak = trailing_environmental_fault_streak(notes)\n        limit = retry_policy.CONSECUTIVE_ENVIRONMENTAL_FAULT_LIMIT\n        if signature and streak >= limit:\n            print(\n                f\"  skip {task['id'][:8]} \u2014 same environmental fault recorded \"\n                f\"{streak} consecutive times (bound {limit}); this is a stop, not \"\n                \"a verdict on the work \u2014 use --task to force a run\"\n            )\n            continue\n        return task"
+  },
+  "trailing_environmental_fault_streak": {
+   "kind": "function",
+   "lines": [
+    6404,
+    6435
+   ],
+   "source": "def trailing_environmental_fault_streak(\n    notes: Iterable[dict[str, Any]],\n) -> tuple[str, int]:\n    \"\"\"The most recent environmental fault's signature and its consecutive run.\n\n    Scans outcome notes newest-first (skipping narration notes entirely, per\n    ``_is_dispatch_outcome_note``) and counts how many of the most recent ones\n    in a row are environmental faults carrying the SAME signature. Returns\n    ``(\"\", 0)`` when there is no recorded outcome, or the most recent one was\n    not an environmental fault: a real work failure, a capacity backpressure,\n    or a differently-signed fault landing in between two occurrences of this\n    one means the fault did not recur on every consecutive dispatch, which is\n    exactly the case that must not trip the bound.\n    \"\"\"\n    ordered = sorted(notes, key=lambda n: n.get(\"created_at\") or \"\", reverse=True)\n    signature = \"\"\n    count = 0\n    for note in ordered:\n        if not _is_dispatch_outcome_note(note):\n            continue\n        content = note.get(\"content\") or {}\n        note_signature = content.get(ENVIRONMENTAL_FAULT_SIGNATURE_FIELD)\n        if count == 0:\n            if not note_signature:\n                return \"\", 0\n            signature = note_signature\n            count = 1\n            continue\n        if note_signature != signature:\n            break\n        count += 1\n    return signature, count"
+  }
+ }
+}

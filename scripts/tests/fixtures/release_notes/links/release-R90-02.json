@@ -1,0 +1,26 @@
+[
+  {
+    "id": "link-r90-02-a",
+    "source_id": "10000000-0000-4000-8000-000000000001",
+    "target_id": "release-R90-02",
+    "link_type": "delivers"
+  },
+  {
+    "id": "link-r90-02-b",
+    "source_id": "10000000-0000-4000-8000-000000000002",
+    "target_id": "release-R90-02",
+    "link_type": "delivers"
+  },
+  {
+    "id": "link-r90-02-c",
+    "source_id": "10000000-0000-4000-8000-000000000003",
+    "target_id": "release-R90-02",
+    "link_type": "delivers"
+  },
+  {
+    "id": "link-r90-02-d",
+    "source_id": "10000000-0000-4000-8000-000000000004",
+    "target_id": "release-R90-02",
+    "link_type": "delivers"
+  }
+]

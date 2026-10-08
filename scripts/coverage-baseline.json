@@ -1,0 +1,10 @@
+{
+  "suite": "scripts",
+  "measured_at": "2026-10-03T14:42:36Z",
+  "measured_revision": "3b1efa671108330adfdc7873c34a4759c80b93cf",
+  "python": "3.12",
+  "line_coverage_pct": 92.4,
+  "fail_under_pct": 91.9,
+  "command": "python -m pytest scripts/tests/ -q --cov=scripts --cov-precision=2 --cov-fail-under=91.9",
+  "measured_on": "coverage-ratchet workflow run 37127016856 (the self-hosted Linux CI runner, Python 3.12)"
+}

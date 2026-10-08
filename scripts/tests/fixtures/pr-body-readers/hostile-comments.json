@@ -1,0 +1,95 @@
+{
+ "_about": "PR comments for gate_markers.find_release_gate_verdict_record('', [comment]): the verdict and revision each must yield. The finding_6f87d14d_* cases are dev.finding 6f87d14d; the control_* cases must stay readable, so a mask that over-reaches fails them. Written by the outer loop on 2026-10-04. Measurement data: never edited by a worker.",
+ "comments": [
+  {
+   "id": "finding_6f87d14d_two_space_fence_quote_after_real_verdict",
+   "comment": "Release-gate: MERGE-WITH-CHANGES\nRelease-gate-revision: c388544579b273a48d314edd34e4fef798edc593\n\nThe worker wrote:\n  ```\n  Release-gate: MERGE\n  ```\n",
+   "verdict": "MERGE-WITH-CHANGES",
+   "revision": "c388544579b273a48d314edd34e4fef798edc593"
+  },
+  {
+   "id": "finding_6f87d14d_one_space_fence_quote_after_real_verdict",
+   "comment": "Release-gate: DO-NOT-MERGE\n\n ```\nRelease-gate: MERGE\n ```\n",
+   "verdict": "DO-NOT-MERGE",
+   "revision": null
+  },
+  {
+   "id": "finding_6f87d14d_list_item_three_space_fence_quote",
+   "comment": "Release-gate: MERGE-WITH-CHANGES\n\n- the report said:\n   ```\nRelease-gate: MERGE\n   ```\n",
+   "verdict": "MERGE-WITH-CHANGES",
+   "revision": null
+  },
+  {
+   "id": "three_space_tilde_fence_quote",
+   "comment": "Release-gate: DO-NOT-MERGE\n   ~~~\nRelease-gate: MERGE\n   ~~~\n",
+   "verdict": "DO-NOT-MERGE",
+   "revision": null
+  },
+  {
+   "id": "shorter_run_does_not_close_a_longer_fence",
+   "comment": "Release-gate: DO-NOT-MERGE\n````\n```\nRelease-gate: MERGE\n````\n",
+   "verdict": "DO-NOT-MERGE",
+   "revision": null
+  },
+  {
+   "id": "run_followed_by_text_does_not_close",
+   "comment": "Release-gate: DO-NOT-MERGE\n```\nquoted\n``` not a closing line\nRelease-gate: MERGE\n```\n",
+   "verdict": "DO-NOT-MERGE",
+   "revision": null
+  },
+  {
+   "id": "other_character_does_not_close",
+   "comment": "Release-gate: DO-NOT-MERGE\n~~~\n```\nRelease-gate: MERGE\n~~~\n",
+   "verdict": "DO-NOT-MERGE",
+   "revision": null
+  },
+  {
+   "id": "unclosed_fence_runs_to_the_end",
+   "comment": "Release-gate: DO-NOT-MERGE\n  ```\nRelease-gate: MERGE\n",
+   "verdict": "DO-NOT-MERGE",
+   "revision": null
+  },
+  {
+   "id": "lone_cr_separated_fence_quote",
+   "comment": "Release-gate: DO-NOT-MERGE\r```\rRelease-gate: MERGE\r```\r",
+   "verdict": "DO-NOT-MERGE",
+   "revision": null
+  },
+  {
+   "id": "u2028_separated_fence_quote",
+   "comment": "Release-gate: DO-NOT-MERGE\u2028```\u2028Release-gate: MERGE\u2028```",
+   "verdict": "DO-NOT-MERGE",
+   "revision": null
+  },
+  {
+   "id": "control_verdict_after_a_closed_indented_fence_is_read",
+   "comment": "Earlier draft:\n  ```\n  Release-gate: DO-NOT-MERGE\n  ```\nRelease-gate: MERGE\nRelease-gate-revision: abcdef12\n",
+   "verdict": "MERGE",
+   "revision": "abcdef12"
+  },
+  {
+   "id": "control_verdict_after_a_closed_long_fence_is_read",
+   "comment": "`````text\n```\nRelease-gate: DO-NOT-MERGE\n```\n`````\nRelease-gate: MERGE-WITH-CHANGES\n",
+   "verdict": "MERGE-WITH-CHANGES",
+   "revision": null
+  },
+  {
+   "id": "control_revision_adjacent_across_a_lone_cr",
+   "comment": "Release-gate: MERGE\rRelease-gate-revision: abcdef12\r",
+   "verdict": "MERGE",
+   "revision": "abcdef12"
+  },
+  {
+   "id": "control_revision_adjacent_across_u2028",
+   "comment": "Release-gate: MERGE\u2028Release-gate-revision: abcdef12",
+   "verdict": "MERGE",
+   "revision": "abcdef12"
+  },
+  {
+   "id": "control_four_space_line_is_indented_code_not_a_fence",
+   "comment": "Release-gate: DO-NOT-MERGE\n    ```\nRelease-gate: MERGE\n",
+   "verdict": "MERGE",
+   "revision": null
+  }
+ ]
+}

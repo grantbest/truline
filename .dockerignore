@@ -1,0 +1,36 @@
+# Root build context for images built with `docker build -f apps/<app>/Dockerfile .`
+# (today: mcp-hub, via build-mcp-hub.yml -- OPS-112, 2026-09-12).
+#
+# WHITELIST. Everything is excluded, then the trees an image may COPY are
+# re-admitted. The list is the set of trees the R26.09 refactor plan names as
+# image content: apps/mcp-hub itself, the dispatcher (M9: factory intake as a
+# gateway capability), the substrate's client package (M6/M12), and scripts/
+# (the shared client lives there until M6 moves it). Adding a tree here is an
+# outer-loop change; a worker's bead scope never includes this file.
+#
+# Not applied to images whose context is their own directory
+# (build-lifeops-console.yml builds apps/lifeops-console/ as before).
+*
+!apps/mcp-hub/pyproject.toml
+!apps/mcp-hub/src/
+!apps/factory-dispatcher/
+!apps/substrate/
+!scripts/
+# ADDED 2026-09-17 (#909 gate, F1). file_task.py:61 derives REQUIREMENTS_DIR as
+# parents[2]/docs/requirements, which is /app/docs/requirements in the image. Without
+# this tree the gateway intake refuses every spec that CITES a real requirement while
+# accepting every spec that WAIVES traceability -- and its reason text diverges from the
+# CLI's, breaking the same-reason parity criterion. Only the registry is admitted, not
+# docs/ at large.
+!docs/requirements/
+# Never image content, even inside an admitted tree.
+**/__pycache__/
+**/.pytest_cache/
+**/node_modules/
+**/venv/
+**/.venv/
+**/tests/
+**/*.pyc
+apps/substrate/tests/
+apps/factory-dispatcher/tasks/
+apps/factory-dispatcher/tests/

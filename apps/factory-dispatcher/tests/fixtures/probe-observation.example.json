@@ -1,0 +1,96 @@
+{
+  "_purpose": "Example shape of the one standing arch.observation apps/factory-dispatcher/probe_console_surface.py writes (R26.09/O-7). Not a live capture -- the ids/timestamps below are illustrative. content is EXACTLY the closed ArchObservationContent shape (apps/substrate/src/schemas.py:947-976, extra='forbid'); every probe-specific datum lives in context instead, which the store never validates.",
+  "id": "3f6a9c2e-6f1d-4c2b-9d9a-0f6d9c8e7b1a",
+  "namespace": "arch",
+  "type": "observation",
+  "state": "active",
+  "parent_id": null,
+  "trust_tier": "system",
+  "created_by": "factory-dispatcher/probe-console-surface",
+  "content": {
+    "ref": "obs.probe.console-surface",
+    "observed_at": "2026-09-23T14:05:00Z",
+    "workload": {
+      "cluster": "factory",
+      "namespace": "factory-dispatcher",
+      "kind": "Process",
+      "name": "probe-console-surface"
+    },
+    "source_class": "observed"
+  },
+  "context": {
+    "probe_at": "2026-09-23T14:05:00Z",
+    "probed_revision": "0be6e0a1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7",
+    "ran_by": "operator@example.org",
+    "operations": [
+      "GET /api/v1/factory/schedule_status",
+      "POST /api/v1/factory/release_delivery R26.09"
+    ],
+    "release_refs": ["R26.09"],
+    "groups": {
+      "schedule": "demonstrated",
+      "releases": {
+        "R26.09": "demonstrated"
+      }
+    },
+    "outcome": "demonstrated",
+    "not_probed": [
+      "factory-state panel queue counts (factory-status.ts::queueCountsFrom, read over the substrate proxy -- no machine token holds substrate.proxy)",
+      "factory-state panel worker liveness (obs.worker-revision-drift, read over the substrate proxy)",
+      "release index browser-computed outcome counts (release-index.ts::classifyOutcome)",
+      "rendering",
+      "the Cloudflare Access / ForwardAuth hop in front of the gateway"
+    ],
+    "divergences": []
+  },
+  "confidence": null,
+  "provenance": {},
+  "created_at": "2026-09-23T14:05:00Z",
+  "updated_at": "2026-09-23T14:05:00Z",
+  "_example_of_a_divergent_and_unconfigured_run": {
+    "_purpose": "The same bead, updated in place (find_bead by content.ref, then patch_content followed by patch_context -- never a second bead), the next time the probe found a schedule divergence and the release_delivery route was unconfigured (OPS-110 arm (c), the production default). Never 'demonstrated' when any group's own outcome is not.",
+    "content": {
+      "ref": "obs.probe.console-surface",
+      "observed_at": "2026-09-24T14:05:00Z",
+      "workload": {
+        "cluster": "factory",
+        "namespace": "factory-dispatcher",
+        "kind": "Process",
+        "name": "probe-console-surface"
+      },
+      "source_class": "observed"
+    },
+    "context": {
+      "probe_at": "2026-09-24T14:05:00Z",
+      "probed_revision": "0be6e0a1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7",
+      "ran_by": "operator@example.org",
+      "operations": [
+        "GET /api/v1/factory/schedule_status",
+        "POST /api/v1/factory/release_delivery R26.09"
+      ],
+      "release_refs": ["R26.09"],
+      "groups": {
+        "schedule": "failed:compare",
+        "releases": {
+          "R26.09": "cannot-evaluate:not_configured"
+        }
+      },
+      "outcome": "failed:schedule",
+      "not_probed": [
+        "factory-state panel queue counts (factory-status.ts::queueCountsFrom, read over the substrate proxy -- no machine token holds substrate.proxy)",
+        "factory-state panel worker liveness (obs.worker-revision-drift, read over the substrate proxy)",
+        "release index browser-computed outcome counts (release-index.ts::classifyOutcome)",
+        "rendering",
+        "the Cloudflare Access / ForwardAuth hop in front of the gateway"
+      ],
+      "divergences": [
+        {
+          "group": "schedule",
+          "field": "schedule.paused",
+          "claim": false,
+          "authority": true
+        }
+      ]
+    }
+  }
+}

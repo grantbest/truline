@@ -1,0 +1,14 @@
+[
+  {
+    "id": "link-r90-a",
+    "source_id": "99999999-9999-4999-8999-999999999999",
+    "target_id": "release-R90.01",
+    "link_type": "delivers"
+  },
+  {
+    "id": "link-r90-b",
+    "source_id": "88888888-8888-4888-8888-888888888888",
+    "target_id": "release-R90.01",
+    "link_type": "delivers"
+  }
+]

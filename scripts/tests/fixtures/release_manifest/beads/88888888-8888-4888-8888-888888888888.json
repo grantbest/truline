@@ -1,0 +1,14 @@
+{
+  "id": "88888888-8888-4888-8888-888888888888",
+  "namespace": "dev",
+  "type": "task",
+  "state": "review",
+  "content": {
+    "title": "First delivering task",
+    "lane": "platform",
+    "risk_class": "behavioral",
+    "intent": "Deliver the first outcome of R90.01.",
+    "acceptance": ["Does the first thing."],
+    "pr_url": "https://github.com/grantbest/homelabv2/pull/509"
+  }
+}

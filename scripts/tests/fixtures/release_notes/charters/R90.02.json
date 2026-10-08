@@ -1,0 +1,33 @@
+{
+  "ref": "R90.02",
+  "name": "Fixture release for release-notes",
+  "objective": "Exercise release-notes.py rendering against committed fixtures, with no network and no credentials.",
+  "opened_at": "2026-08-20",
+  "declared_balance": {
+    "feature": 0,
+    "enabling": 30,
+    "blocking": 10,
+    "risk": 30,
+    "security": 20
+  },
+  "outcomes": [
+    {
+      "id": "O-1",
+      "statement": "Enabling work delivered and its cited criterion measured moving.",
+      "work_class": "enabling",
+      "requirement_refs": ["PC-FAC-001/AC-5"]
+    },
+    {
+      "id": "O-2",
+      "statement": "Risk work whose PR never merged.",
+      "work_class": "risk",
+      "requirement_refs": ["PC-TRU-001/AC-1"]
+    },
+    {
+      "id": "O-3",
+      "statement": "Security work delivered, citing no criteria.",
+      "work_class": "security",
+      "requirement_refs": []
+    }
+  ]
+}

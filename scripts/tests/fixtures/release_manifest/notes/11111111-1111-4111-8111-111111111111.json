@@ -1,0 +1,10 @@
+[
+  {
+    "id": "note-501-a",
+    "namespace": "dev",
+    "type": "note",
+    "content": {
+      "body": "Architect note: renderer must stay pure for offline tests."
+    }
+  }
+]

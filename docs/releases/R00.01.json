@@ -1,0 +1,60 @@
+{
+  "ref": "R00.01",
+  "name": "Example release: the platform runs end to end",
+  "objective": "An example charter in the shape the tooling validates (scripts/release-load.py --check). A release is one three-sprint arc: it holds the objective and decomposes it into outcomes, each a statement of what is tangibly different afterwards, written for the person the release is for, carrying a work class and the requirement criteria that prove it. Sprints hold the time box; this file holds the intent. Replace it with your own charters; keep three in planned or in_flight at all times.",
+  "sprints": [
+    "1",
+    "2",
+    "3"
+  ],
+  "opened_at": "2000-01-01",
+  "target_at": "2000-03-31",
+  "declared_balance": {
+    "feature": 40,
+    "enabling": 30,
+    "blocking": 10,
+    "risk": 10,
+    "security": 10
+  },
+  "outcomes": [
+    {
+      "id": "O-1",
+      "work_class": "enabling",
+      "requirement_refs": [
+        "PC-SUB-001/AC-1"
+      ],
+      "statement": "A task bead carries intent and outcome only; attempt counts, leases and retries live in the workflow engine, and the conformance check fails the build when they leak into bead content."
+    },
+    {
+      "id": "O-2",
+      "work_class": "feature",
+      "requirement_refs": [
+        "PC-SUB-003/AC-1",
+        "PC-SUB-003/AC-2"
+      ],
+      "statement": "Every edge between two beads is one of the closed link types, so a misspelt relationship is an error at write time rather than a new kind of edge."
+    },
+    {
+      "id": "O-3",
+      "work_class": "security",
+      "requirement_refs": [
+        "PC-FAC-001/AC-1"
+      ],
+      "statement": "No pull request merges without a release-gate verdict written by a fresh-context gate agent, and the merge script refuses a verdict written by the PR's own author."
+    },
+    {
+      "id": "O-4",
+      "work_class": "risk",
+      "requirement_refs": [],
+      "statement": "The private-identifier scan runs on every pull request against the operator's own pattern file, so a host, domain or person named in a change is caught before it lands."
+    },
+    {
+      "id": "O-5",
+      "work_class": "blocking",
+      "requirement_refs": [
+        "PC-SUB-001/AC-2"
+      ],
+      "statement": "The retry budget for a dispatched task is owned by the workflow engine's retry policy, and nothing in bead content can raise it."
+    }
+  ]
+}

@@ -1,0 +1,612 @@
+{
+  "registry": {
+    "id": "REG-LIFEOPS",
+    "name": "LifeOps Requirements Registry",
+    "version": "0.1.0",
+    "status": "EXAMPLE",
+    "owner": "the operator",
+    "scope": "The LifeOps example vertical: finance ingestion, categorisation, ledger integrity, budgeting, bills and the console views. The platform substrate and the factory are out of scope except where the vertical depends on them.",
+    "purpose": "Establish what the vertical is supposed to do, as testable statements, before work on it is filed. Every requirement carries acceptance criteria; verdicts are added by the operator's own measuring pass.",
+    "method": "This file is an example in the shape the tooling validates. Requirements record intent as a user story; scripts/requirements-load.py mirrors the story into the rationale the substrate requires.",
+    "conformance_legend": {
+      "pass": "Verified working against live data or code inspection.",
+      "fail": "Verified broken or verifiably not meeting the criterion.",
+      "absent": "No implementation exists.",
+      "unverified": "Plausibly implemented; not exercised. Do not treat as passing."
+    },
+    "status_legend": {
+      "implemented": "Built and conforming.",
+      "partial": "Built, conforms to some acceptance criteria only.",
+      "defective": "Built, but the implementation measures or does the wrong thing.",
+      "absent": "Not built."
+    },
+    "source_legend": {
+      "derived-from-implementation": "Intent inferred from code and docstrings.",
+      "owner-stated": "Stated by the owner directly.",
+      "analyst-proposed": "Proposed to close a gap; not yet approved."
+    },
+    "bead_projection": {
+      "namespace": "arch",
+      "type": "requirement",
+      "link_via": "bead_link to the dev.task beads that implement it"
+    }
+  },
+  "capabilities": [
+    {
+      "id": "CAP-ING",
+      "name": "Ingestion & Connectivity",
+      "intent": "Get every account's transactions and balances into Substrate, completely and continuously."
+    },
+    {
+      "id": "CAP-OBS",
+      "name": "Ingestion Observability",
+      "intent": "Know, without checking manually, whether the data is actually arriving."
+    },
+    {
+      "id": "CAP-CAT",
+      "name": "Categorization",
+      "intent": "Every transaction lands in a category the operator would agree with, or in a queue he can clear."
+    },
+    {
+      "id": "CAP-REC",
+      "name": "Ledger Integrity",
+      "intent": "Know whether the recorded ledger matches reality, and by how much."
+    },
+    {
+      "id": "CAP-BIL",
+      "name": "Bills & Subscriptions",
+      "intent": "Nothing recurring bills unnoticed, hikes, or converts from a trial without warning."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "LO-BIL-003",
+      "capability": "CAP-BIL",
+      "title": "Price hikes and duplicate charges are caught the night they land",
+      "user_story": {
+        "as_a": "the operator",
+        "i_want": "duplicate charges and silent price increases flagged fast",
+        "so_that": "I can dispute or cancel while it still matters"
+      },
+      "priority": "P1",
+      "status": "implemented",
+      "source": "derived-from-implementation",
+      "implementation": [
+        "apps/mcp-hub/src/workflows/finance_anomaly_detector.py"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "the same merchant billing the same amount twice in 48h",
+          "when": "the detector runs",
+          "then": "a duplicate_charge anomaly bead is raised",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "a recurring vendor's charge well above its moving average",
+          "when": "the detector runs",
+          "then": "a price-hike anomaly is raised",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "detection",
+          "when": "it runs",
+          "then": "no LLM is in the hot path, so results are reproducible",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-4",
+          "given": "an anomaly summary",
+          "when": "it is posted",
+          "then": "one message per run, deduped across the 20 daily executions",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "LO-CAT-001",
+      "capability": "CAP-CAT",
+      "title": "Every transaction is categorized through a rule \u2192 ML \u2192 LLM cascade",
+      "user_story": {
+        "as_a": "the operator",
+        "i_want": "transactions categorized automatically and cheaply",
+        "so_that": "budgets and spend analysis work without manual entry"
+      },
+      "priority": "P0",
+      "status": "partial",
+      "source": "derived-from-implementation",
+      "implementation": [
+        "apps/mcp-hub/src/workflows/bank_sync.py:820-960"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "a transaction matching a committed rule",
+          "when": "it is categorized",
+          "then": "the rule wins at confidence 1.0 and records categorization_rule_id",
+          "verification": "not measured in this example registry",
+          "note": "No live transaction in the 1349-row sample carries categorization_source='rule' \u2014 either no rules are committed, or rules are not reaching the hot path."
+        },
+        {
+          "id": "AC-2",
+          "given": "no rule matches",
+          "when": "local naive Bayes predicts at >= 0.85",
+          "then": "that prediction is used and no LLM call is made",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "local ML is below threshold",
+          "when": "the LLM fallback runs",
+          "then": "a category is assigned at confidence 0.8",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-4",
+          "given": "any transaction",
+          "when": "categorization completes",
+          "then": "the assigned category is one the operator would agree with",
+          "verification": "not measured in this example registry",
+          "source": "grant-stated",
+          "gap_ref": "RC-1"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "LO-CAT-002",
+      "capability": "CAP-CAT",
+      "title": "The category taxonomy can express the deployment's actual money flows",
+      "user_story": {
+        "as_a": "the operator",
+        "i_want": "a category for every kind of money movement I actually have",
+        "so_that": "the classifier is not forced to lie"
+      },
+      "priority": "P0",
+      "status": "defective",
+      "source": "analyst-proposed",
+      "root_cause": "RC-1",
+      "current_taxonomy": [
+        "groceries",
+        "dining",
+        "utilities",
+        "kids",
+        "auto",
+        "housing",
+        "entertainment",
+        "health",
+        "interest_fees",
+        "misc",
+        "transfer"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "a payroll deposit",
+          "when": "it is categorized",
+          "then": "it lands in an income category, not misc",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "a credit-card payment ('Online Payment, Thank You', 'Jpmorgan Chase Bank Na')",
+          "when": "it is categorized",
+          "then": "it is a transfer, not spend",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "an 'Interest Earned' credit",
+          "when": "it is categorized",
+          "then": "it maps to interest_fees or an income bucket, not misc",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-4",
+          "given": "an ATM withdrawal",
+          "when": "it is categorized",
+          "then": "it is recognized as cash movement with a defined treatment",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-5",
+          "given": "a genuinely ambiguous merchant (Amazon, Target)",
+          "when": "it is categorized",
+          "then": "the system marks it needs-enrichment rather than assigning misc at high confidence",
+          "verification": "not measured in this example registry",
+          "note": "Amazon is genuinely un-categorizable from the bank feed alone. It needs item-level data or a the operator decision, and the honest representation is 'unknown', not 'misc'."
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "LO-CAT-004",
+      "capability": "CAP-CAT",
+      "title": "Low-confidence categorization is surfaced for review",
+      "user_story": {
+        "as_a": "the operator",
+        "i_want": "to be told when the classifier was unsure",
+        "so_that": "I review the guesses most likely to be wrong"
+      },
+      "priority": "P1",
+      "status": "defective",
+      "source": "derived-from-implementation",
+      "root_cause": "RC-1",
+      "implementation": [
+        "apps/mcp-hub/src/workflows/bank_sync.py:1964"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "a transaction categorized below the confidence threshold",
+          "when": "the quality check runs",
+          "then": "it is counted in the low-confidence total",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "686 misc transactions",
+          "when": "the quality check runs",
+          "then": "the review set correlates with actual mis-categorization",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "a low-confidence count",
+          "when": "it is reported",
+          "then": "the operator can act on it \u2014 see the specific transactions, not just a number",
+          "verification": "not measured in this example registry",
+          "source": "analyst-proposed"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "LO-ING-001",
+      "capability": "CAP-ING",
+      "title": "Scheduled per-institution transaction sync",
+      "user_story": {
+        "as_a": "the operator",
+        "i_want": "each linked institution's new transactions pulled automatically on a schedule",
+        "so_that": "the ledger is current without me touching it"
+      },
+      "priority": "P0",
+      "status": "implemented",
+      "source": "derived-from-implementation",
+      "implementation": [
+        "apps/mcp-hub/src/workflows/bank_sync.py"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "an institution with a valid access token and cursor",
+          "when": "its schedule fires",
+          "then": "new transactions since the cursor are written as finance.transaction beads",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "five linked institutions",
+          "when": "schedules are inspected",
+          "then": "each has an active, unpaused Temporal schedule",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "a sync run",
+          "when": "Plaid returns a removed transaction",
+          "then": "the bead is marked state=removed rather than deleted",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "LO-OBS-001",
+      "capability": "CAP-OBS",
+      "title": "Per-institution connection health",
+      "user_story": {
+        "as_a": "the operator",
+        "i_want": "one place that tells me whether each institution's connection is working",
+        "so_that": "I can trust the ledger without spot-checking my bank apps"
+      },
+      "priority": "P0",
+      "status": "implemented",
+      "source": "derived-from-implementation",
+      "grant_evidence": "\"chase for instance was continuing to show synced even though we stop seeing data\"",
+      "implementation": [
+        "apps/mcp-hub/src/tools/connections.py"
+      ],
+      "root_cause": "RC-2",
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "an institution whose token is missing",
+          "when": "status is read",
+          "then": "status is no_token",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "an institution needing re-auth",
+          "when": "status is read",
+          "then": "status is reauth_required and repairable=true",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "an institution whose sync job runs successfully but returns no data for N days",
+          "when": "status is read",
+          "then": "status must NOT be 'ok'",
+          "verification": "not measured in this example registry",
+          "source": "grant-stated"
+        },
+        {
+          "id": "AC-4",
+          "given": "the console shows last_synced",
+          "when": "the operator reads it",
+          "then": "the label must distinguish 'job last ran' from 'data last arrived'",
+          "verification": "not measured in this example registry",
+          "source": "analyst-proposed"
+        },
+        {
+          "id": "AC-5",
+          "given": "Plaid returns a non-reauth item error (rate limit, institution outage)",
+          "when": "status is derived",
+          "then": "the degraded condition is visible, not collapsed into healthy=true",
+          "verification": "not measured in this example registry",
+          "source": "analyst-proposed"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "LO-OBS-002",
+      "capability": "CAP-OBS",
+      "title": "Per-institution data-freshness SLO and alerting",
+      "user_story": {
+        "as_a": "the operator",
+        "i_want": "to be told when an institution stops producing transactions for longer than is normal for that institution",
+        "so_that": "a dead feed surfaces in days, not when I happen to notice"
+      },
+      "priority": "P0",
+      "status": "absent",
+      "source": "grant-stated",
+      "root_cause": "RC-2",
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "an institution with an established transaction cadence",
+          "when": "the gap since its newest posted_date exceeds its own historical p95 gap",
+          "then": "a stale-feed condition is raised",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "a low-volume card that legitimately goes quiet for two weeks",
+          "when": "freshness is evaluated",
+          "then": "it does NOT alert \u2014 the threshold is per-institution, learned, not a global constant",
+          "verification": "not measured in this example registry",
+          "note": "amex has 18 transactions across 5 months; a global 3-day rule would alert on it constantly. This AC is what makes the requirement non-trivial."
+        },
+        {
+          "id": "AC-3",
+          "given": "a stale-feed condition",
+          "when": "it is raised",
+          "then": "it appears in the console attention feed AND as a single Discord alert, subject to CAP-NTF policy",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-4",
+          "given": "a stale-feed condition that has been raised",
+          "when": "data resumes",
+          "then": "the condition auto-resolves without manual clearing",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-5",
+          "given": "any institution",
+          "when": "I ask the system",
+          "then": "it can state days-since-last-transaction per institution as a first-class field",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "depends_on": [
+        "LO-NTF-001"
+      ],
+      "gaps": []
+    },
+    {
+      "id": "LO-OBS-004",
+      "capability": "CAP-OBS",
+      "title": "Sync failure is never silent",
+      "user_story": {
+        "as_a": "the operator",
+        "i_want": "an alert when a sync workflow crashes",
+        "so_that": "failures do not accumulate unnoticed"
+      },
+      "priority": "P0",
+      "status": "partial",
+      "source": "derived-from-implementation",
+      "implementation": [
+        "apps/mcp-hub/src/workflows/bank_sync.py:1330"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "a bank-sync workflow about to fail",
+          "when": "it exits",
+          "then": "a Discord alert names the institution and the error",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "the same failure recurring on every run",
+          "when": "alerts are emitted",
+          "then": "the operator is interrupted at most once per policy window, not once per run",
+          "verification": "not measured in this example registry",
+          "gap_ref": "RC-4"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "LO-REC-001",
+      "capability": "CAP-REC",
+      "title": "Nightly balance-delta reconciliation",
+      "user_story": {
+        "as_a": "the operator",
+        "i_want": "to be told when an account's balance moved by more than its recorded transactions explain",
+        "so_that": "missing transactions surface"
+      },
+      "priority": "P0",
+      "status": "partial",
+      "source": "grant-stated",
+      "grant_evidence": "\"I have drift detection that I don't really [think] serves the purpose its supposed to\"",
+      "root_cause": "RC-3",
+      "implementation": [
+        "apps/mcp-hub/src/workflows/finance_reconciliation.py"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "a prior snapshot and the transactions since",
+          "when": "reconciliation runs",
+          "then": "drift = current - (prev -/+ net_flow) is computed per account with liability sign handling",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "drift above $1.00 tolerance",
+          "when": "it is detected",
+          "then": "a pending finance.audit_discrepancy bead is upserted, not duplicated nightly",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "drift detected on night N",
+          "when": "night N+1 runs",
+          "then": "the unexplained gap is still visible",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-4",
+          "given": "an institution whose feed goes silent (no transactions AND no balance change)",
+          "when": "reconciliation runs",
+          "then": "the condition is detected",
+          "verification": "not measured in this example registry",
+          "gap_ref": "RC-2"
+        },
+        {
+          "id": "AC-5",
+          "given": "a detected discrepancy",
+          "when": "the operator reviews it",
+          "then": "there is a defined path to resolve, explain, or accept it",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "LO-REC-002",
+      "capability": "CAP-REC",
+      "title": "Cumulative ledger-integrity measure",
+      "user_story": {
+        "as_a": "the operator",
+        "i_want": "a standing answer to 'how wrong is my ledger, in dollars, right now'",
+        "so_that": "I know whether to trust the numbers I am making decisions on"
+      },
+      "priority": "P0",
+      "status": "partial",
+      "source": "analyst-proposed",
+      "root_cause": "RC-3",
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "a detected drift that is never explained",
+          "when": "time passes",
+          "then": "it accumulates into a running unexplained-variance figure per account",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "an account",
+          "when": "integrity is reported",
+          "then": "it states the anchor date and cumulative unexplained variance since",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "the operator explains a discrepancy (accepts it, or adds the missing transaction)",
+          "when": "he resolves it",
+          "then": "the baseline resets deliberately and the resolution is recorded",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-4",
+          "given": "cumulative variance",
+          "when": "it crosses a threshold",
+          "then": "the ledger is marked untrustworthy in the console",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "note": "The code docstring's reasoning for rejecting the naive sum is correct and should be preserved. The fix is an explicit anchor plus resolution lifecycle, not reverting to summing everything.",
+      "gaps": []
+    },
+    {
+      "id": "LO-REC-004",
+      "capability": "CAP-REC",
+      "title": "Ledger trust without manual reconciliation",
+      "user_story": {
+        "as_a": "the operator who checks balances online and never hand-enters anything",
+        "i_want": "the system to verify itself against the bank rather than against my data entry",
+        "so_that": "I get integrity assurance without a workflow I will never perform"
+      },
+      "priority": "P0",
+      "status": "absent",
+      "source": "grant-stated",
+      "root_cause": "RC-5",
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "given": "the operator never logs manual expenses",
+          "when": "data quality is assessed",
+          "then": "the assessment uses only signals derivable from the bank feed itself \u2014 balance-vs-transactions, feed freshness, categorization confidence",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-2",
+          "given": "the 'N unreconciled' metric",
+          "when": "the quality alert is next changed",
+          "then": "it is removed rather than thresholded",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-3",
+          "given": "a transaction that will never be paired with a manual entry",
+          "when": "its state is modelled",
+          "then": "state=posted is either terminal-by-design or the manual-pairing states are removed",
+          "verification": "not measured in this example registry"
+        },
+        {
+          "id": "AC-4",
+          "given": "the operator checks his accounts online",
+          "when": "the system reports a balance",
+          "then": "it matches what he sees in the bank app, and any divergence is the drift signal",
+          "verification": "not measured in this example registry"
+        }
+      ],
+      "depends_on": [
+        "LO-REC-002"
+      ],
+      "gaps": []
+    }
+  ],
+  "open_questions_for_owner": [],
+  "audit_limitations": [
+    "This is an example registry; nothing in it was measured."
+  ]
+}

@@ -1,0 +1,7 @@
+{
+ "comments": [
+  {
+   "body": "## Release-gate review (fresh-context Claude gate agent, strict export isolation)\n\nVerified: the house AlertPolicy machinery (fingerprint + declared window + host-local state, the failure_diagnosis precedent) wired as its own call site — the 770-ping shape is dead while #672's failed-drain evidence is preserved (the activity still raises, the workflow still fails per tick; only the Discord notice dedups). The fail direction is right everywhere it was charged: corrupt/missing state posts, dedup exceptions fall open to posting everything, and the fail-open path is itself tested. All five ACs pass with behavior-shaped tests (3-runs-1-post, resolve-recur-reposts, 3-raises-1-notice on unreachable, skipped kinds named, first-occurrence exact-payload). Suite 1339 passed, invariants and ruff clean.\n\nSix advisories, none blocking, two chartered onward at merge: dedup state records 'posted' before the batched webhook post confirms (a first-occurrence Discord failure silences one window); and the reused mcp-hub window math strips tzinfo against naive local time — every declared alert window on this host runs ~2.4× long (errs quiet, never spam; affects failure_diagnosis too; lives out of this bead's scope). Also recorded: ArgoCD message churn re-posts (spam-direction), flap-spam unbounded per AC2's own choice, severity absent from the fingerprint (moot at one tier).\n\nRelease-gate: MERGE"
+  }
+ ]
+}
