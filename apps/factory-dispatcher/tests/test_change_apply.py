@@ -448,6 +448,36 @@ def test_classify_change_kind_multiple_declarations_defaults_and_states_the_gap(
     assert gap is not None
 
 
+# --- AC-5: the emergency marker is read only outside fences -------------------------------------
+
+
+def test_has_emergency_marker_fenced_does_not_count():
+    assert ca.has_emergency_marker("```\nEmergency change: true\n```\n") is False
+
+
+def test_has_emergency_marker_unfenced_counts():
+    assert ca.has_emergency_marker("Emergency change: true\n") is True
+
+
+def test_has_emergency_marker_crlf_separated_unfenced_counts():
+    """Main's EMERGENCY_MARKER_RE misses this: its trailing `[ \\t]*$` does
+    not admit the `\\r` that a CRLF-terminated line leaves behind. Through
+    gate_markers.split_lines the \\r is consumed as the line separator, so
+    the line content the regex sees is clean (AC-5's stated behaviour
+    change)."""
+    assert ca.has_emergency_marker("Emergency change: true\r\nmore text\r\n") is True
+
+
+def test_emergency_marker_re_is_only_matched_inside_has_emergency_marker():
+    """AC-5: `grep -n EMERGENCY_MARKER_RE activities/change_apply.py` must
+    show exactly two lines -- the definition, and the one match call inside
+    has_emergency_marker. No other caller may match it against PR-body text
+    directly."""
+    source = Path(ca.__file__).read_text()
+    lines_with_hit = [line for line in source.splitlines() if "EMERGENCY_MARKER_RE" in line]
+    assert len(lines_with_hit) == 2, lines_with_hit
+
+
 # --- portfolio path resolution ------------------------------------------------------------------
 
 

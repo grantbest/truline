@@ -289,6 +289,164 @@ def test_verification_profile_denies_the_five_git_control_write_paths_after_the_
     assert "(deny job-creation)" in text
 
 
+# ---------------------------------------------------------------------------
+# PARTB-B2c AC-1, decision (a1): the seed-only profile variant.
+# ---------------------------------------------------------------------------
+
+
+def _make_seed_bundle(tmp_path: Path) -> Path:
+    src = tmp_path / "src"
+    env = {**os.environ, "GIT_AUTHOR_NAME": "T", "GIT_AUTHOR_EMAIL": "t@example.test",
+           "GIT_COMMITTER_NAME": "T", "GIT_COMMITTER_EMAIL": "t@example.test"}
+    subprocess.run([dispatch.GIT, "init", "-q", "-b", "main", str(src)], check=True, capture_output=True)
+    (src / "f.txt").write_text("one\n")
+    subprocess.run([dispatch.GIT, "-C", str(src), "add", "f.txt"], check=True, capture_output=True, env=env)
+    subprocess.run(
+        [dispatch.GIT, "-C", str(src), "commit", "-q", "-m", "init"],
+        check=True, capture_output=True, env=env,
+    )
+    bundle = tmp_path / "repo.bundle"
+    subprocess.run(
+        [dispatch.GIT, "-C", str(src), "bundle", "create", str(bundle), "HEAD"],
+        check=True, capture_output=True,
+    )
+    return bundle
+
+
+def test_render_seed_profile_is_the_verification_profile_minus_the_git_denies(
+    tmp_path, monkeypatch
+):
+    """decision (a1), every host: the seed profile's text is EXACTLY the verification
+    profile's text for the same tree (no extra_write) with the five .git-control
+    write-deny lines removed and its header comment swapped -- nothing else differs,
+    so the two cannot drift apart on reads, network or mach rules."""
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.delenv("FACTORY_DISPATCHER_STATE_DIR", raising=False)
+    monkeypatch.delenv("KUBECONFIG", raising=False)
+    repo = tmp_path / "ptree" / "repo"
+    repo.mkdir(parents=True)
+
+    seed = containment.render_seed_profile(repo)
+    verification = containment.render_verification_profile(repo, (), None)
+    git_denies = containment._git_write_deny_lines(repo.resolve())
+
+    assert git_denies in verification
+    assert git_denies not in seed
+    for line in git_denies.splitlines():
+        if line.strip():
+            assert line not in seed
+
+    def body(text: str) -> str:
+        return "\n".join(line for line in text.splitlines() if not line.startswith(";;"))
+
+    expected = body(verification).replace(git_denies, "").rstrip("\n")
+    assert body(seed).rstrip("\n") == expected
+    assert f'  (subpath "{repo.resolve()}")' in seed
+    assert f'  (subpath "{repo.resolve().parent / containment.VERIFY_TMPDIR_NAME}")' in seed
+    assert "(deny job-creation)" in seed
+    assert '(deny network-outbound (remote tcp "*:22"))' in seed
+
+
+def test_prepare_seed_containment_writes_the_profile_beside_the_tree_and_nothing_else(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.delenv("FACTORY_DISPATCHER_STATE_DIR", raising=False)
+    repo = tmp_path / "ptree" / "repo"
+    repo.parent.mkdir(parents=True)  # the tree itself does not exist yet: clone makes it
+
+    profile = containment.prepare_seed_containment(repo)
+
+    assert profile == repo.resolve().parent / containment.SEED_PROFILE_NAME
+    assert profile.read_text() == containment.render_seed_profile(repo)
+    assert not repo.exists()
+    assert not (repo.resolve().parent / containment.VERIFY_TMPDIR_NAME).exists()
+    assert sorted(p.name for p in repo.parent.iterdir()) == [containment.SEED_PROFILE_NAME]
+
+
+def test_prepare_seed_containment_refuses_a_tree_under_a_denied_dir(tmp_path, monkeypatch):
+    """Same refusal as prepare_verification_containment: a seed tree under <HOME>/.ssh
+    names both paths in the ValueError and writes no profile."""
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.delenv("FACTORY_DISPATCHER_STATE_DIR", raising=False)
+    ssh_dir = tmp_path / "home" / ".ssh"
+    repo = ssh_dir / "ptree" / "repo"
+    repo.parent.mkdir(parents=True)
+
+    with pytest.raises(ValueError) as excinfo:
+        containment.prepare_seed_containment(repo)
+
+    assert str(ssh_dir.resolve()) in str(excinfo.value)
+    assert str(repo.resolve()) in str(excinfo.value)
+    assert not (repo.parent / containment.SEED_PROFILE_NAME).exists()
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="sandbox-exec is macOS-only")
+def test_seed_profile_sandbox_allows_git_clone_into_the_tree(tmp_path):
+    """decision (a1), D1: `git clone` into the (not-yet-existing) tree succeeds under
+    the seed profile, which omits the five .git-control write denies the worker and
+    verification profiles both carry -- those denies are exactly what made seed/vseed
+    fail with EPERM before this bead."""
+    available, reason = _sandbox_probes_available()
+    if not available:
+        pytest.skip(f"sandbox probes unavailable in this execution environment: {reason}")
+
+    bundle = _make_seed_bundle(tmp_path)
+    repo = tmp_path / "ptree" / "repo"
+    repo.parent.mkdir(parents=True)
+    profile = containment.prepare_seed_containment(repo)
+
+    result = subprocess.run(
+        ["sandbox-exec", "-f", str(profile), dispatch.GIT, "clone", "--quiet", "--no-checkout",
+         "--", str(bundle), str(repo)],
+        capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    assert (repo / ".git").is_dir()
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="sandbox-exec is macOS-only")
+def test_verification_profile_sandbox_denies_the_same_clone(tmp_path):
+    """The same clone, under prepare_verification_containment's profile, is denied --
+    proving the seed profile's allowance is specific to the seed profile, not a
+    change to render_verification_profile."""
+    available, reason = _sandbox_probes_available()
+    if not available:
+        pytest.skip(f"sandbox probes unavailable in this execution environment: {reason}")
+
+    bundle = _make_seed_bundle(tmp_path)
+    repo = tmp_path / "ptree" / "repo"
+    repo.mkdir(parents=True)
+    profile, _ = containment.prepare_verification_containment(repo)
+
+    result = subprocess.run(
+        ["sandbox-exec", "-f", str(profile), dispatch.GIT, "clone", "--quiet", "--no-checkout",
+         "--", str(bundle), str(repo)],
+        capture_output=True, text=True,
+    )
+    assert result.returncode != 0
+    assert "Operation not permitted" in result.stderr
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="sandbox-exec is macOS-only")
+def test_seed_profile_still_denies_writes_outside_the_tree(tmp_path):
+    available, reason = _sandbox_probes_available()
+    if not available:
+        pytest.skip(f"sandbox probes unavailable in this execution environment: {reason}")
+
+    repo = tmp_path / "ptree" / "repo"
+    repo.parent.mkdir(parents=True)
+    profile = containment.prepare_seed_containment(repo)
+    outside = tmp_path / ".split"
+
+    result = subprocess.run(
+        ["sandbox-exec", "-f", str(profile), "/usr/bin/touch", str(outside)],
+        capture_output=True, text=True,
+    )
+    assert result.returncode != 0
+    assert not outside.exists()
+
+
 def _probe_git_containment_under_profile(profile: Path, ws: Path) -> None:
     """Shared by the worker- and verification-profile darwin probes below:
     the five git-control paths are refused, an ordinary file stays

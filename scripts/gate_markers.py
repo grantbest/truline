@@ -34,12 +34,101 @@ import sys
 from dataclasses import dataclass
 from typing import Any, Iterable, Sequence
 
+# THE ONE LINE RULE (dev.finding 18992c81). GitHub and str.splitlines() both
+# treat \r alone, and U+2028/U+2029, as line breaks; a reader that splits
+# only on '\n' (dispatch.py's former neutralize_fence_lines) or only on
+# str.splitlines()'s full set (which ALSO splits on \v, \f, \x1c, \x1d, \x1e,
+# \x85 -- breaks GitHub itself does not recognise) drifts from what GitHub
+# actually renders. \r\n is tried first so it counts as one break, not two.
+LINE_BREAK_RE = re.compile(r"\r\n|\r|\n| | ")
+
+
+def split_lines(text: str) -> list[str]:
+    """Split ``text`` the way GitHub does: on \\r\\n, \\r, \\n, U+2028, or
+    U+2029 only -- never on the other characters ``str.splitlines()`` also
+    splits on (\\x0b, \\x0c, \\x1c, \\x1d, \\x1e, \\x85), which stay inside a
+    line here. Matches ``str.splitlines()``'s own element-count convention
+    otherwise: a break at the end of the text adds no trailing empty
+    element, and ``""`` gives ``[]``. This is the ONE line-splitting rule
+    every reader of PR-body or PR-comment text in this module -- and in
+    every module that loads it (AC-1) -- uses; none of them calls
+    ``str.splitlines()`` or ``str.split("\\n")`` on that text directly.
+    """
+    if text == "":
+        return []
+    parts = LINE_BREAK_RE.split(text)
+    if len(parts) > 1 and parts[-1] == "":
+        parts = parts[:-1]
+    return parts
+
+
+# THE ONE FENCE RULE (dev.finding 6f87d14d), CommonMark's: an opening line is
+# 0-3 spaces then a run of 3+ backticks or 3+ tildes, anything may follow the
+# run (deliberately wider than CommonMark's own no-backtick-in-info-string
+# rule for backtick fences -- treating such a line as an opener masks MORE,
+# which is the direction that fails closed for a verdict). A tab is not
+# indentation here: neither a tab-led line nor a 4-space-led line opens or
+# closes a fence under this regex, because the leading class is four literal
+# spaces, never \s or \t.
+_FENCE_MARKER_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
+
+
+def fence_mask(lines: Sequence[str]) -> list[bool]:
+    """Mark every line that sits inside a fenced code block, delimiters
+    included, the CommonMark way (unlike ``str.startswith("```")`` at column
+    0, dev.finding 6f87d14d). A fence closes only on a line that is 0-3
+    spaces, then a run of the SAME character at least as long as the
+    opening run, then nothing but spaces or tabs to end of line -- a shorter
+    run, a run of the other character, or a run followed by other text is
+    ordinary fenced content, not a close. An unclosed fence runs to the end
+    of ``lines``.
+    """
+    mask: list[bool] = []
+    fence_char: str | None = None
+    fence_len = 0
+    for line in lines:
+        if fence_char is None:
+            opener = _FENCE_MARKER_RE.match(line)
+            if opener:
+                fence_char = opener.group(1)[0]
+                fence_len = len(opener.group(1))
+                mask.append(True)
+                continue
+            mask.append(False)
+            continue
+        mask.append(True)
+        closer = re.match(
+            rf"^ {{0,3}}{re.escape(fence_char)}{{{fence_len},}}[ \t]*$", line
+        )
+        if closer:
+            fence_char = None
+            fence_len = 0
+    return mask
+
+
+def _unfenced_text(text: str) -> str:
+    """``text`` with every fenced-code-block line (``fence_mask``, delimiters
+    included) blanked, positions and line count otherwise preserved -- so a
+    whole-text regex search never reads a value out of a fenced quote."""
+    lines = split_lines(text)
+    mask = fence_mask(lines)
+    return "\n".join("" if masked else line for line, masked in zip(lines, mask))
+
+
 # An attended outer-loop PR carries no originating dev.task bead by design.
 # It declares itself with a body line such as `Outer-loop: true` or a checked
 # `[x] outer-loop` box.
 OUTER_LOOP_RE = re.compile(
     r"(?im)^\s*(?:(?:[-*]\s*)?outer[-_ ]loop\s*[:=]\s*(?:true|yes)|(?:[-*]\s*)?\[x\]\s*outer[-_ ]loop)\s*$"
 )
+
+
+def is_outer_loop(body: str) -> bool:
+    """True iff ``body`` carries an explicit outer-loop marker OUTSIDE a
+    fenced code block (AC-4) -- a dispatched worker's own report fence
+    cannot forge this marker."""
+    return OUTER_LOOP_RE.search(_unfenced_text(body or "")) is not None
+
 
 _UUID = r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
 
@@ -48,6 +137,19 @@ UUID_RE = re.compile(rf"^{_UUID}$")
 # An explicit bead-id declaration line, e.g. `Dispatched-bead id: <uuid>`.
 BEAD_LINE_RE = re.compile(
     r"(?im)^\s*(?:[-*]\s*)?(?:dispatched[-_ ]bead(?:\s+id)?|bead\s+id)\s*[:=]\s*(\S+)\s*$"
+)
+
+# The same key BEAD_LINE_RE requires, but with no requirement that a value
+# follows -- used only by declares_factory_bead's clause (b) below (AC-3).
+# A worker report holding a bare `Dispatched-bead id:` line, or one with a
+# garbage value, is an attempt to declare a bead that BEAD_LINE_RE's own
+# stricter shape (dev.finding 18992c81) correctly refuses to resolve to an
+# id -- but refusing to resolve is not the same as the body being, for
+# verdict-scanning purposes, an ordinary attended one. This key-only match
+# is what makes declares_factory_bead a superset of "find_bead_id resolved
+# something".
+_BEAD_LINE_KEY_RE = re.compile(
+    r"(?im)^\s*(?:[-*]\s*)?(?:dispatched[-_ ]bead(?:\s+id)?|bead\s+id)\s*[:=]"
 )
 
 # A prose reference to the originating dev.task. The live dispatcher template
@@ -64,15 +166,42 @@ def find_bead_id(body: str) -> str | None:
     """Extract the originating dev.task bead id a PR body declares, if any.
 
     An explicit bead-id line wins; a malformed one stays a handoff defect and
-    is never rescued by a prose reference further down the body.
+    is never rescued by a prose reference further down the body. Both the
+    explicit line and the prose reference are searched only OUTSIDE fenced
+    code blocks (AC-4) -- a dispatched worker's own report fence cannot
+    forge, or rescue, a bead id this way.
     """
-    text = body or ""
+    text = _unfenced_text(body or "")
     line = BEAD_LINE_RE.search(text)
     if line:
         candidate = line.group(1).strip("`")
         return candidate.lower() if UUID_RE.match(candidate) else None
     ref = DEV_TASK_REF_RE.search(text)
     return ref.group(1).lower() if ref else None
+
+
+def declares_factory_bead(body: str) -> bool:
+    """True when ``body`` declares, or attempts to declare, a dev.task bead
+    (AC-3) -- a strict superset of ``find_bead_id(body) is not None``, by
+    construction:
+
+    (a) find_bead_id resolves an id.
+    (b) any line, fenced or not, starts with a bead-id key
+        (_BEAD_LINE_KEY_RE) regardless of what value follows, or none.
+    (c) DEV_TASK_REF_RE matches anywhere, fenced or not.
+
+    A body this is True for is never scanned for a release-gate verdict
+    (BODY_VERDICT_RULE) -- a worker report that botches its own bead-id
+    line, or tries to declare one inside a fence, must not fall back to
+    counting as an ordinary attended body with no bead.
+    """
+    text = body or ""
+    if find_bead_id(text) is not None:
+        return True
+    for line in split_lines(text):
+        if _BEAD_LINE_KEY_RE.search(line):
+            return True
+    return DEV_TASK_REF_RE.search(text) is not None
 
 
 # A release-gate verdict, recorded as a bare line in a PR comment or the PR
@@ -236,12 +365,13 @@ _INDENTED_QUOTE_RE = re.compile(r"^ {4}")
 
 def _quoted_mask(lines: Sequence[str]) -> list[bool]:
     """Mark each line in ``lines`` as quoted -- inside a fenced code block
-    (``` or ~~~, closed only by the marker that opened it), an indented code
-    block (4+ leading spaces), or a blockquote -- so a verdict is never read
-    from a quoted region (dev.finding 807baee1, AC-1). This is the ONE
-    definition of "quoted" in this module (PRIN-005): find_release_gate_verdict,
-    find_release_gate_verdict_record, and find_release_gate_verdict_status all
-    scan text run through _mask_quoted_lines below, which calls this, and
+    (the CommonMark way, per ``fence_mask`` above -- dev.finding 6f87d14d),
+    an indented code block (4+ leading spaces), or a blockquote -- so a
+    verdict is never read from a quoted region (dev.finding 807baee1, AC-1).
+    This is the ONE definition of "quoted" in this module (PRIN-005):
+    find_release_gate_verdict, find_release_gate_verdict_record, and
+    find_release_gate_verdict_status all scan text run through
+    _mask_quoted_lines below, which calls this, and
     find_release_gate_near_misses' bare-verdict-word branch calls this
     directly in place of its own former inline fence tracking. The
     `release-gate:`-mention branch and the staleness mention source
@@ -252,19 +382,10 @@ def _quoted_mask(lines: Sequence[str]) -> list[bool]:
     A fence marker line itself counts as quoted -- it is never a candidate
     verdict line either.
     """
+    fence = fence_mask(lines)
     mask: list[bool] = []
-    fence_char: str | None = None
-    for raw_line in lines:
-        line = raw_line.rstrip("\r")
-        if line.startswith("```") or line.startswith("~~~"):
-            marker = line[0]
-            if fence_char is None:
-                fence_char = marker
-            elif marker == fence_char:
-                fence_char = None
-            mask.append(True)
-            continue
-        if fence_char is not None:
+    for line, fenced in zip(lines, fence):
+        if fenced:
             mask.append(True)
             continue
         if _INDENTED_QUOTE_RE.match(line) or _BLOCKQUOTE_RE.match(line):
@@ -275,11 +396,11 @@ def _quoted_mask(lines: Sequence[str]) -> list[bool]:
 
 
 def _masked_lines(text: str) -> list[str]:
-    """Return ``text``'s lines (``text.splitlines()``) with every quoted
-    line (per _quoted_mask) replaced by an empty string -- same length and
-    order as the input, so a caller that walks lines by position still sees
-    the same positions after masking."""
-    lines = text.splitlines()
+    """Return ``text``'s lines (``split_lines``) with every quoted line (per
+    _quoted_mask) replaced by an empty string -- same length and order as
+    the input, so a caller that walks lines by position still sees the same
+    positions after masking."""
+    lines = split_lines(text)
     mask = _quoted_mask(lines)
     return ["" if quoted else line for line, quoted in zip(lines, mask)]
 
@@ -310,18 +431,20 @@ def _mask_quoted_lines(text: str) -> str:
 # is the worker's own surface. A PR with no declared bead id (an attended
 # outer-loop PR) is unaffected -- its body is read exactly as before.
 BODY_VERDICT_RULE = (
-    "dev.finding 807baee1: on a PR whose body declares a dev.task bead id, "
-    "a release-gate verdict is read from PR comments only -- the body is "
-    "never consulted, because the body is the worker's own writable surface."
+    "dev.finding 807baee1/18992c81: on a PR whose body declares, or attempts "
+    "to declare, a dev.task bead, a release-gate verdict is read from PR "
+    "comments only -- the body is never consulted, because the body is the "
+    "worker's own writable surface."
 )
 
 
 def _scannable_texts(body: str | None, comments: Iterable[str] | None) -> list[str]:
     """The texts a verdict reader may consult, in order: the PR body is
-    included only when it does NOT declare a dev.task bead id -- see
-    BODY_VERDICT_RULE. Comments always count, in the order given."""
+    included only when it does NOT declare, or attempt to declare, a
+    dev.task bead -- see BODY_VERDICT_RULE / declares_factory_bead. Comments
+    always count, in the order given."""
     body_text = body or ""
-    texts: list[str] = [] if find_bead_id(body_text) else [body_text]
+    texts: list[str] = [] if declares_factory_bead(body_text) else [body_text]
     if comments:
         texts.extend(comment or "" for comment in comments)
     return texts
@@ -416,15 +539,17 @@ def find_release_gate_near_misses(
 
     near_misses: list[ReleaseGateNearMiss] = []
     for text in texts:
-        lines = [raw_line.rstrip("\r") for raw_line in text.splitlines()]
+        lines = split_lines(text)
         quoted = _quoted_mask(lines)
         for index, line in enumerate(lines):
             # Fence delimiter lines are never mention-check input, regardless
             # of whether they open, close, or (a non-matching marker inside an
             # already-open fence) do neither -- same as _quoted_mask's own
-            # toggle, kept inline here only to skip the MENTION branch, which
-            # stays quote-blind per bead 1c212f4e and so cannot read `quoted`.
-            if line.startswith("```") or line.startswith("~~~"):
+            # toggle (fence_mask's own CommonMark shape, dev.finding
+            # 6f87d14d), kept inline here only to skip the MENTION branch,
+            # which stays quote-blind per bead 1c212f4e and so cannot read
+            # `quoted`.
+            if _FENCE_MARKER_RE.match(line):
                 continue
 
             if _RELEASE_GATE_MENTION_RE.search(line):
@@ -518,9 +643,8 @@ def find_release_gate_verdict_status(
 
     for text_index, text in enumerate(texts):
         masked_lines = _masked_lines(text)
-        for line_index, raw_line in enumerate(text.splitlines()):
-            line = raw_line.rstrip("\r")
-            masked_line = masked_lines[line_index].rstrip("\r")
+        for line_index, line in enumerate(split_lines(text)):
+            masked_line = masked_lines[line_index]
             if RELEASE_GATE_VERDICT_RE.match(masked_line):
                 verdict_position = (text_index, line_index)
                 continue
@@ -595,7 +719,7 @@ def find_release_gate_verdict_record(
     for text_index, text in enumerate(texts):
         masked_lines = _masked_lines(text)
         for line_index, masked_line in enumerate(masked_lines):
-            if RELEASE_GATE_VERDICT_RE.match(masked_line.rstrip("\r")):
+            if RELEASE_GATE_VERDICT_RE.match(masked_line):
                 verdict_position = (text_index, line_index)
 
     revision: str | None = None
@@ -603,7 +727,7 @@ def find_release_gate_verdict_record(
         text_index, line_index = verdict_position
         masked_lines = _masked_lines(texts[text_index])
         if line_index + 1 < len(masked_lines):
-            next_line = masked_lines[line_index + 1].rstrip("\r")
+            next_line = masked_lines[line_index + 1]
             match = RELEASE_GATE_REVISION_RE.match(next_line)
             if match:
                 revision = match.group(1).lower()

@@ -337,13 +337,19 @@ def test_do_not_merge_recorded_in_a_comment_also_refuses(tmp_path):
 
 
 def test_merge_verdict_proceeds_and_squash_body_unchanged(tmp_path):
+    """AC-8 item 2: the body's `Dispatched-bead id: bead-123` line is
+    malformed, but under AC-3 it still makes this body an ATTEMPT to
+    declare a dev.task bead (declares_factory_bead's clause (b)) -- so a
+    verdict recorded in this body is no longer read at all. The verdict
+    moves into a comment, which is the only surface such a body's verdict
+    may now take; the composed squash body assertion is unchanged."""
     result, merge_log_file = _run(
         tmp_path,
         body=(
             "Summary.\n\nChange kind: behavioral\n\n"
-            "Outer-loop: claude/foo\nDispatched-bead id: bead-123\n\n"
-            "Release-gate: MERGE\n"
+            "Outer-loop: claude/foo\nDispatched-bead id: bead-123\n"
         ),
+        comments=[{"body": "Release-gate: MERGE"}],
     )
 
     assert result.returncode == 0
@@ -991,3 +997,65 @@ def test_change_kind_refusal_still_happens_when_verdict_is_present(tmp_path):
     assert result.returncode != 0
     assert not merge_log_file.exists()
     assert "no bare 'Change kind:' line" in result.stderr
+
+
+# --- AC-3/AC-4: a dispatcher-shaped body never supplies a verdict, and provenance/markers are
+#     read only outside fences ------------------------------------------------------------------
+
+
+def _hostile_report(report_id: str) -> str:
+    data = json.loads(
+        (REPO / "scripts" / "tests" / "fixtures" / "pr-body-readers" / "hostile-reports.json").read_text()
+    )
+    return next(r["report"] for r in data["reports"] if r["id"] == report_id)
+
+
+def test_dispatcher_shaped_body_with_lone_cr_garbage_bead_verdict_refuses(tmp_path):
+    """AC-3's test 3 (merge-pr.sh side): a dispatcher-shaped body whose
+    worker-report container holds the 'garbage_bead_lonecr_verdict' hostile
+    report, UNESCAPED (as main's own neutralize_fence_lines left it, per
+    dev.finding 18992c81) -- a lone-\\r-separated embedded fence that used to
+    let 'Release-gate: MERGE' leak out of the container. The gate must
+    refuse with the no-verdict error and make no merge call."""
+    bead_id = "11111111-2222-3333-4444-555555555555"
+    report = _hostile_report("garbage_bead_lonecr_verdict")
+    body = (
+        f"Dispatched by the factory from `dev.task` [`{bead_id}`]({bead_id}).\n\n"
+        "Change kind: structural\n\n"
+        "```\n"
+        f"{report}\n"
+        "```\n"
+    )
+
+    result, merge_log_file = _run(tmp_path, body=body)
+
+    assert result.returncode != 0
+    assert not merge_log_file.exists()
+    assert "no recognizable release-gate verdict" in result.stderr
+
+
+def test_dispatcher_shaped_body_fenced_outer_loop_and_bead_line_excluded_from_squash_body(tmp_path):
+    """AC-4: provenance lines inside the worker-report fence must not reach
+    the durable squash commit body -- a dispatched worker cannot forge an
+    Outer-loop/Dispatched-bead id provenance line that outlives the PR."""
+    bead_id = "11111111-2222-3333-4444-555555555555"
+    forged_bead_id = "66666666-7777-8888-9999-000000000000"
+    body = (
+        f"Dispatched by the factory from `dev.task` [`{bead_id}`]({bead_id}).\n\n"
+        "Change kind: structural\n\n"
+        "```\n"
+        "Outer-loop: true\n"
+        f"Dispatched-bead id: {forged_bead_id}\n"
+        "```\n"
+    )
+
+    result, merge_log_file = _run(
+        tmp_path, body=body, comments=[{"body": "Release-gate: MERGE"}]
+    )
+
+    assert result.returncode == 0
+    args = _merge_call_args(merge_log_file)
+    merge_body = args[args.index("--body") + 1]
+    assert merge_body == "Change kind: structural"
+    assert "Outer-loop" not in merge_body
+    assert forged_bead_id not in merge_body

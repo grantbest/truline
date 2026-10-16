@@ -51,6 +51,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import hashlib
+import importlib.util
 import inspect
 import json
 import os
@@ -67,7 +68,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Mapping
 
 import dev_task_contract
 import doctrine
@@ -3765,17 +3766,39 @@ def render_applies_stamp(applies_ids: Iterable[str]) -> str:
 WORKER_REPORT_CAP = 12000
 _FENCE_LINE_RE = re.compile(r"^( {0,3})(`{3,}|~{3,})")
 
+#: dev.finding 18992c81: loaded lazily/cached, not at import time -- every
+#: Temporal activity imports dispatch, and most never call this (AC-1).
+_gate_markers_module: Any | None = None
+
+
+def _load_gate_markers() -> Any:
+    global _gate_markers_module
+    if _gate_markers_module is None:
+        path = Path(__file__).resolve().parents[2] / "scripts" / "gate_markers.py"
+        spec = importlib.util.spec_from_file_location("dispatch_gate_markers", path)
+        if spec is None or spec.loader is None:
+            raise DispatchError(f"could not load gate_markers from {path}")
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module  # dataclasses need this before exec_module
+        spec.loader.exec_module(module)
+        _gate_markers_module = module
+    return _gate_markers_module
+
 
 def neutralize_fence_lines(text: str) -> tuple[str, int]:
-    lines, neutralized = [], 0
-    for line in text.split("\n"):
-        m = _FENCE_LINE_RE.match(line)
+    # Split on the one line-break rule (gate_markers.LINE_BREAK_RE), not
+    # merely '\n' -- a lone \r or U+2028-separated fence (dev.finding
+    # 18992c81) used to still escape the container. Rejoins with the
+    # separators actually present, never with '\n'.
+    pattern = _load_gate_markers().LINE_BREAK_RE
+    tokens = re.split(f"({pattern.pattern})", text)
+    neutralized = 0
+    for index in range(0, len(tokens), 2):
+        m = _FENCE_LINE_RE.match(tokens[index])
         if m:
-            lines.append(f"{m.group(1)}\\{line[len(m.group(1)):]}")
+            tokens[index] = f"{m.group(1)}\\{tokens[index][len(m.group(1)):]}"
             neutralized += 1
-        else:
-            lines.append(line)
-    return "\n".join(lines), neutralized
+    return "".join(tokens), neutralized
 
 
 def render_worker_report(worker_note: str, cap: int = WORKER_REPORT_CAP) -> str:
@@ -4347,6 +4370,10 @@ def pick_task(
     sub: BeadStore,
     task_id: str | None,
     tasks: list[dict] | None = None,
+    *,
+    claimable_since_by_task_id: Mapping[str, datetime | None] | None = None,
+    time_box_by_release_ref: Mapping[str, queue_order.TimeBox] | None = None,
+    policy: queue_order.RankPolicy | None = None, mode: str | None = None, order_out: list | None = None,
 ) -> dict | None:
     all_tasks = list(tasks) if tasks is not None else sub.list_tasks()
     if task_id:
@@ -4368,7 +4395,22 @@ def pick_task(
         print(f"  refuse — release state could not be read: {type(exc).__name__}: {exc}")
         return None
 
-    return queue_order.first_selectable(sub, pending, all_tasks, release_by_task_id)
+    # R26.12 B8: ranked order when every rank input is supplied; FIFO
+    # (today's behaviour) when any one of them is missing.
+    if None in (claimable_since_by_task_id, time_box_by_release_ref, policy, mode):
+        return queue_order.first_selectable(sub, pending, all_tasks, release_by_task_id)
+
+    order = queue_order.rank_or_fifo(
+        mode, all_tasks, notes_by_id={t["id"]: sub.list_notes(t["id"]) for t in pending},
+        release_by_task_id=release_by_task_id, time_box_by_release_ref=time_box_by_release_ref,
+        policy=policy, now=datetime.now(timezone.utc), claimable_since_by_task_id=claimable_since_by_task_id,
+    )
+    if order_out is not None:
+        order_out.append(order)
+    if order.fallback_reason:
+        print(f"  rank fallback to fifo: {order.fallback_reason}")
+    picked_id = order.ranked[0].task_id if order.ranked else None
+    return next((t for t in all_tasks if t["id"] == picked_id), None)
 
 
 def parse_bead_timestamp(value: str) -> datetime:
@@ -7046,6 +7088,8 @@ def main(argv: list[str] | None = None) -> int:
         help="print intended dispatch or reconciliation actions; write nothing",
     )
     parser.add_argument("--backfill-edges", action="store_true", help="walk every arch.change idempotently, backfilling delivers/affects edges")
+    parser.add_argument("--explain-order", action="store_true", help="print the declared queue order via operator_verbs; read-only")
+    parser.add_argument("--json", action="store_true", help="with --explain-order, print QueueOrder.to_json() instead of the table")
     parser.add_argument(
         "--yes",
         action="store_true",
@@ -7170,6 +7214,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.backfill_edges:
         from activities import change_apply
         return print(change_apply.backfill_change_edges(change_apply.default_store(), dry_run=args.dry_run)) or 0
+    if args.explain_order:
+        import operator_verbs
+        return operator_verbs.main(["explain-order", *(["--json"] if args.json else [])], store=default_store())
     if (
         not args.report_stuck
         and not args.traceability_report

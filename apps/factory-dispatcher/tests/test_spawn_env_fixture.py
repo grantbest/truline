@@ -73,6 +73,12 @@ CaseFunc = Callable[["SpawnRecorder", Path, pytest.MonkeyPatch], None]
 _ALLOWED_CREDENTIALS: dict[CaseKey, set[str]] = {
     ("dispatch.py", "run_worker"): {"CLAUDE_CODE_OAUTH_TOKEN", "SUBSTRATE_API_KEY"},
     ("activities/merge_on_verdict.py", "run_merge_script"): {"DISCORD_WEBHOOK_URL"},
+    # PARTB-B2c/D21: handoff.pinned_git_env()'s GIT_CONFIG_KEY_<n> names the git
+    # config KEY, which process_env.is_credential_name's generic KEY|TOKEN|SECRET|
+    # PASSWORD pattern cannot tell apart from a credential name by spelling alone --
+    # the VALUES (core.hooksPath, core.fsmonitor, gc.auto, maintenance.auto) are never
+    # sensitive, and handoff never reads payload content into this env at all.
+    ("handoff.py", "_run_git"): {f"GIT_CONFIG_KEY_{i}" for i in range(4)},
 }
 
 _WORKER_LAUNCHER_PATH = _DISPATCHER_ROOT / "worker_launcher.py"

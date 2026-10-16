@@ -1,0 +1,171 @@
+{
+  "header": {
+    "fixture": "verdict-disposition-2026-10-08",
+    "authored_at": "2026-10-08T18:55:00Z",
+    "main_revision": "45a83f6",
+    "captured_by": "outer-loop/claude (VD-1, attended)",
+    "capture_method": "SYNTHETIC. Not captured from the live store or GitHub. Eight PR views authored by the outer loop in the shapes the repository's own conventions produce: the dispatcher's PR body opener and Dispatched-bead line (dispatch.py open_pull_request), the two-line verdict record (scripts/gate_markers.py: Release-gate: <value> then Release-gate-revision: <sha>), and the requeue status note shape dispatch.requeue_task writes. Head and verdict shas are sha1 of a label, not real commits. Bead ids are v4-shaped placeholders.",
+    "what_the_fixture_is_for": "VD-1 AC-2 and AC-4. 'expected' is the outcome decide() must return for each view and 'why' names the evidence the reason string must name. The worker may add views; it may not change an expected value without a note in the PR body saying which convention it found the fixture had wrong.",
+    "comment_author_note": "'author' on a comment is the GitHub login as gh pr view --json comments returns it; the hardened reader (4e1c33bf) decides attribution from the comment's position and shape, not from this field, so the field is informational here.",
+    "state_casing": "'state' carries the value gh pr view --json state returns, upper case: OPEN, CLOSED or MERGED (dispatch.py compares against these literals). A view adapter that lower-cases it must not exist; decide() reads these values.",
+    "revised": "2026-10-08 gate round 1 (MERGE-WITH-CHANGES on a0f4da28): view 2007's requeue note now carries the exact body prefix dispatch.requeue_task writes with the reason in the body and content holding only resets_attempts; states upper-cased to gh casing; view 2009 (MERGED) added so every AC-4 disposition has a case. Gate round 2 (MERGE-WITH-CHANGES on 8a6710b6): the note envelope now matches Substrate.add_note (kind and body inside content, created_at on the envelope), the shape guards.py reads."
+  },
+  "pr_views": [
+    {
+      "number": 2001,
+      "state": "OPEN",
+      "head_sha": "febdd4dee1aef790a73c332ca77638e89c515ede",
+      "bead_id": "00000001-0000-4000-8000-000000000001",
+      "body": "Dispatched by the factory from `dev.task` [`00000001-0000-4000-8000-000000000001`](00000001-0000-4000-8000-000000000001).\n\nChange kind: behavioral\n\nDispatched-bead id: 00000001-0000-4000-8000-000000000001\n",
+      "comments": [
+        {
+          "author": "outer-loop",
+          "created_at": "2026-10-08T15:10:00Z",
+          "body": "Release-gate: MERGE-WITH-CHANGES\nRelease-gate-revision: febdd4dee1aef790a73c332ca77638e89c515ede\n"
+        }
+      ],
+      "task_notes": [],
+      "expected": "AWAITING",
+      "why": "newest attributed verdict MERGE-WITH-CHANGES at head, PR open, no later note"
+    },
+    {
+      "number": 2002,
+      "state": "OPEN",
+      "head_sha": "178c040fb76195151aba3d9f4ab33804b03b96c8",
+      "bead_id": "00000002-0000-4000-8000-000000000002",
+      "body": "Dispatched by the factory from `dev.task` [`00000002-0000-4000-8000-000000000002`](00000002-0000-4000-8000-000000000002).\n\nChange kind: behavioral\n\nDispatched-bead id: 00000002-0000-4000-8000-000000000002\n",
+      "comments": [
+        {
+          "author": "outer-loop",
+          "created_at": "2026-10-08T15:20:00Z",
+          "body": "Release-gate: DO-NOT-MERGE\nRelease-gate-revision: 178c040fb76195151aba3d9f4ab33804b03b96c8\n"
+        }
+      ],
+      "task_notes": [],
+      "expected": "AWAITING",
+      "why": "newest attributed verdict DO-NOT-MERGE at head, PR open, no later note"
+    },
+    {
+      "number": 2003,
+      "state": "OPEN",
+      "head_sha": "a7e5f8057a6e987586d44bab3018332a08c47d2c",
+      "bead_id": "00000003-0000-4000-8000-000000000003",
+      "body": "Dispatched by the factory from `dev.task` [`00000003-0000-4000-8000-000000000003`](00000003-0000-4000-8000-000000000003).\n\nChange kind: behavioral\n\nDispatched-bead id: 00000003-0000-4000-8000-000000000003\n",
+      "comments": [
+        {
+          "author": "outer-loop",
+          "created_at": "2026-10-08T15:30:00Z",
+          "body": "Release-gate: MERGE\nRelease-gate-revision: a7e5f8057a6e987586d44bab3018332a08c47d2c\n"
+        }
+      ],
+      "task_notes": [],
+      "expected": "NONE",
+      "why": "verdict is MERGE; A34 territory, not this detector's"
+    },
+    {
+      "number": 2004,
+      "state": "OPEN",
+      "head_sha": "028ae45cd04f740d05b2cc6adb540e2fa1cda187",
+      "bead_id": "00000004-0000-4000-8000-000000000004",
+      "body": "Dispatched by the factory from `dev.task` [`00000004-0000-4000-8000-000000000004`](00000004-0000-4000-8000-000000000004).\n\nChange kind: behavioral\n\nDispatched-bead id: 00000004-0000-4000-8000-000000000004\n",
+      "comments": [
+        {
+          "author": "outer-loop",
+          "created_at": "2026-10-08T15:40:00Z",
+          "body": "Release-gate: MERGE-WITH-CHANGES\nRelease-gate-revision: b58af3e6fa7cbc795aaf35ebbd7e88b16ca82548\n"
+        }
+      ],
+      "task_notes": [],
+      "expected": "ROUND_OPEN",
+      "why": "verdict revision differs from head_sha: a new round is open, the worker already pushed"
+    },
+    {
+      "number": 2005,
+      "state": "OPEN",
+      "head_sha": "d8a973fee0d5a9be58d4de023bde22f5d11b85b2",
+      "bead_id": "00000005-0000-4000-8000-000000000005",
+      "body": "Dispatched by the factory from `dev.task` [`00000005-0000-4000-8000-000000000005`](00000005-0000-4000-8000-000000000005).\n\nChange kind: behavioral\n\nDispatched-bead id: 00000005-0000-4000-8000-000000000005\n\nRelease-gate: MERGE-WITH-CHANGES\nRelease-gate-revision: d8a973fee0d5a9be58d4de023bde22f5d11b85b2\n",
+      "comments": [],
+      "task_notes": [],
+      "expected": "NONE",
+      "why": "verdict appears only in the dispatcher-shaped body (worker-authored); BODY_VERDICT_RULE and 4e1c33bf refuse to attribute it"
+    },
+    {
+      "number": 2006,
+      "state": "CLOSED",
+      "head_sha": "d8134dbe50e7616a5dca1f9d6a655e33bbd91ccb",
+      "bead_id": "00000006-0000-4000-8000-000000000006",
+      "body": "Dispatched by the factory from `dev.task` [`00000006-0000-4000-8000-000000000006`](00000006-0000-4000-8000-000000000006).\n\nChange kind: behavioral\n\nDispatched-bead id: 00000006-0000-4000-8000-000000000006\n",
+      "comments": [
+        {
+          "author": "outer-loop",
+          "created_at": "2026-10-08T15:50:00Z",
+          "body": "Release-gate: MERGE-WITH-CHANGES\nRelease-gate-revision: d8134dbe50e7616a5dca1f9d6a655e33bbd91ccb\n"
+        }
+      ],
+      "task_notes": [],
+      "expected": "DISPOSITIONED",
+      "why": "PR closed after the verdict with no requeue note: CLOSED"
+    },
+    {
+      "number": 2007,
+      "state": "CLOSED",
+      "head_sha": "de617217db1767a951e3fd418aa820b9a7740066",
+      "bead_id": "00000007-0000-4000-8000-000000000007",
+      "body": "Dispatched by the factory from `dev.task` [`00000007-0000-4000-8000-000000000007`](00000007-0000-4000-8000-000000000007).\n\nChange kind: behavioral\n\nDispatched-bead id: 00000007-0000-4000-8000-000000000007\n",
+      "comments": [
+        {
+          "author": "outer-loop",
+          "created_at": "2026-10-08T16:00:00Z",
+          "body": "Release-gate: MERGE-WITH-CHANGES\nRelease-gate-revision: de617217db1767a951e3fd418aa820b9a7740066\n"
+        }
+      ],
+      "task_notes": [
+        {
+          "created_at": "2026-10-08T16:12:00Z",
+          "content": {
+            "kind": "status",
+            "body": "Returned to pending by an operator, with the retry budget restarted. Recorded failures before this point were judged not to have been spent on this task's work. Reason: MERGE-WITH-CHANGES: carry the gate's two findings",
+            "resets_attempts": true
+          }
+        }
+      ],
+      "expected": "DISPOSITIONED",
+      "why": "requeue note newer than the verdict: REQUEUED"
+    },
+    {
+      "number": 2008,
+      "state": "OPEN",
+      "head_sha": "2725842ab40d3a1eb799d6db6acbb02de6b6a763",
+      "bead_id": "00000008-0000-4000-8000-000000000008",
+      "body": "Dispatched by the factory from `dev.task` [`00000008-0000-4000-8000-000000000008`](00000008-0000-4000-8000-000000000008).\n\nChange kind: behavioral\n\nDispatched-bead id: 00000008-0000-4000-8000-000000000008\n",
+      "comments": [
+        {
+          "author": "outer-loop",
+          "created_at": "2026-10-08T16:20:00Z",
+          "body": "Looks fine so far, gate not yet dispatched."
+        }
+      ],
+      "task_notes": [],
+      "expected": "NONE",
+      "why": "no verdict at all"
+    },
+    {
+      "number": 2009,
+      "state": "MERGED",
+      "head_sha": "1235f3f25fd82a26f1d8b40fc244b05d091c4daa",
+      "bead_id": "00000009-0000-4000-8000-000000000009",
+      "body": "Dispatched by the factory from `dev.task` [`00000009-0000-4000-8000-000000000009`](00000009-0000-4000-8000-000000000009).\n\nChange kind: behavioral\n\nDispatched-bead id: 00000009-0000-4000-8000-000000000009\n",
+      "comments": [
+        {
+          "author": "outer-loop",
+          "created_at": "2026-10-08T16:30:00Z",
+          "body": "Release-gate: MERGE-WITH-CHANGES\nRelease-gate-revision: 1235f3f25fd82a26f1d8b40fc244b05d091c4daa\n"
+        }
+      ],
+      "task_notes": [],
+      "expected": "DISPOSITIONED",
+      "why": "PR merged after the verdict (a person made the changes and merged, or the verdict was overtaken): MERGED"
+    }
+  ]
+}

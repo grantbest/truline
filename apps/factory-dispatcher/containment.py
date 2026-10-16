@@ -582,6 +582,69 @@ VERIFY_PROFILE_TEMPLATE = """\
 """
 
 
+#: decision (a1) (2026-10-04): the seed-only profile variant used by `seed`/`vseed`,
+#: which must run `git clone`/`git remote set-url` inside the tree -- the five
+#: .git-control write denies both other profiles carry would EPERM both calls (D1).
+SEED_PROFILE_NAME = ".seed-containment.sb"
+
+SEED_PROFILE_TEMPLATE = """\
+;; Rendered by apps/factory-dispatcher/containment.py — decision (a1) (2026-10-04).
+;; The seed-only variant of the verification profile, used ONLY by worker_launcher's
+;; `seed` and `vseed` subcommands: everything else about this profile matches
+;; render_verification_profile, but it omits the five .git-control write denies that
+;; profile and the worker profile both carry, because seed/vseed's own `git clone`
+;; and `git remote set-url` write `<tree>/repo/.git` and `.git/config` directly (D1).
+(version 1)
+(allow default)
+{READ_DENIES}
+{NETWORK_RULES}
+{MACH_JOB_DENIES}
+(deny file-write*)
+(allow file-write*{WRITE_ALLOWS})
+"""
+
+
+def render_seed_profile(tree_repo: Path, environ: dict[str, str] | None = None) -> str:
+    """The seed-only profile text for ``tree_repo``: the same write-allow set as
+    :func:`render_verification_profile` with no ``extra_write`` (``tree_repo``, its
+    sibling ``.verify-tmp``, ``/dev``) and the same read/network/mach rules, but
+    WITHOUT :func:`_git_write_deny_lines` -- see the module docstring and
+    SEED_PROFILE_NAME's own comment above.
+    """
+    resolved_repo = tree_repo.resolve()
+    verify_tmp = resolved_repo.parent / VERIFY_TMPDIR_NAME
+    write_allows = f'\n  (subpath "{resolved_repo}")\n  (subpath "{verify_tmp}")'
+    write_allows += '\n  (subpath "/dev")\n  (literal "/dev/null")'
+    return (
+        SEED_PROFILE_TEMPLATE.replace("{WRITE_ALLOWS}", write_allows)
+        .replace("{READ_DENIES}", _read_deny_lines(environ))
+        .replace("{NETWORK_RULES}", _network_rule_lines())
+        .replace("{MACH_JOB_DENIES}", _mach_job_deny_lines())
+    )
+
+
+def prepare_seed_containment(
+    tree_repo: Path, environ: dict[str, str] | None = None
+) -> Path:
+    """Write the seed-only profile text beside ``tree_repo`` -- no directory and no
+    tmpdir created here (seed/vseed's own ``.verify-tmp`` usage, if any, is created by
+    the launcher's existing `_finalize_child_env`/`_venv_tmp_env` HOME setup, the same
+    as it is for the other profiles). Raises ValueError, naming both paths, the same
+    way :func:`prepare_verification_containment` does when ``tree_repo`` resolves
+    under a directory :func:`_all_denied_subpaths` names. Returns the profile path.
+    """
+    resolved_repo = tree_repo.resolve()
+    collision = _under_any(resolved_repo, _all_denied_subpaths(environ))
+    if collision is not None:
+        raise ValueError(
+            f"seed tree {resolved_repo} resolves under {collision}, "
+            "which this profile denies reading; refusing to run there"
+        )
+    profile = resolved_repo.parent / SEED_PROFILE_NAME
+    profile.write_text(render_seed_profile(tree_repo, environ))
+    return profile
+
+
 def verification_venv_path(clone: Path) -> Path:
     """Where the verification interpreter lives for ``clone`` -- OUTSIDE it."""
     return clone.resolve().parent / VERIFICATION_VENV_NAME

@@ -69,6 +69,13 @@ class FakeSubstrate:
     def list_notes(self, parent_id, limit=500):
         return []
 
+    def list_events(self, bead_id):
+        """R26.12 B8: claim_activity's auto-pick now reads this for every
+        pending bead's claimable_since (operator_verbs.read_rank_inputs);
+        empty here falls back to created_at, same oldest-first order these
+        tests already assert."""
+        return []
+
     def find_bead(self, namespace, type, content_ref):
         return None
 

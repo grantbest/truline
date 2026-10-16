@@ -40,6 +40,7 @@ SECRET_ENV_VARS = (_substrate.URL_ENV, _substrate.KEY_ENV)
 GH_PR_FIELDS = "number,title,body,url,headRefName,baseRefName"
 _markers = _load_shared("gate_markers")
 OUTER_LOOP_RE = _markers.OUTER_LOOP_RE
+is_outer_loop = _markers.is_outer_loop
 find_bead_id = _markers.find_bead_id
 CHANGE_KIND_RE = re.compile(r"^[ \t]*Change kind:[ \t]*(structural|behavioral)[ \t]*$", re.MULTILINE | re.IGNORECASE)
 PR_URL_RE = re.compile(r"/pull/(\d+)(?:[/?#]|$)")
@@ -225,7 +226,7 @@ def collect_context(pr_numbers: list[int], provider: Provider) -> list[PrContext
     for number in pr_numbers:
         pr = provider.pr(number)
         bead_id = find_bead_id(pr.body)
-        context = PrContext(pr=pr, bead_id=bead_id, outer_loop=bool(OUTER_LOOP_RE.search(pr.body)))
+        context = PrContext(pr=pr, bead_id=bead_id, outer_loop=is_outer_loop(pr.body))
         if bead_id:
             context.bead = provider.bead(bead_id)
             context.notes = provider.notes(bead_id)

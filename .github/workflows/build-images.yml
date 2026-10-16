@@ -1,0 +1,93 @@
+name: Build and publish images
+
+# The platform's images, built on GitHub-hosted runners and pushed to this
+# repository's GitHub Container Registry namespace. A consumer pins them by
+# digest (`ghcr.io/<owner>/truline-<app>@sha256:...`), never by a tag that
+# moves. Two triggers:
+#
+#   * a tag `v*` is a platform release: every image is pushed as
+#     `:<tag>` (immutable by convention) and `:sha-<short>`;
+#   * a push to `main` is a pre-release build: `:sha-<short>` and `:main`.
+#
+# No credential beyond the workflow's own GITHUB_TOKEN is used, so a fork
+# builds and publishes into its own namespace with no setup.
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+    paths:
+      - 'apps/**'
+      - '.dockerignore'
+      - '.github/workflows/build-images.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: ${{ matrix.app }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: substrate
+            context: apps/substrate
+            dockerfile: apps/substrate/Dockerfile
+          - app: mcp-hub
+            # Root context: the gateway image carries the dispatcher's intake and
+            # the substrate client, which live outside apps/mcp-hub/; the root
+            # .dockerignore whitelists exactly the trees it may COPY.
+            context: .
+            dockerfile: apps/mcp-hub/Dockerfile
+          - app: lifeops-console
+            context: apps/lifeops-console
+            dockerfile: apps/lifeops-console/Dockerfile
+          - app: finance-reporting
+            context: apps/finance-reporting
+            dockerfile: apps/finance-reporting/Dockerfile
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Resolve image name and tags
+        id: meta
+        run: |
+          owner="$(printf '%s' "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
+          image="ghcr.io/${owner}/truline-${{ matrix.app }}"
+          short="${GITHUB_SHA::12}"
+          tags="${image}:sha-${short}"
+          case "${GITHUB_REF}" in
+            refs/tags/v*)      tags="${tags} ${image}:${GITHUB_REF_NAME}" ;;
+            refs/heads/main)   tags="${tags} ${image}:main" ;;
+          esac
+          echo "image=${image}" >> "${GITHUB_OUTPUT}"
+          echo "tags=${tags}" >> "${GITHUB_OUTPUT}"
+
+      - name: Build
+        run: |
+          set -eu
+          args=""
+          for t in ${{ steps.meta.outputs.tags }}; do args="${args} -t ${t}"; done
+          timeout 900s docker build \
+            --build-arg GIT_SHA="${GITHUB_SHA}" \
+            -f "${{ matrix.dockerfile }}" \
+            ${args} \
+            "${{ matrix.context }}"
+
+      - name: Log in to GHCR
+        run: printf '%s' "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Push
+        run: |
+          set -eu
+          for t in ${{ steps.meta.outputs.tags }}; do docker push "${t}"; done
+          docker logout ghcr.io
+
+      - name: Report the digest
+        run: |
+          docker inspect --format='{{index .RepoDigests 0}}' "${{ steps.meta.outputs.image }}:sha-${GITHUB_SHA::12}" | tee -a "${GITHUB_STEP_SUMMARY}"

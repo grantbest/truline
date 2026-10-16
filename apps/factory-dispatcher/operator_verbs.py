@@ -7,7 +7,9 @@ same BeadStore GET methods the dispatcher's tick already uses (pending
 tasks, their notes, arch.release beads, the delivers edges that resolve a
 task's release, and each pending task's event log for claimable_since), and
 prints the order, the held list and every position's explanation. It writes
-nothing. pick_task does not call anything in this file yet.
+nothing itself. R26.12 B8: ``read_rank_inputs`` below is also called by the
+dispatcher's own claim path (``activities/dispatch_steps.py``), which is what
+writes ``queue-order.json`` and feeds ``dispatch.pick_task``.
 """
 
 from __future__ import annotations
@@ -28,13 +30,23 @@ if str(APP) not in sys.path:
 import guards  # noqa: E402
 import queue_order  # noqa: E402
 import schedule_status  # noqa: E402
+import worker_revision  # noqa: E402
 from substrate import default_store  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 POLICY_PATH = REPO_ROOT / "docs" / "releases" / "policy" / "health-policy.json"
 
+
+def order_file_path(environ: Mapping[str, str] | None = None) -> Path:
+    """Where the dispatcher's last-computed ``QueueOrder`` lives: a sibling
+    of ``worker-revision.json`` in the same state directory (AC-4, AC-10) --
+    reusing ``worker_revision.default_state_path`` rather than re-deriving
+    ``FACTORY_DISPATCHER_STATE_DIR`` a second way."""
+    return worker_revision.default_state_path(environ).parent / queue_order.ORDER_FILE_NAME
+
+
 #: The BeadStore GET methods explain-order may call. Used only to document
-#: intent beside _read_inputs below -- FakeStore in the test suite has no
+#: intent beside read_rank_inputs below -- FakeStore in the test suite has no
 #: write method at all, which is what actually proves this.
 _READ_METHODS = ("list_tasks", "list_notes", "list_beads", "list_links", "list_events")
 
@@ -89,11 +101,18 @@ def load_policy(policy_path: Path) -> queue_order.RankPolicy:
     return queue_order.RankPolicy.from_mapping(mapping, policy_revision=_git_blob_sha(data))
 
 
-def _read_inputs(store: Any) -> dict[str, Any]:
+def read_rank_inputs(store: Any) -> dict[str, Any]:
     """``rank_or_fifo``'s keyword inputs, read from ``store`` through GET
     calls only -- the same calls dispatch.resolve_task_release_states and
     the tick's note reads already make, plus one list_events per pending
-    bead for claimable_since (schedule_status._became_claimable_at)."""
+    bead for claimable_since (schedule_status._became_claimable_at).
+
+    Public (R26.12 B8 AC-1): the dispatcher's claim path calls this too, so
+    the tick and ``explain-order`` read identically, including the per-bead
+    fallback below -- a bead whose own event log cannot be read falls back
+    to ``None`` here, which is exactly what makes ``rank_pending`` fall back
+    to that bead's ``created_at`` (source ``"created_at"``) rather than
+    refusing the whole tick over one bead's unreadable history."""
     all_tasks = list(store.list_tasks())
     pending = [task for task in all_tasks if task.get("state") == "pending"]
 
@@ -125,9 +144,14 @@ def _read_inputs(store: Any) -> dict[str, Any]:
             )
             break
 
-    claimable_since_by_task_id = {
-        task["id"]: schedule_status._became_claimable_at(store.list_events(task["id"])) for task in pending
-    }
+    claimable_since_by_task_id: dict[str, Any] = {}
+    for task in pending:
+        try:
+            events = store.list_events(task["id"])
+        except Exception:  # noqa: BLE001 - one bead's unreadable events falls back, never refuses the tick
+            claimable_since_by_task_id[task["id"]] = None
+            continue
+        claimable_since_by_task_id[task["id"]] = schedule_status._became_claimable_at(events)
 
     return dict(
         tasks=all_tasks,
@@ -148,7 +172,7 @@ def compute_queue_order(
 ) -> queue_order.QueueOrder:
     """Read-only: builds rank_or_fifo's inputs from ``store`` and the
     FACTORY_QUEUE_ORDER kill switch read from ``environ``."""
-    inputs = _read_inputs(store)
+    inputs = read_rank_inputs(store)
     mode = queue_order.order_mode(environ)
     return queue_order.rank_or_fifo(mode, inputs["tasks"], policy=policy, now=now, **{
         key: value for key, value in inputs.items() if key != "tasks"
@@ -213,6 +237,41 @@ def render_explain_order(order: queue_order.QueueOrder) -> str:
     return "\n\n".join((render_table(order), render_held(order), render_explanations(order)))
 
 
+def read_live_order_file(path: Path) -> dict[str, Any] | None:
+    """The dispatcher's last-written order, reduced to the three fields
+    AC-10's ``live_order_file`` carries -- ``None`` if there is no file, or
+    it cannot be parsed (informational only; never raises)."""
+    try:
+        data = json.loads(path.read_text())
+    except (OSError, ValueError):
+        return None
+    return {k: data.get(k) for k in ("mode", "computed_at", "fallback_reason")}
+
+
+def render_mode_lines(
+    order: queue_order.QueueOrder, environ: Mapping[str, str], live_order_file: dict[str, Any] | None
+) -> str:
+    """AC-10: what mode THIS computation used, read from the invoking
+    shell's own ``FACTORY_QUEUE_ORDER`` -- distinct from the dispatcher's own
+    process, which reads its env file, not this shell."""
+    shell_value = environ.get("FACTORY_QUEUE_ORDER")
+    lines = [
+        f"mode: {order.mode} (this computation; FACTORY_QUEUE_ORDER from the invoking "
+        f"shell: {shell_value if shell_value is not None else 'unset'})"
+    ]
+    if live_order_file is not None:
+        lines.append(
+            f"dispatcher's last tick: mode={live_order_file['mode']} at "
+            f"{live_order_file['computed_at']}, fallback_reason={live_order_file['fallback_reason']}"
+        )
+        if live_order_file["mode"] != order.mode:
+            lines.append(
+                "WARNING: the dispatcher's live mode differs from this shell's; "
+                "the dispatcher reads its env file, not your shell"
+            )
+    return "\n".join(lines)
+
+
 def cmd_explain_order(args: argparse.Namespace, *, store: Any = None, policy_path: Path = POLICY_PATH) -> int:
     try:
         policy = load_policy(policy_path)
@@ -224,10 +283,17 @@ def cmd_explain_order(args: argparse.Namespace, *, store: Any = None, policy_pat
     active_store = store if store is not None else default_store()
     order = compute_queue_order(active_store, now=now, environ=os.environ, policy=policy)
 
+    order_path = order_file_path()
+    live_order_file = read_live_order_file(order_path) if order_path.exists() else None
+
     if args.json:
-        print(order.to_json())
+        payload = json.loads(order.to_json())
+        payload["live_order_file"] = live_order_file
+        print(json.dumps(payload, sort_keys=True, separators=(",", ":")))
         return 0
 
+    print(render_mode_lines(order, os.environ, live_order_file))
+    print()
     print(render_explain_order(order))
     return 0
 

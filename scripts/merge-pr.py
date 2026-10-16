@@ -53,39 +53,66 @@ class Refusal(Exception):
     """Raised when the helper must stop before making any merge call."""
 
 
+def _load_gate_markers() -> Any:
+    """Load scripts/gate_markers.py by file path -- the one definition of
+    the line-break rule and the CommonMark fence rule every PR-body/comment
+    reader in this repo now shares (AC-1). Registered in sys.modules under a
+    private alias BEFORE exec_module: gate_markers.py defines dataclasses,
+    and dataclass processing looks the defining module up in sys.modules;
+    without this registration the load raises AttributeError (measured).
+    """
+    path = Path(__file__).resolve().with_name("gate_markers.py")
+    spec = importlib.util.spec_from_file_location("merge_pr_gate_markers", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"could not load gate_markers from {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+_gate_markers = _load_gate_markers()
+split_lines = _gate_markers.split_lines
+fence_mask = _gate_markers.fence_mask
+
+
 def extract_change_kind(body: str) -> str:
     """Return the single bare ``Change kind:`` line in ``body``.
 
-    Fenced code blocks are excluded so a quoted example cannot count. Raises
-    :class:`Refusal` unless exactly one declaration is present.
+    Fenced code blocks are excluded, the CommonMark way (``fence_mask``,
+    dev.finding 6f87d14d) -- not merely a column-0 ``` toggle -- so a quoted
+    example cannot count regardless of how it is indented or which fence
+    character closes it. Raises :class:`Refusal` unless exactly one
+    declaration is present outside any fence.
     """
-    declarations: list[str] = []
-    in_fence = False
-    for line in body.splitlines():
-        if line.startswith("```"):
-            in_fence = not in_fence
-            continue
-        if in_fence:
-            continue
-        if CHANGE_KIND_RE.match(line):
-            declarations.append(line.strip())
+    lines = split_lines(body)
+    mask = fence_mask(lines)
+    declarations = [
+        line.strip()
+        for line, fenced in zip(lines, mask)
+        if not fenced and CHANGE_KIND_RE.match(line)
+    ]
     if len(declarations) != 1:
         raise Refusal(
             "PR body must carry exactly one bare 'Change kind: structural' or "
-            f"'Change kind: behavioral' line; found {len(declarations)}."
+            f"'Change kind: behavioral' line outside code fences; found {len(declarations)}."
         )
     return declarations[0]
 
 
 def extract_provenance(body: str) -> list[str]:
-    """Return up to two ``Outer-loop:``/``Dispatched-bead id:`` lines from ``body``.
+    """Return up to two ``Outer-loop:``/``Dispatched-bead id:`` lines from ``body``,
+    outside fenced code blocks (AC-4) -- a dispatched worker's own report
+    fence cannot forge a provenance line this way.
 
-    Mirrors ``scripts/merge-pr.sh``'s
-    ``grep -iE '^\\s*(Outer-loop:|Dispatched-bead id:)' | head -2``: case-insensitive,
-    first two matches in order, no fence exclusion (the shell script doesn't
-    fence-exclude provenance either — only the Change kind declaration).
+    Case-insensitive, first two matches in order -- the same shape
+    ``scripts/merge-pr.sh`` used to grep for directly, now composed through
+    this one function instead (AC-4; merge-pr.sh no longer parses the body
+    itself).
     """
-    matches = [line for line in body.splitlines() if PROVENANCE_RE.match(line)]
+    lines = split_lines(body)
+    mask = fence_mask(lines)
+    matches = [line for line, fenced in zip(lines, mask) if not fenced and PROVENANCE_RE.match(line)]
     return matches[:2]
 
 
@@ -207,10 +234,34 @@ def merge_pr(pr_number: str) -> str:
     )
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+def main(argv: Sequence[str] | None = None, stdin: Any = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("pr_number", help="PR number to merge")
+    parser.add_argument("pr_number", nargs="?", help="PR number to merge")
+    parser.add_argument(
+        "--merge-body-from-stdin",
+        action="store_true",
+        help=(
+            "Read a PR body from stdin and print the composed squash-commit body "
+            "(compose_merge_body(extract_change_kind(body), extract_provenance(body))), "
+            "refusing on stderr (exit 1) when extract_change_kind refuses. "
+            "scripts/merge-pr.sh uses this instead of parsing the body itself (AC-4)."
+        ),
+    )
     args = parser.parse_args(argv)
+
+    if args.merge_body_from_stdin:
+        stream = stdin if stdin is not None else sys.stdin
+        body = stream.read()
+        try:
+            change_kind = extract_change_kind(body)
+        except Refusal as exc:
+            print(f"REFUSED: {exc}", file=sys.stderr)
+            return 1
+        print(compose_merge_body(change_kind, extract_provenance(body)))
+        return 0
+
+    if not args.pr_number:
+        parser.error("pr_number is required unless --merge-body-from-stdin is given")
 
     try:
         print(merge_pr(args.pr_number))

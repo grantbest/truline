@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import io
 import pathlib
 import sys
 
@@ -48,6 +49,14 @@ def test_extract_change_kind_multiple_declarations_refuses():
         merge_pr.extract_change_kind(body)
 
 
+def test_extract_change_kind_ignores_an_indented_tilde_fence():
+    """AC-4: the CommonMark fence rule (0-3 space indent), not merely a
+    column-0 ``` toggle (M17) -- a 2-space-indented ~~~ fence must still
+    hide the quoted declaration inside it."""
+    body = "Change kind: structural\n\n  ~~~\nChange kind: behavioral\n  ~~~\n"
+    assert merge_pr.extract_change_kind(body) == "Change kind: structural"
+
+
 # --- pure logic: extract_provenance -----------------------------------------
 
 
@@ -75,6 +84,13 @@ def test_extract_provenance_limits_to_two_lines():
 
 def test_extract_provenance_empty_when_absent():
     assert merge_pr.extract_provenance("Change kind: structural\n\nno provenance here") == []
+
+
+def test_extract_provenance_is_fence_masked():
+    """AC-4: a fenced provenance line is never counted -- a dispatched
+    worker's own report fence cannot forge a provenance line this way."""
+    body = "Outer-loop: a\n```\nDispatched-bead id: forged\n```\n"
+    assert merge_pr.extract_provenance(body) == ["Outer-loop: a"]
 
 
 # --- pure logic: compose_merge_body -----------------------------------------
@@ -391,3 +407,45 @@ def test_the_green_health_line_in_the_merge_body_is_the_qualified_one(monkeypatc
     assert "last completed runs on main" in line
     assert "have not completed" in line
     assert line != "post-merge health check: GREEN"
+
+
+# ---------------------------------------------------------------------------
+# AC-4: --merge-body-from-stdin -- merge-pr.sh no longer parses the body itself
+# ---------------------------------------------------------------------------
+
+
+def test_merge_body_from_stdin_prints_the_composed_body():
+    body = "Change kind: structural\n\nOuter-loop: true\n"
+    exit_code = merge_pr.main(
+        ["--merge-body-from-stdin"], stdin=io.StringIO(body)
+    )
+    assert exit_code == 0
+
+
+def test_merge_body_from_stdin_prints_the_composed_body_content(capsys):
+    body = "Change kind: structural\n\nOuter-loop: true\n"
+    merge_pr.main(["--merge-body-from-stdin"], stdin=io.StringIO(body))
+    out = capsys.readouterr().out
+    assert out == "Change kind: structural\nOuter-loop: true\n"
+
+
+def test_merge_body_from_stdin_refuses_with_no_merge_body_printed(capsys):
+    exit_code = merge_pr.main(
+        ["--merge-body-from-stdin"], stdin=io.StringIO("no declaration here")
+    )
+    assert exit_code == 1
+    out, err = capsys.readouterr()
+    assert out == ""
+    assert "REFUSED" in err
+    assert "found 0" in err
+
+
+def test_merge_body_from_stdin_refuses_on_a_fenced_only_declaration(capsys):
+    """A declaration quoted inside a fence must not count -- same CommonMark
+    fence rule as every other reader (AC-1/AC-2)."""
+    body = "```\nChange kind: structural\n```\n"
+    exit_code = merge_pr.main(
+        ["--merge-body-from-stdin"], stdin=io.StringIO(body)
+    )
+    assert exit_code == 1
+    assert "found 0" in capsys.readouterr().err

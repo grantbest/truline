@@ -7,9 +7,12 @@ import pathlib
 import re
 import sys
 
+import pytest
+
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 DISPATCH = REPO / "apps" / "factory-dispatcher" / "dispatch.py"
+FIXTURES = REPO / "scripts" / "tests" / "fixtures" / "pr-body-readers"
 UUID = "55555555-5555-4555-8555-555555555555"
 
 
@@ -1070,13 +1073,137 @@ def test_body_verdict_with_revision_on_a_bead_declaring_pr_is_ignored_even_recor
     assert record.revision is None
 
 
-def test_malformed_bead_line_does_not_trigger_the_body_exclusion():
-    """find_bead_id rejects a malformed bead-id line outright (it is never
-    rescued by a prose reference); AC-2's body exclusion keys off the same
-    function, so a malformed bead line must not suppress a real body
-    verdict on what is, for this purpose, still an unattended body with no
-    resolvable bead."""
+def test_malformed_bead_line_still_triggers_the_body_exclusion():
+    """Inverts the pre-dev.finding-18992c81 test of the same shape (AC-8
+    item 1): find_bead_id rejects a malformed bead-id line outright (it is
+    never rescued by a prose reference), but a body carrying that line is
+    still an ATTEMPT to declare a dev.task bead (declares_factory_bead's
+    clause (b), AC-3) -- so it must be excluded from the verdict scan the
+    same as a body with a well-formed bead id, not treated as an ordinary
+    unattended body with no bead at all."""
     markers = _load_markers()
     body = "Dispatched-bead id: not-a-uuid\n\nRelease-gate: MERGE\n"
     assert markers.find_bead_id(body) is None
+    assert markers.declares_factory_bead(body) is True
+    assert markers.find_release_gate_verdict(body) is None
+
+
+# --- AC-1: the one line rule --------------------------------------------------------------------
+
+
+def test_split_lines_matches_str_splitlines_element_count_on_the_five_breaks():
+    markers = _load_markers()
+    assert markers.split_lines("") == []
+    assert markers.split_lines("a") == ["a"]
+    assert markers.split_lines("a\r\nb") == ["a", "b"]
+    assert markers.split_lines("a\rb") == ["a", "b"]
+    assert markers.split_lines("a\nb") == ["a", "b"]
+    assert markers.split_lines("a b") == ["a", "b"]
+    assert markers.split_lines("a b") == ["a", "b"]
+    assert markers.split_lines("a\n") == ["a"]
+    assert markers.split_lines("a\n\n") == ["a", ""]
+    assert markers.split_lines("\n") == [""]
+
+
+def test_split_lines_does_not_split_on_characters_str_splitlines_also_splits_on():
+    markers = _load_markers()
+    for other in ("\x0b", "\x0c", "\x1c", "\x1d", "\x1e", "\x85"):
+        text = f"a{other}b"
+        assert markers.split_lines(text) == [text], f"unexpectedly split on {other!r}"
+
+
+# --- AC-2: fences the CommonMark way, via the hostile comments fixture -------------------------
+
+
+def _load_hostile_comments():
+    data = json.loads((FIXTURES / "hostile-comments.json").read_text())
+    return data["comments"]
+
+
+@pytest.mark.parametrize(
+    "entry", _load_hostile_comments(), ids=lambda entry: entry["id"]
+)
+def test_hostile_comment_fixture_resolves_as_specified(entry):
+    markers = _load_markers()
+    record = markers.find_release_gate_verdict_record("", [entry["comment"]])
+    assert record.verdict == entry["verdict"]
+    assert record.revision == entry["revision"]
+
+
+# --- AC-3: a factory body never supplies a verdict -----------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "bead_line",
+    [
+        "Dispatched-bead id: not-a-uuid",
+        "Bead id: x",
+        "Dispatched-bead id:",
+    ],
+)
+def test_any_attempted_bead_line_excludes_the_body_from_the_verdict_scan(bead_line):
+    markers = _load_markers()
+    body = f"{bead_line}\n\nRelease-gate: MERGE\n"
+    assert markers.declares_factory_bead(body) is True
+    assert markers.find_release_gate_verdict(body) is None
+
+
+def test_dev_task_reference_fenced_still_excludes_the_body_clause_c():
+    """Clause (c): DEV_TASK_REF_RE matches fenced or not. Main's find_bead_id
+    is fence-blind, so on main this body's verdict is also None (both read
+    `dev.task` inside the fence and resolve an id there) -- this test is
+    what keeps clause (c) rather than letting it silently narrow away."""
+    markers = _load_markers()
+    body = (
+        "```\n"
+        f"dev.task {UUID}\n"
+        "```\n\n"
+        "Release-gate: MERGE\n"
+    )
+    assert markers.declares_factory_bead(body) is True
+    assert markers.find_release_gate_verdict(body) is None
+
+
+def test_attended_body_with_outer_loop_and_no_bead_signal_still_gives_a_verdict():
+    """Control: an attended body (no bead key, no dev.task reference
+    anywhere) carrying an explicit outer-loop marker still supplies a
+    verdict from its own body."""
+    markers = _load_markers()
+    body = "Outer-loop: true\n\nRelease-gate: MERGE\n"
+    assert markers.declares_factory_bead(body) is False
     assert markers.find_release_gate_verdict(body) == "MERGE"
+
+
+def test_attended_body_quoting_a_bead_line_inside_a_fence_is_left_out():
+    """Pinned consequence of clause (b): a fenced quotation of a bead-id
+    line still counts as an ATTEMPT to declare a bead under
+    declares_factory_bead, even though the body is otherwise an ordinary
+    attended one quoting the shape as an example. Over-excluding here is
+    the direction that fails closed for a verdict."""
+    markers = _load_markers()
+    body = (
+        "Here's the shape a bad report looked like:\n"
+        "```\n"
+        "Dispatched-bead id: x\n"
+        "```\n\n"
+        "Release-gate: MERGE\n"
+    )
+    assert markers.declares_factory_bead(body) is True
+    assert markers.find_release_gate_verdict(body) is None
+
+
+# --- AC-4: provenance is read only outside fences ------------------------------------------------
+
+
+def test_find_bead_id_is_fence_masked():
+    markers = _load_markers()
+    unfenced = f"Dispatched-bead id: {UUID}\n"
+    fenced = f"```\nDispatched-bead id: {UUID}\n```\n"
+    assert markers.find_bead_id(unfenced) == UUID.lower()
+    assert markers.find_bead_id(fenced) is None
+
+
+def test_is_outer_loop_is_fence_masked():
+    markers = _load_markers()
+    assert markers.is_outer_loop("Outer-loop: true\n") is True
+    assert markers.is_outer_loop("```\nOuter-loop: true\n```\n") is False

@@ -204,27 +204,23 @@ else
   fi
 fi
 
-# Same shape the change-kind CI job validates: a bare declaration line,
-# outside code fences. Extract it rather than re-validating — CI already
-# guaranteed exactly one on the PR; this preserves it.
-declaration=$(printf '%s\n' "$body" | awk '
-  /^```/ { in_fence = !in_fence; next }
-  in_fence { next }
-  /^[[:space:]]*Change kind:[[:space:]]*(structural|behavioral)[[:space:]]*$/ { print; exit }
-')
-if [ -z "$declaration" ]; then
-  echo "ERROR: PR #${pr} body carries no bare 'Change kind:' line — fix the body first." >&2
+# AC-4: this script no longer parses the body itself -- the declaration awk
+# and the provenance grep both used to toggle on a bare column-0 ``` and
+# split only on '\n', neither of which matches the fence/line rules
+# scripts/gate_markers.py now defines once (dev.findings 6f87d14d,
+# 18992c81). merge-pr.py composes the squash body (the one bare
+# `Change kind:` line outside fences, then any provenance lines, also
+# outside fences) and prints its refusal on stderr when there isn't exactly
+# one such declaration.
+merge_body_output=""
+merge_body_status=0
+merge_body_output=$(printf '%s' "$body" | python3 "$SCRIPT_DIR/merge-pr.py" --merge-body-from-stdin 2>&1) || merge_body_status=$?
+if [ "$merge_body_status" -ne 0 ]; then
+  echo "ERROR: PR #${pr} body carries no bare 'Change kind:' line, or more than one, outside code fences — fix the body first." >&2
+  echo "$merge_body_output" >&2
   exit 1
 fi
-
-# Carry provenance lines the gate tooling reads, when present.
-provenance=$(printf '%s\n' "$body" | grep -iE '^\s*(Outer-loop:|Dispatched-bead id:)' | head -2 || true)
-
-merge_body="$declaration"
-if [ -n "$provenance" ]; then
-  merge_body="${merge_body}
-${provenance}"
-fi
+merge_body="$merge_body_output"
 if [ -n "$override_reason" ]; then
   merge_body="${merge_body}
 Verdict-override: ${override_reason}"

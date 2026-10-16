@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
+import dataclasses
 import fcntl
 import logging
 import os
@@ -577,6 +578,17 @@ def claim_activity(request: dict[str, Any]) -> dict[str, Any]:
 
 
 def _claim_task(request: dict[str, Any], cfg: dispatch.Config) -> dict[str, Any]:
+    # Local, not module-level: operator_verbs imports schedule_status, whose
+    # own import chain (tunnel_keeper -> launchd_agent -> worker_checkout ->
+    # dispatch) reaches back to this module's own import of `dispatch` --
+    # harmless only because that chain never used to run until something
+    # here needed operator_verbs. A module-level import makes `import
+    # worker_checkout` standalone (its own cycle guard,
+    # test_worker_checkout_is_importable_standalone) fail: dispatch.py's own
+    # module-level `from activities import dispatch_steps` would re-enter
+    # worker_checkout mid-initialization.
+    import operator_verbs
+
     floor = dispatch.budget_floor_reason()
     if floor:
         return {"status": "budget_floor", "exit_code": 0, "message": floor}
@@ -591,9 +603,50 @@ def _claim_task(request: dict[str, Any], cfg: dispatch.Config) -> dict[str, Any]
     # guard pick_task's own auto-scan already applies when no task_id is
     # given.
     tasks = sub.list_tasks()
-    task = dispatch.pick_task(sub, str(task_id) if task_id else None, tasks)
+
+    # R26.12 B8: the rank only drives the auto-scan (no explicit task_id) --
+    # an operator --task force needs none of this, and pick_task's own
+    # explicit-task_id branch never looks at these kwargs anyway.
+    order_list: list[queue_order.QueueOrder] = []
+    rank_kwargs: dict[str, Any] = {}
+    mode_fallback_reason: str | None = None
+    if not task_id:
+        policy = operator_verbs.load_policy(operator_verbs.POLICY_PATH)
+        raw_mode = os.environ.get("FACTORY_QUEUE_ORDER")
+        try:
+            mode = queue_order.order_mode(os.environ)
+        except ValueError:
+            mode = "fifo"
+            mode_fallback_reason = f"invalid FACTORY_QUEUE_ORDER={raw_mode!r}"
+            _LOG.warning("%s; this tick runs FIFO", mode_fallback_reason)
+        rank_inputs = operator_verbs.read_rank_inputs(sub)
+        rank_kwargs = dict(
+            claimable_since_by_task_id=rank_inputs["claimable_since_by_task_id"],
+            time_box_by_release_ref=rank_inputs["time_box_by_release_ref"],
+            policy=policy,
+            mode=mode,
+            order_out=order_list,
+        )
+
+    task = dispatch.pick_task(sub, str(task_id) if task_id else None, tasks, **rank_kwargs)
+
+    if order_list and mode_fallback_reason:
+        order_list[0] = dataclasses.replace(order_list[0], fallback_reason=mode_fallback_reason)
+    if order_list:
+        # AC-2: the ranked table beside the skip lines, once per tick.
+        print(operator_verbs.render_table(order_list[0]))
+        print(operator_verbs.render_held(order_list[0]))
+        try:
+            queue_order.write_order_file(order_list[0], operator_verbs.order_file_path())
+        except Exception as exc:  # noqa: BLE001 - a failed write must log, never fail the tick
+            _LOG.warning("failed to write queue-order.json: %s", exc)
+
     if task is None:
         return {"status": "no_task", "exit_code": 0, "message": "No runnable pending task."}
+
+    picked_position = (
+        next((p for p in order_list[0].ranked if p.task_id == task["id"]), None) if order_list else None
+    )
 
     notes = sub.list_notes(task["id"])
     # release_by_task_id=None matches guards.is_runnable's own prior default
@@ -642,7 +695,10 @@ def _claim_task(request: dict[str, Any], cfg: dispatch.Config) -> dict[str, Any]
         }
     principle_pairs = doctrine.as_prompt_pairs(citations)
 
-    prompt = guards.build_prompt(task, notes, principle_pairs)
+    prompt = guards.build_prompt(
+        task, notes, principle_pairs,
+        why_next=picked_position.explanation if picked_position else None,
+    )
     if dry_run:
         return {
             "status": "dry_run",
@@ -732,6 +788,9 @@ def _claim_task(request: dict[str, Any], cfg: dispatch.Config) -> dict[str, Any]
             f"`{worker.command_display()}` with a {budget}m budget.",
             dispatch.CREATED_BY,
             provenance=dispatch.provenance_for_task(task["id"], worker.name),
+            queue_position=picked_position.position if picked_position else None,
+            priority=picked_position.priority if picked_position else None,
+            class_source=picked_position.class_source if picked_position else None,
         )
     except Exception as exc:  # noqa: BLE001 - the claim is not atomic without this
         # compensation: pending->doing already landed, and a bead left in doing

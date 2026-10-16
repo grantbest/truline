@@ -16,6 +16,7 @@ import json
 import math
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Callable, Iterable, Literal, Mapping
 
 import guards
@@ -301,6 +302,10 @@ class QueueOrder:
     policy_revision: str | None
     inputs_unavailable: tuple[str, ...]
     fallback_reason: str | None = None
+    #: 'rank' unless rank_or_fifo actually produced the FIFO order -- either
+    #: the kill switch (mode='fifo') or a rank_pending failure, both of which
+    #: set this via _fifo_order (AC-4).
+    mode: str = "rank"
 
     def to_json(self) -> str:
         payload = {
@@ -311,6 +316,7 @@ class QueueOrder:
             "policy_revision": self.policy_revision,
             "inputs_unavailable": list(self.inputs_unavailable),
             "fallback_reason": self.fallback_reason,
+            "mode": self.mode,
         }
         return json.dumps(payload, sort_keys=True, separators=(",", ":"))
 
@@ -690,7 +696,12 @@ def rank_pending(
         )
 
     all_tasks = list(tasks)
-    pending_tasks = [t for t in all_tasks if t.get("state") == "pending"]
+    # A missing state defaults to pending (dispatch.task_state's own
+    # convention) -- a bare `t.get("state") == "pending"` made a bead with no
+    # explicit state field invisible to ranked AND held alike (R26.12 B8:
+    # surfaced the moment a real task without the fixtures' always-explicit
+    # state reached this function through dispatch.pick_task).
+    pending_tasks = [t for t in all_tasks if (t.get("state") or "pending") == "pending"]
 
     dependents_map = _build_dependents_map(pending_tasks)
 
@@ -927,7 +938,7 @@ def _fifo_positions(
     urgency/impact/aging arithmetic that can fail: that is the whole point
     of a kill switch."""
     all_tasks = list(tasks)
-    pending_tasks = [t for t in all_tasks if t.get("state") == "pending"]
+    pending_tasks = [t for t in all_tasks if (t.get("state") or "pending") == "pending"]
 
     positions: list[QueuePosition] = []
     for task in pending_tasks:
@@ -1024,6 +1035,7 @@ def _fifo_order(
         policy_revision=policy.policy_revision,
         inputs_unavailable=(),
         fallback_reason=fallback_reason,
+        mode="fifo",
     )
 
 
@@ -1084,3 +1096,24 @@ def rank_or_fifo(
             computed_by_revision=computed_by_revision,
             fallback_reason=f"{type(exc).__name__}: {exc}",
         )
+
+
+#: R26.12 B8 (AC-4): the file explain-order and the claim path both read for
+#: "what did the dispatcher's own tick last compute". A sibling of
+#: worker-revision.json in the same state directory (see operator_verbs.py
+#: and activities/dispatch_steps.py, which both locate that directory via
+#: worker_revision.default_state_path -- this module takes no dependency on
+#: worker_revision itself).
+ORDER_FILE_NAME = "queue-order.json"
+
+
+def write_order_file(order: QueueOrder, path: Path) -> None:
+    """Atomically write ``order.to_json()`` to ``path`` (temp file, rename).
+
+    Raises on any failure -- the caller (the claim path) is the one that
+    decides a failed write must log, not fail, the tick.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = path.with_name(path.name + ".tmp")
+    tmp_path.write_text(order.to_json(), encoding="utf-8")
+    tmp_path.replace(path)

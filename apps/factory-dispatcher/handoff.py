@@ -78,6 +78,31 @@ def _git_argv(args: list[str]) -> list[str]:
     return [dispatch.GIT, "-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false", *args]
 
 
+#: D21: dispatch.git_in_clone's own four pins, restated (handoff never calls it --
+#: its git-control check is not handoff's contract, and dispatch exports no constant).
+GIT_CONFIG_COUNT_PINS: tuple[tuple[str, str], ...] = (
+    ("core.hooksPath", "/dev/null"),
+    ("core.fsmonitor", "false"),
+    ("gc.auto", "0"),
+    ("maintenance.auto", "false"),
+)
+
+
+def pinned_git_env() -> dict[str, str]:
+    """D21: child_env() plus global/system config pinned off, so a git call against
+    W/repo never reads the operator's ~/.gitconfig. _run_git calls this; PARTB-B3c's
+    rehearsal uses it for its own git calls as uid 501 too."""
+    env = process_env.child_env()
+    env["GIT_CONFIG_GLOBAL"] = "/dev/null"
+    env["GIT_CONFIG_SYSTEM"] = "/dev/null"
+    env["GIT_CONFIG_NOSYSTEM"] = "1"
+    env["GIT_CONFIG_COUNT"] = str(len(GIT_CONFIG_COUNT_PINS))
+    for index, (key, value) in enumerate(GIT_CONFIG_COUNT_PINS):
+        env[f"GIT_CONFIG_KEY_{index}"] = key
+        env[f"GIT_CONFIG_VALUE_{index}"] = value
+    return env
+
+
 def _run_git(
     repo: Path, args: list[str], *, input: bytes | None = None
 ) -> subprocess.CompletedProcess:
@@ -86,7 +111,7 @@ def _run_git(
         cwd=repo,
         input=input,
         capture_output=True,
-        env=process_env.child_env(),
+        env=pinned_git_env(),
     )
 
 

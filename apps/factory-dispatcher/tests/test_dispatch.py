@@ -24,6 +24,7 @@ import guards  # noqa: E402
 import queue_order  # noqa: E402
 import schedule_status  # noqa: E402
 import worker_checkout  # noqa: E402
+from activities import change_apply as change_apply_module  # noqa: E402
 from activities import dispatch_steps  # noqa: E402
 from _clone_fixtures import recorded  # noqa: E402
 
@@ -109,11 +110,12 @@ def failure_notes(count: int, task_id: str = "task-1") -> list[dict]:
 
 class FakeSubstrate:
     def __init__(
-        self, task=None, tasks=None, notes=None, principle_beads=None, releases=None
+        self, task=None, tasks=None, notes=None, principle_beads=None, releases=None, events=None
     ):
         self.task = task
         self.tasks = tasks if tasks is not None else [task]
         self.existing_notes = notes or {}
+        self.events = events or {}
         self.transitions = []
         self.notes = []
         self.patches = []
@@ -171,6 +173,13 @@ class FakeSubstrate:
 
     def list_notes(self, task_id):
         return list(self.existing_notes.get(task_id) or [])
+
+    def list_events(self, task_id):
+        """R26.12 B8 AC-6: empty by default -- every pending task's
+        claimable_since falls back to its own created_at, exactly as before
+        this double gained events. A test passes ``events={task_id: [...]}``
+        to model a bead's own transition history."""
+        return list(self.events.get(task_id) or [])
 
     def _task_by_id(self, task_id):
         for task in self.tasks:
@@ -1542,6 +1551,115 @@ def test_neutralize_fence_lines_counts_and_escapes_every_matching_line():
     assert escaped == (
         "keep\n\\```\n   \\~~~~\nChange kind: behavioral\n\\````python\nkeep too"
     )
+
+
+# --- AC-1: the one line rule, agreed on by every reader ----------------------------------------
+
+_LINE_BREAKS = [("\r\n", "crlf"), ("\r", "cr"), ("\n", "lf"), ("\u2028", "u2028"), ("\u2029", "u2029")]
+_NON_BREAKS = [
+    ("\x0b", "x0b-vt"),
+    ("\x0c", "x0c-ff"),
+    ("\x1c", "x1c-fs"),
+    ("\x1d", "x1d-gs"),
+    ("\x1e", "x1e-rs"),
+    ("\x85", "x85-nel"),
+]
+_AGREEMENT_CASES = [(c, True, name) for c, name in _LINE_BREAKS] + [
+    (c, False, name) for c, name in _NON_BREAKS
+]
+
+
+@pytest.mark.parametrize(
+    "character,is_break,_name",
+    _AGREEMENT_CASES,
+    ids=[case[2] for case in _AGREEMENT_CASES],
+)
+def test_every_reader_agrees_on_what_is_and_is_not_a_line_break(character, is_break, _name):
+    """AC-1's AGREEMENT TEST: the five line-break sequences, and the six
+    other characters str.splitlines() also splits on but this repo's one
+    line rule deliberately does not, must be treated identically by
+    gate_markers.split_lines, merge-pr.py's extract_change_kind,
+    change_apply.has_emergency_marker, gate_markers.is_outer_loop, and
+    dispatch.neutralize_fence_lines."""
+    gate_markers = dispatch._load_gate_markers()
+    merge_pr = change_apply_module._load_merge_pr_module()
+
+    t1 = f"Change kind: structural{character}Emergency change: true{character}Outer-loop: true"
+    lines = gate_markers.split_lines(t1)
+
+    if is_break:
+        assert len(lines) == 3
+        assert merge_pr.extract_change_kind(t1) == "Change kind: structural"
+        assert change_apply_module.has_emergency_marker(t1) is True
+        assert gate_markers.is_outer_loop(t1) is True
+    else:
+        assert len(lines) == 1
+        with pytest.raises(merge_pr.Refusal):
+            merge_pr.extract_change_kind(t1)
+        assert change_apply_module.has_emergency_marker(t1) is False
+        assert gate_markers.is_outer_loop(t1) is False
+
+    t2 = f"intro{character}```{character}end"
+    escaped, neutralized = dispatch.neutralize_fence_lines(t2)
+
+    assert neutralized == (1 if is_break else 0)
+    assert escaped.count(character) == t2.count(character)
+
+
+# --- AC-6: the attacks, end to end ---------------------------------------------------------------
+
+_HOSTILE_REPORTS_PATH = (
+    _REPO_ROOT / "scripts" / "tests" / "fixtures" / "pr-body-readers" / "hostile-reports.json"
+)
+_HOSTILE_BEAD_ID = "77777777-7777-4777-8777-777777777777"
+
+
+def _load_hostile_reports():
+    data = json.loads(_HOSTILE_REPORTS_PATH.read_text())
+    return data["reports"]
+
+
+@pytest.mark.parametrize(
+    "entry", _load_hostile_reports(), ids=lambda entry: entry["id"]
+)
+def test_hostile_worker_report_never_breaks_a_pr_body_reader(monkeypatch, entry):
+    bead = task_with_id(_HOSTILE_BEAD_ID, risk_class="structural")
+
+    _url, body = capture_pull_request_body(monkeypatch, bead, worker_note=entry["report"])
+
+    gate_markers = dispatch._load_gate_markers()
+    merge_pr = change_apply_module._load_merge_pr_module()
+
+    assert gate_markers.find_release_gate_verdict(body, []) is None
+    assert gate_markers.declares_factory_bead(body) is True
+    assert gate_markers.find_bead_id(body) == _HOSTILE_BEAD_ID
+    assert gate_markers.is_outer_loop(body) is False
+    assert merge_pr.extract_provenance(body) == []
+    assert merge_pr.extract_change_kind(body) == "Change kind: structural"
+    assert change_apply_module.classify_change_kind(
+        body,
+        extract_change_kind=merge_pr.extract_change_kind,
+        change_kind_re=merge_pr.CHANGE_KIND_RE,
+    ) == ("standard", None)
+
+    lines = gate_markers.split_lines(body)
+    header_index = lines.index("## Worker's own report")
+    open_index = next(
+        i for i in range(header_index, len(lines)) if _FENCE_LINE_PATTERN.match(lines[i])
+    )
+    last_fence_index = max(
+        i for i, line in enumerate(lines) if _FENCE_LINE_PATTERN.match(line)
+    )
+    assert last_fence_index > open_index
+    for i in range(open_index + 1, last_fence_index):
+        assert not _FENCE_LINE_PATTERN.match(lines[i]), (entry["id"], i, lines[i])
+
+    if entry["id"] == "plain":
+        expected = legacy_pr_body(bead).replace(
+            "## Worker's own report\n\n```\nworker report\n```",
+            f"## Worker's own report\n\n```\n{entry['report']}\n```",
+        )
+        assert body == expected
 
 
 def run_dispatch_with_verification(
@@ -4196,8 +4314,11 @@ def test_dispatcher_skips_superseded_pending_task_before_claim_or_clone(
     out = capsys.readouterr().out
 
     assert rc == 0
-    assert "skip f8237e30" in out
-    assert "superseded by bead 1eef771a" in out
+    # R26.12 B8: the claim path's auto-pick now runs ranked by default, which
+    # logs the ranked table and held list (AC-2) in place of pick_task's old
+    # per-bead "skip <id> — <reason>" line -- f8237e30's hold reason still
+    # surfaces, just through the held list instead.
+    assert "f8237e30: superseded by bead 1eef771a" in out
     assert "No runnable pending task." in out
     assert sub.transitions == []
     assert sub.notes == []
@@ -8565,3 +8686,39 @@ def test_fast_forward_leaves_a_deliberately_pinned_detached_head_alone(tmp_path)
     assert status is not None
     assert git(repo, "rev-parse", "main").stdout.strip() == upstream_rev
     assert git(repo, "rev-parse", "HEAD").stdout.strip() == first
+
+
+# ---------------------------------------------------------------------------
+# R26.12 B8 AC-5: --explain-order delegates to operator_verbs, once, with the
+# dispatcher's own store -- no logic duplicated in dispatch.py.
+# ---------------------------------------------------------------------------
+
+
+def test_explain_order_flag_delegates_to_operator_verbs_with_the_dispatcher_store(monkeypatch):
+    import operator_verbs
+
+    sentinel_store = object()
+    monkeypatch.setattr(dispatch, "default_store", lambda: sentinel_store)
+    calls = []
+    monkeypatch.setattr(
+        operator_verbs, "main", lambda argv, *, store=None: calls.append((list(argv), store)) or 0
+    )
+
+    rc = dispatch.main(["--explain-order"])
+
+    assert rc == 0
+    assert calls == [(["explain-order"], sentinel_store)]
+
+
+def test_explain_order_json_flag_is_forwarded(monkeypatch):
+    import operator_verbs
+
+    monkeypatch.setattr(dispatch, "default_store", lambda: object())
+    calls = []
+    monkeypatch.setattr(
+        operator_verbs, "main", lambda argv, *, store=None: calls.append(list(argv)) or 0
+    )
+
+    dispatch.main(["--explain-order", "--json"])
+
+    assert calls == [["explain-order", "--json"]]

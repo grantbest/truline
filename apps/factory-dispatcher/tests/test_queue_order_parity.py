@@ -33,6 +33,7 @@ import dispatch  # noqa: E402
 import queue_order  # noqa: E402
 
 from test_dispatch import FakeSubstrate  # noqa: E402
+from test_queue_order import _prepare_latched, _prepare_latched_notes, _synthetic_inputs  # noqa: E402
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
@@ -158,3 +159,172 @@ def test_synthetic_fixture_pick_agrees_and_is_fifo(capsys):
     candidates = [t for t in fixture["tasks"] if t["id"] not in expected_held]
     expected_pick = min(candidates, key=lambda t: t["created_at"])
     assert pick_via_dispatch["id"] == expected_pick["id"]
+
+
+# ---------------------------------------------------------------------------
+# R26.12 B8 AC-1: pick_task wired to the rank, over the same two fixtures.
+# ---------------------------------------------------------------------------
+
+
+def test_pick_task_with_rank_inputs_returns_the_orders_own_first_pick():
+    fixture = _load("queue-synthetic-2026-09-23.json")
+    notes_by_task = {tid: list(notes) for tid, notes in fixture["notes_by_task"].items()}
+    store, all_tasks = _build_store(fixture, notes_by_task)
+    inputs = _synthetic_inputs(fixture, tasks_override=all_tasks)
+
+    order_out = []
+    picked = dispatch.pick_task(
+        store, None, all_tasks,
+        claimable_since_by_task_id=inputs["claimable_since_by_task_id"],
+        time_box_by_release_ref=inputs["time_box_by_release_ref"],
+        policy=inputs["policy"],
+        mode="rank",
+        order_out=order_out,
+    )
+
+    assert len(order_out) == 1
+    order = order_out[0]
+    assert order.ranked, "fixture must carry at least one selectable task"
+    assert picked is not None
+    assert picked["id"] == order.ranked[0].task_id
+
+
+def test_pick_task_with_rank_inputs_is_none_on_the_latched_snapshot():
+    fixture = _load("queue-2026-09-23-latched.json")
+    store, all_tasks = _build_store(fixture, _prepare_latched_notes(fixture))
+    latched_inputs = _prepare_latched(fixture)
+
+    order_out = []
+    picked = dispatch.pick_task(
+        store, None, all_tasks,
+        claimable_since_by_task_id=latched_inputs["claimable_since_by_task_id"],
+        time_box_by_release_ref=latched_inputs["time_box_by_release_ref"],
+        policy=latched_inputs["policy"],
+        mode="rank",
+        order_out=order_out,
+    )
+
+    assert picked is None
+    assert len(order_out) == 1
+    assert order_out[0].ranked == ()
+
+
+def test_pick_task_with_rank_inputs_mode_fifo_matches_first_selectable_on_synthetic_fixture():
+    fixture = _load("queue-synthetic-2026-09-23.json")
+    notes_by_task = {tid: list(notes) for tid, notes in fixture["notes_by_task"].items()}
+    store, all_tasks = _build_store(fixture, notes_by_task)
+    pending = _pending_sorted(all_tasks)
+    release_by_task_id = dispatch.resolve_task_release_states(store, pending)
+    fifo_pick = queue_order.first_selectable(store, pending, all_tasks, release_by_task_id)
+    assert fifo_pick is not None
+
+    inputs = _synthetic_inputs(fixture, tasks_override=all_tasks)
+    picked = dispatch.pick_task(
+        store, None, all_tasks,
+        claimable_since_by_task_id=inputs["claimable_since_by_task_id"],
+        time_box_by_release_ref=inputs["time_box_by_release_ref"],
+        policy=inputs["policy"],
+        mode="fifo",
+    )
+    assert picked is not None
+    assert picked["id"] == fifo_pick["id"]
+
+
+def test_pick_task_with_rank_inputs_mode_fifo_matches_first_selectable_on_latched_fixture():
+    fixture = _load("queue-2026-09-23-latched.json")
+    store, all_tasks = _build_store(fixture, _prepare_latched_notes(fixture))
+    pending = _pending_sorted(all_tasks)
+    release_by_task_id = dispatch.resolve_task_release_states(store, pending)
+    fifo_pick = queue_order.first_selectable(store, pending, all_tasks, release_by_task_id)
+    assert fifo_pick is None
+
+    latched_inputs = _prepare_latched(fixture)
+    picked = dispatch.pick_task(
+        store, None, all_tasks,
+        claimable_since_by_task_id=latched_inputs["claimable_since_by_task_id"],
+        time_box_by_release_ref=latched_inputs["time_box_by_release_ref"],
+        policy=latched_inputs["policy"],
+        mode="fifo",
+    )
+    assert picked is None
+
+
+def test_pick_task_falls_back_to_fifo_and_logs_fallback_reason_when_rank_pending_raises(monkeypatch, capsys):
+    fixture = _load("queue-synthetic-2026-09-23.json")
+    notes_by_task = {tid: list(notes) for tid, notes in fixture["notes_by_task"].items()}
+    store, all_tasks = _build_store(fixture, notes_by_task)
+    inputs = _synthetic_inputs(fixture, tasks_override=all_tasks)
+
+    def _boom(*_args, **_kwargs):
+        raise RuntimeError("synthetic rank failure")
+
+    monkeypatch.setattr(queue_order, "rank_pending", _boom)
+
+    order_out = []
+    picked = dispatch.pick_task(
+        store, None, all_tasks,
+        claimable_since_by_task_id=inputs["claimable_since_by_task_id"],
+        time_box_by_release_ref=inputs["time_box_by_release_ref"],
+        policy=inputs["policy"],
+        mode="rank",
+        order_out=order_out,
+    )
+
+    out = capsys.readouterr().out
+    assert "synthetic rank failure" in out
+    assert len(order_out) == 1
+    assert order_out[0].mode == "fifo"
+    assert order_out[0].fallback_reason is not None
+
+    fifo_picked = dispatch.pick_task(
+        store, None, all_tasks,
+        claimable_since_by_task_id=inputs["claimable_since_by_task_id"],
+        time_box_by_release_ref=inputs["time_box_by_release_ref"],
+        policy=inputs["policy"],
+        mode="fifo",
+    )
+    assert picked is not None and fifo_picked is not None
+    assert picked["id"] == fifo_picked["id"]
+
+
+def test_pick_task_rank_order_conserves_every_pending_bead():
+    """AC-8's conservation mutation guard, re-run through pick_task itself:
+    the order it carries out through order_out reorders the selectable set
+    but drops none of the pending population, whether selectable or held."""
+    fixture = _load("queue-synthetic-2026-09-23.json")
+    notes_by_task = {tid: list(notes) for tid, notes in fixture["notes_by_task"].items()}
+    store, all_tasks = _build_store(fixture, notes_by_task)
+    inputs = _synthetic_inputs(fixture, tasks_override=all_tasks)
+    pending_ids = {t["id"] for t in fixture["tasks"] if t.get("state", "pending") == "pending"}
+
+    order_out = []
+    dispatch.pick_task(
+        store, None, all_tasks,
+        claimable_since_by_task_id=inputs["claimable_since_by_task_id"],
+        time_box_by_release_ref=inputs["time_box_by_release_ref"],
+        policy=inputs["policy"],
+        mode="rank",
+        order_out=order_out,
+    )
+
+    order = order_out[0]
+    all_ids = {p.task_id for p in order.ranked} | {p.task_id for p in order.held}
+    assert all_ids == pending_ids
+    assert len(order.ranked) + len(order.held) == len(pending_ids)
+
+
+def test_pick_task_with_no_rank_inputs_is_unchanged_from_base():
+    """AC-1: every one of claimable_since_by_task_id/time_box_by_release_ref/
+    policy/mode defaulting to None means pick_task is exactly
+    queue_order.first_selectable, as at this bead's own base."""
+    fixture = _load("queue-synthetic-2026-09-23.json")
+    notes_by_task = {tid: list(notes) for tid, notes in fixture["notes_by_task"].items()}
+    store, all_tasks = _build_store(fixture, notes_by_task)
+    pending = _pending_sorted(all_tasks)
+    release_by_task_id = dispatch.resolve_task_release_states(store, pending)
+
+    picked = dispatch.pick_task(store, None, all_tasks)
+    expected = queue_order.first_selectable(store, pending, all_tasks, release_by_task_id)
+
+    assert picked is not None
+    assert picked["id"] == expected["id"]

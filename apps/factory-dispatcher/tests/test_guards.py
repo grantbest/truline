@@ -776,6 +776,16 @@ class TestBuildPrompt:
         assert "apps/mcp-hub/" in prompt
         assert ".github/workflows/**" in prompt
 
+    def test_prompt_says_why_this_bead_is_next(self):
+        """AC-3: the caller passes the position's own explanation string;
+        with none (the --task operator path, no computed position), a fixed
+        default names that path rather than leaving the paragraph blank."""
+        prompt = guards.build_prompt(task(), [], why_next="Queue position: priority=1.")
+        assert "Why this bead is next: Queue position: priority=1." in prompt
+
+        default_prompt = guards.build_prompt(task(), [])
+        assert "Why this bead is next: selected by the operator (--task)" in default_prompt
+
     def test_answered_question_travels_into_the_prompt(self):
         # The point of the round-trip: the human's decision reaches the worker
         # attached to the question it settled.
@@ -1273,6 +1283,8 @@ GOLDEN_WITH_PR_REVIEW_ONLY = """\
 
 i
 
+Why this bead is next: selected by the operator (--task)
+
 ## Resuming from applied preserved work
 
 This attempt resumes from preserved work already applied as its starting point: https://github.com/example/repo/pull/42 at abc1234d. Read its discussion with `gh pr view https://github.com/example/repo/pull/42 --json comments` if you need more than what is quoted below.
@@ -1307,6 +1319,8 @@ GOLDEN_WITH_PR_REQUEUE_REASON_ONLY = """\
 
 i
 
+Why this bead is next: selected by the operator (--task)
+
 ## Resuming from applied preserved work
 
 This attempt resumes from preserved work already applied as its starting point: https://github.com/example/repo/pull/42 at abc1234d. Read its discussion with `gh pr view https://github.com/example/repo/pull/42 --json comments` if you need more than what is quoted below.
@@ -1340,6 +1354,8 @@ GOLDEN_WITH_PR_REVIEW_AND_REQUEUE_REASON = """\
 # Task: t
 
 i
+
+Why this bead is next: selected by the operator (--task)
 
 ## Resuming from applied preserved work
 
@@ -1378,6 +1394,8 @@ GOLDEN_NO_PR_REQUEUE_REASON_FALLBACK = """\
 # Task: t
 
 i
+
+Why this bead is next: selected by the operator (--task)
 
 ## Why this bead was requeued
 

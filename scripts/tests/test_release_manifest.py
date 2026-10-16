@@ -177,6 +177,38 @@ def test_release_and_positional_prs_are_mutually_exclusive(capsys):
         manifest.main(["--fixture-dir", str(FIXTURES)])
 
 
+def test_collect_context_outer_loop_is_fence_masked():
+    """AC-4: collect_context's outer_loop flag now calls
+    gate_markers.is_outer_loop, which is fence-masked -- a worker's own
+    report fence cannot forge this marker on a dispatched PR, and a real
+    attended marker outside any fence is still recognised."""
+    manifest = _load_release_manifest()
+
+    class _FakeProvider:
+        def __init__(self, body: str):
+            self._body = body
+
+        def pr(self, number: int):
+            return manifest.PrRecord(
+                number=number, title="t", body=self._body, url="u", head_ref="h", base_ref="main"
+            )
+
+        def bead(self, bead_id: str):
+            raise AssertionError("no bead id in this body; bead() must not be called")
+
+        def notes(self, bead_id: str):
+            raise AssertionError("no bead id in this body; notes() must not be called")
+
+        def links(self, bead_id: str):
+            raise AssertionError("no bead id in this body; links() must not be called")
+
+    fenced = manifest.collect_context([1], _FakeProvider("Summary.\n```\nOuter-loop: true\n```\n"))
+    assert fenced[0].outer_loop is False
+
+    unfenced = manifest.collect_context([1], _FakeProvider("Outer-loop: true\n"))
+    assert unfenced[0].outer_loop is True
+
+
 def test_unknown_release_refuses_rather_than_emitting_an_empty_manifest(capsys):
     manifest = _load_release_manifest()
 

@@ -271,6 +271,7 @@ def extraction_task_spec(source: KnowledgeSource) -> dict[str, Any]:
             "(docs/reference/design-rules-v2-takeaways.md), for this one "
             "source. This proposes candidates for the Product Owner to "
             "review; it never writes doctrine directly."
+            + (f" Source context: {source.summary.strip()}" if source.summary.strip() else "")
         ),
         "context_refs": [source.context_ref, source.reference],
         "acceptance": [

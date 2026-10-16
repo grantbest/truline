@@ -19,7 +19,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import dispatch  # noqa: E402
 import handoff  # noqa: E402
-import process_env  # noqa: E402
 
 _GIT_IDENTITY_ENV = {
     "GIT_AUTHOR_NAME": "Factory Test",
@@ -217,7 +216,9 @@ def test_guard_tree_refuses_a_case_folded_dot_factory_component(tmp_path):
 
 def test_guard_tree_git_invocation_shape(monkeypatch, tmp_path):
     """AC-1: git runs with -c core.hooksPath=/dev/null -c core.fsmonitor=false
-    and env from process_env.child_env."""
+    and env from handoff.pinned_git_env() (D21/AC-8: process_env.child_env() plus the
+    global/system config pins -- this test is updated from plain process_env.child_env()
+    since _run_git's env changed)."""
     repo = _init_repo(tmp_path / "repo")
     _commit_file(repo, "f.txt", "hello\n")
     captured = []
@@ -232,13 +233,66 @@ def test_guard_tree_git_invocation_shape(monkeypatch, tmp_path):
     handoff.guard_tree(repo)
 
     assert len(captured) == 2
-    expected_env = process_env.child_env()
+    expected_env = handoff.pinned_git_env()
     for cmd, kwargs in captured:
         assert cmd[:5] == [
             dispatch.GIT, "-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false",
         ]
         assert kwargs["cwd"] == repo
         assert kwargs["env"] == expected_env
+
+
+# ---------------------------------------------------------------------------
+# AC-8 (D21): handoff's git calls pin global/system config off.
+# ---------------------------------------------------------------------------
+
+
+def test_pinned_git_env_carries_exactly_the_twelve_git_config_keys_matching_git_in_clone():
+    # dispatch.py's git_in_clone (dispatch.py:822-830) sets these literally; restated
+    # here rather than imported, the same way test_worker_launcher_b2b.py's
+    # test_git_config_count_pins_equal_dispatchs_own restates them, since handoff.py
+    # must not import worker_launcher's table and dispatch.py exposes no importable
+    # constant for git_in_clone's own inline dict.
+    git_in_clone_pins = {
+        "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_SYSTEM": os.devnull,
+        "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_COUNT": "4",
+        "GIT_CONFIG_KEY_0": "core.hooksPath", "GIT_CONFIG_VALUE_0": "/dev/null",
+        "GIT_CONFIG_KEY_1": "core.fsmonitor", "GIT_CONFIG_VALUE_1": "false",
+        "GIT_CONFIG_KEY_2": "gc.auto", "GIT_CONFIG_VALUE_2": "0",
+        "GIT_CONFIG_KEY_3": "maintenance.auto", "GIT_CONFIG_VALUE_3": "false",
+    }
+    handoff_env = handoff.pinned_git_env()
+    for key, value in git_in_clone_pins.items():
+        assert handoff_env[key] == value, key
+    assert {k for k in handoff_env if k.startswith("GIT_CONFIG_")} == set(git_in_clone_pins)
+
+
+def test_apply_ignores_the_operators_gitconfig_whitespace_setting(tmp_path, monkeypatch):
+    """D21: without the GIT_CONFIG_GLOBAL=/dev/null pin, an operator's own
+    ~/.gitconfig applies to every git call against W/repo, including `git apply`,
+    which honours `apply.whitespace`. Mutation: removing the pins from
+    pinned_git_env() turns this red (the numstat pre-check itself starts failing with
+    'adds whitespace errors', so handoff.apply raises HandoffRefused instead of
+    succeeding)."""
+    monkeypatch.setattr(dispatch, "FAILURE_PATCH_DIR", tmp_path / "failed")
+    fake_home = tmp_path / "operator-home"
+    fake_home.mkdir()
+    (fake_home / ".gitconfig").write_text("[apply]\n\twhitespace = error\n")
+    monkeypatch.setenv("HOME", str(fake_home))
+
+    source = _init_repo(tmp_path / "source")
+    _commit_file(source, "f.txt", "a\n")
+
+    w = _make_w(tmp_path, source)
+    repo = w / "repo"
+    (repo / "f.txt").write_text("a\nb   \n")
+    patch = git(repo, "diff", "--binary").stdout
+    git(repo, "checkout", "--", "f.txt")
+
+    result = handoff.apply(w, patch, "task-whitespace")
+
+    assert result.repo == repo
+    assert (repo / "f.txt").read_text() == "a\nb   \n"
 
 
 # ---------------------------------------------------------------------------

@@ -222,16 +222,20 @@ def test_load_registered_sources_rejects_unknown_kind(tmp_path):
 
 
 def test_real_registry_file_parses_the_first_registered_source():
-    """The shipped registry now carries its first real entry: GEMINI.md
-    section 4's accumulated-traps list, named as the first candidate by
-    #460's own intent and registered here per PRIN-011/PRIN-009."""
+    """The shipped registry carries two real entries: GEMINI.md section 4's
+    accumulated-traps list (the first candidate, named by #460's own intent
+    and registered per PRIN-011/PRIN-009) and the external Quality Playbook,
+    registered as an external-doc to be absorbed by method, not by copying."""
     sources = ki.load_registered_sources(ki.REGISTRY_PATH)
-    assert len(sources) == 1
+    assert [s.id for s in sources] == ["gemini-4-traps", "quality-playbook"]
     source = sources[0]
-    assert source.id == "gemini-4-traps"
     assert source.kind == "book-takeaways"
     assert source.reference == "GEMINI.md#4-accumulated-traps"
     assert source.title == "GEMINI.md section 4 accumulated-traps list"
+    external = sources[1]
+    assert external.kind == "external-doc"
+    assert external.reference.startswith("https://github.com/andrewstellman/quality-playbook")
+    assert "own words" in external.summary
 
 
 def test_real_registry_source_is_eligible_for_extraction_task_filing():
@@ -239,24 +243,41 @@ def test_real_registry_source_is_eligible_for_extraction_task_filing():
     and actually file via the same machinery every hand-filed task uses --
     the registration is only real if the workflow can act on it."""
     sources = ki.load_registered_sources(ki.REGISTRY_PATH)
-    source = sources[0]
-
-    content = ki.extraction_task_spec(source)
-    built = file_task.build_content(content)
-    assert built["lane"] == "code-health"
-    assert built["risk_class"] == "structural"
-    assert source.context_ref in built["context_refs"]
+    for source in sources:
+        content = ki.extraction_task_spec(source)
+        built = file_task.build_content(content)
+        assert built["lane"] == "code-health"
+        assert built["risk_class"] == "structural"
+        assert source.context_ref in built["context_refs"]
 
     store = FakeKnowledgeStore()
     result = ki.file_knowledge_extraction_tasks(store, registry_path=ki.REGISTRY_PATH)
 
     assert result["status"] == "filed"
-    assert len(result["filed"]) == 1
-    assert result["filed"][0]["source_id"] == "gemini-4-traps"
-    assert len(store.tasks) == 1
+    assert [f["source_id"] for f in result["filed"]] == ["gemini-4-traps", "quality-playbook"]
+    assert len(store.tasks) == 2
 
 
 # -- phase 1: filing -----------------------------------------------------------
+
+
+def test_extraction_task_spec_carries_the_summary_into_the_intent():
+    """The registry header documents ``summary`` as context for the worker.
+    Until this test existed the field was parsed and never used, so a
+    safeguard written there (e.g. "extract by method, not by copying") never
+    reached the task. The summary must land in the built task's intent."""
+    source = ki.KnowledgeSource(
+        id="src",
+        kind="external-doc",
+        reference="https://example.invalid/doc",
+        title="Doc",
+        summary="Extract by method, in our own words, never by copying.",
+    )
+    built = file_task.build_content(ki.extraction_task_spec(source))
+    assert "Extract by method, in our own words, never by copying." in built["intent"]
+
+    blank = ki.KnowledgeSource(id="s2", kind="audit", reference="x", title="T", summary="  ")
+    assert "Source context:" not in ki.extraction_task_spec(blank)["intent"]
 
 
 def test_extraction_task_spec_builds_valid_dev_task_content(tmp_path):

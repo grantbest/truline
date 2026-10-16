@@ -94,6 +94,41 @@ EMERGENCY_MARKER_RE = re.compile(
     r"^[ \t]*Emergency change:[ \t]*true[ \t]*$", re.MULTILINE | re.IGNORECASE
 )
 
+
+def _load_gate_markers() -> Any:
+    """Load scripts/gate_markers.py by file path -- the one definition of the
+    line-break rule and the CommonMark fence rule (AC-1). Registered in
+    sys.modules under a private alias BEFORE exec_module: gate_markers.py
+    defines dataclasses, and dataclass processing looks the defining module
+    up in sys.modules; without this registration the load raises
+    AttributeError (measured, see scripts/merge-pr.py's loader of the same
+    shape).
+    """
+    path = REPO_ROOT / "scripts" / "gate_markers.py"
+    spec = importlib.util.spec_from_file_location("change_apply_gate_markers", path)
+    if spec is None or spec.loader is None:
+        raise ChangeApplyError(f"could not load gate_markers from {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+_gate_markers = _load_gate_markers()
+
+
+def has_emergency_marker(body: str) -> bool:
+    """True iff ``body`` carries an ``Emergency change: true`` marker OUTSIDE
+    a fenced code block (AC-5) -- a dispatched worker's own report fence
+    cannot forge this marker. Public so every caller goes through this
+    rather than matching the bare regex against PR-body text directly.
+    """
+    lines = _gate_markers.split_lines(body or "")
+    mask = _gate_markers.fence_mask(lines)
+    return any(
+        EMERGENCY_MARKER_RE.search(line) for line, masked in zip(lines, mask) if not masked
+    )
+
 #: A portfolio `evidence` entry is treated as a path candidate when it looks like one -- see
 #: application_path_prefixes().
 PORTFOLIO_PATH_ROOTS = ("apps/", "infrastructure/", "docs/", "scripts/", ".github/")
@@ -437,7 +472,7 @@ def classify_change_kind(
     Checks the emergency marker first -- it is an explicit override, not an inference, and takes
     precedence over whatever (if anything) the Change kind line says.
     """
-    if EMERGENCY_MARKER_RE.search(body or ""):
+    if has_emergency_marker(body or ""):
         return "emergency", None
     try:
         declaration = extract_change_kind(body or "")

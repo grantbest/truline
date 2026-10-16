@@ -1777,3 +1777,82 @@ def test_fifo_fallback_handles_naive_now_without_raising():
     assert order.fallback_reason.startswith("ValueError:")
     ids = {p.task_id for p in (*order.ranked, *order.held)}
     assert ids == {"T1"}
+
+
+# ===========================================================================
+# R26.12 B8 AC-4: QueueOrder.mode and write_order_file
+# ===========================================================================
+
+
+def test_rank_or_fifo_rank_mode_sets_mode_rank():
+    fixture = _load("queue-synthetic-2026-09-23.json")
+    inputs = _synthetic_inputs(fixture)
+    order = _rank_or_fifo("rank", inputs)
+    assert order.mode == "rank"
+    assert '"mode":"rank"' in order.to_json()
+
+
+def test_rank_or_fifo_fifo_kill_switch_sets_mode_fifo():
+    fixture = _load("queue-synthetic-2026-09-23.json")
+    inputs = _synthetic_inputs(fixture)
+    order = _rank_or_fifo("fifo", inputs)
+    assert order.mode == "fifo"
+    assert order.fallback_reason is None
+    assert '"mode":"fifo"' in order.to_json()
+
+
+def test_rank_or_fifo_fallback_to_fifo_sets_mode_fifo_too():
+    """A rank_pending failure is a fallback, not a different mode: AC-4 says
+    mode='fifo' on EITHER the kill switch or a fallback."""
+    task = {"id": "T1", "state": "pending", "content": dict(DEFAULT_SCOPE)}  # no created_at -> rank_pending raises
+    inputs = dict(
+        tasks=[task],
+        notes_by_id={"T1": []},
+        release_by_task_id={},
+        time_box_by_release_ref={},
+        policy=queue_order.RankPolicy(
+            urgency_band_medium=0.33, urgency_band_high=0.66, aging_days=14, max_aging_steps=3
+        ),
+        now=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        claimable_since_by_task_id={},
+    )
+    order = _rank_or_fifo("rank", inputs)
+    assert order.fallback_reason is not None
+    assert order.mode == "fifo"
+
+
+def test_write_order_file_writes_to_json_atomically(tmp_path, monkeypatch):
+    fixture = _load("queue-synthetic-2026-09-23.json")
+    inputs = _synthetic_inputs(fixture)
+    order = _rank_or_fifo("rank", inputs)
+    path = tmp_path / "state" / "queue-order.json"
+
+    renamed = []
+    real_replace = Path.replace
+
+    def _recording_replace(self, target):
+        renamed.append((str(self), str(target)))
+        return real_replace(self, target)
+
+    monkeypatch.setattr(Path, "replace", _recording_replace)
+
+    queue_order.write_order_file(order, path)
+
+    assert path.read_text() == order.to_json()
+    assert len(renamed) == 1
+    tmp_name, final_name = renamed[0]
+    assert tmp_name.endswith(".tmp")
+    assert final_name == str(path)
+
+
+def test_write_order_file_raises_on_failure_rather_than_swallowing(tmp_path):
+    fixture = _load("queue-synthetic-2026-09-23.json")
+    inputs = _synthetic_inputs(fixture)
+    order = _rank_or_fifo("rank", inputs)
+    # A path whose parent cannot be a directory (it's a file) -- write_order_file
+    # raises; the caller (the claim path) decides to log, not fail, the tick.
+    blocker = tmp_path / "not-a-directory"
+    blocker.write_text("x")
+
+    with pytest.raises(OSError):
+        queue_order.write_order_file(order, blocker / "queue-order.json")

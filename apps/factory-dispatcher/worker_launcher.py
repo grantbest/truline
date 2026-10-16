@@ -3,15 +3,23 @@
 §8 row B2, first half): the launcher that runs factory work as the worker user.
 
 Invariant L (design §2.1): the launcher runs nothing from a worker-writable path and reads
-no worker-written configuration outside one of the three named profiles (worker,
-verification, pip). Only selfcheck, probe, reap and purge run unsandboxed, and none of them
-executes worker content. SUBCOMMAND_PROFILE/SUBCOMMAND_FUNCTION record that mapping; an
+no worker-written configuration outside one of the four named profiles (worker,
+verification, pip, seed). Only selfcheck, probe, reap and purge run unsandboxed, and none of
+them executes worker content. SUBCOMMAND_PROFILE/SUBCOMMAND_FUNCTION record that mapping; an
 ast-based static test (tests/test_worker_launcher.py) enforces it, including that this
 module never reads the process environment (no `environ`/`getenv` name appears below).
 
 B2b adds the git, venv, pip, purge and probe subcommands. Nothing calls this module yet --
 worker_identity.py (B1) is not wired to it until B4, and this module imports nothing from
 this checkout except process_env, installed beside it.
+
+PARTB-B2c (decision (a1), 2026-10-04): `seed`/`vseed` move to their own `seed` profile
+category -- a seed-only sandbox variant (containment.SEED_PROFILE_NAME, never imported
+here, per Invariant L) that omits the five .git-control write denies the `worker` and
+`verification` profiles both carry, because `seed`/`vseed` must run `git clone`/`git
+remote set-url` inside the tree. Every OTHER sandboxed subcommand and probe's
+`worker_profile` refuse a profile named that way, so the relaxed posture can never reach
+anything but seed/vseed.
 
 Every result is exactly one JSON envelope on stdout: {status, child_rc, stdout, stderr,
 stdout_truncated_result}. status is "ok", "deadline" (deadline_s elapsed, whole process
@@ -23,6 +31,7 @@ from __future__ import annotations
 
 import base64
 import ctypes
+import errno
 import functools
 import json
 import os
@@ -50,8 +59,8 @@ SUBCOMMAND_PROFILE: dict[str, str] = {
     "reap": "UNSANDBOXED",
     "run": "worker",
     "exec": "verification",
-    "seed": "worker",
-    "vseed": "verification",
+    "seed": "seed",
+    "vseed": "seed",
     "materialize": "worker",
     "export": "worker",
     "venv": "pip",
@@ -59,6 +68,16 @@ SUBCOMMAND_PROFILE: dict[str, str] = {
     "purge": "UNSANDBOXED",
     "probe": "UNSANDBOXED",
 }
+
+#: decision (a1) (2026-10-04): equal to containment.SEED_PROFILE_NAME (asserted by a
+#: test; not imported here, per Invariant L). Every sandboxed subcommand OTHER than
+#: seed/vseed, plus probe's `worker_profile`, refuses a profile with this basename.
+SEED_PROFILE_NAME = ".seed-containment.sb"
+
+#: decision (a1)'s AC-3 companion: equal to containment.VERIFICATION_VENV_NAME
+#: (asserted by a test). `exec` and the `pip` branch of `_cmd_venv` prepend
+#: ``<W>/<tree>/VERIFICATION_VENV_NAME/bin`` to PATH and set VIRTUAL_ENV to it.
+VERIFICATION_VENV_NAME = ".verification-venv"
 
 #: Fixed absolute binaries probe may execute (purge never spawns: it clears flags and
 #: removes entries through os.chflags/os.chmod/os.unlink/os.rmdir directly).
@@ -306,6 +325,16 @@ def _check_profile(payload: dict) -> dict | None:
         )
     return None
 
+def _seed_profile_name_refusal(profile: object) -> str | None:
+    """decision (a1): refuses a profile whose realpath basename is SEED_PROFILE_NAME --
+    called by every sandboxed subcommand OTHER than seed/vseed, and by probe for
+    `worker_profile`, right after `_check_profile`. `seed`/`vseed` never call this."""
+    real = os.path.realpath(str(profile))
+    if os.path.basename(real) == SEED_PROFILE_NAME:
+        return f"profile {profile!r} is the seed-only profile {SEED_PROFILE_NAME!r}; refused here"
+    return None
+
+
 def _kill_process_group(pid: int) -> None:
     try:
         os.killpg(pid, signal.SIGKILL)
@@ -355,6 +384,16 @@ def run(payload: dict, w_path: Path) -> dict:
     if missing is not None:
         return _refused(f"run payload missing {missing!r}")
 
+    argv_payload = payload["argv"]
+    if (
+        not isinstance(argv_payload, list)
+        or not argv_payload
+        or not all(isinstance(a, str) for a in argv_payload)
+    ):
+        return _refused("run payload argv must be a non-empty list of strings")
+    if not os.path.isabs(argv_payload[0]):
+        return _refused(f"run payload argv[0] {argv_payload[0]!r} must be absolute")
+
     expected_cwd = w_path / "wtree" / "repo"
     cwd = Path(payload["cwd"])
     if cwd != expected_cwd:
@@ -363,6 +402,9 @@ def run(payload: dict, w_path: Path) -> dict:
     profile_refusal = _check_profile(payload)
     if profile_refusal is not None:
         return profile_refusal
+    seed_refusal = _seed_profile_name_refusal(payload["profile"])
+    if seed_refusal is not None:
+        return _refused(seed_refusal)
 
     payload_env = payload["env"]
     if not isinstance(payload_env, dict):
@@ -419,6 +461,9 @@ def _cmd_exec(payload: dict, w_path: Path) -> dict:
     profile_refusal = _check_profile(payload)
     if profile_refusal is not None:
         return profile_refusal
+    seed_refusal = _seed_profile_name_refusal(payload["profile"])
+    if seed_refusal is not None:
+        return _refused(seed_refusal)
 
     env = process_env.child_env(environ=payload_env)
 
@@ -429,6 +474,12 @@ def _cmd_exec(payload: dict, w_path: Path) -> dict:
     except OSError as exc:
         return _refused(f"could not create HOME {home}: {exc}")
     env = _finalize_child_env(env, home, tmp_dir)
+
+    # AC-3 (D2 critic option (b)): the tree's OWN verification venv, derived from W and
+    # the validated tree alone -- a payload PATH/VIRTUAL_ENV is always overwritten.
+    venv_dir = w_path / tree / VERIFICATION_VENV_NAME
+    env["PATH"] = f"{venv_dir}/bin:{FIXED_CHILD_PATH}"
+    env["VIRTUAL_ENV"] = str(venv_dir)
 
     argv = _sandboxed_argv(payload, list(payload["argv"]))
     deadline_s = float(payload["deadline_s"])
@@ -519,7 +570,11 @@ def _seed_vseed_core(payload: dict, w_path: Path) -> dict:
         # guarantee here, not this placement).
         [GIT_PATH, "-C", str(repo), "checkout", "--quiet", base_ref, "--"],
         [GIT_PATH, "-C", str(repo), "remote", "set-url", "origin", "--", remote_url],
-        [GIT_PATH, "-C", str(repo), "fetch", "--quiet", "--end-of-options", bundle_real, f"{ref}:{ref}"],
+        # D12 (AC-4): force-prefixed ('+') -- after `git clone`, this ref already holds
+        # the bundle's refs/heads/<base_ref>; a preserved baseline leaves that one
+        # commit ahead of refs/remotes/origin/<base_ref>, so fetching the latter back
+        # into the SAME ref is a non-fast-forward unless forced.
+        [GIT_PATH, "-C", str(repo), "fetch", "--quiet", "--end-of-options", bundle_real, f"+{ref}:{ref}"],
     ]
     if patch_real is not None:
         steps.append([GIT_PATH, "-C", str(repo), "apply", "--index", "--binary", "--", patch_real])
@@ -574,6 +629,9 @@ def _cmd_materialize(payload: dict, w_path: Path) -> dict:
     profile_refusal = _check_profile(payload)
     if profile_refusal is not None:
         return profile_refusal
+    seed_refusal = _seed_profile_name_refusal(payload["profile"])
+    if seed_refusal is not None:
+        return _refused(seed_refusal)
 
     payload_env = payload.get("env")
     env = process_env.child_env(environ=payload_env if isinstance(payload_env, dict) else {})
@@ -631,6 +689,52 @@ EXPORT_ENVELOPE_CAP_BYTES = (
 )
 
 
+def _read_design_text(repo: Path) -> tuple[str, str | None]:
+    """dev.finding 789fbc6b: the design.md read, factored out of `_cmd_export` so it
+    can refuse BEFORE ever opening design.md when ``<repo>/.factory`` exists and is
+    not a real directory (a symlink included) -- the old O_NOFOLLOW-on-design.md-only
+    check let a worker-made ``.factory`` symlink to an outside directory have ITS
+    design.md read straight through. Otherwise keeps the existing O_NOFOLLOW,
+    O_NONBLOCK, S_ISREG, cap and strict-UTF-8 rules. Returns ``(text, None)`` on
+    success, or ``("", reason)`` to refuse."""
+    factory_dir = repo / ".factory"
+    try:
+        factory_st = os.lstat(str(factory_dir))
+    except OSError:
+        return "", None
+    if not stat.S_ISDIR(factory_st.st_mode):
+        return "", f"export refused: {factory_dir} exists and is not a directory"
+
+    design_path = factory_dir / "design.md"
+    try:
+        os.lstat(str(design_path))
+    except OSError:
+        return "", None
+
+    # Review item 3 (PR 1178 gate): a directory or FIFO at this path used to pass
+    # straight through as "absent" (is_file() is False for both, so the block below
+    # was simply skipped). Open with O_NOFOLLOW (refuses a symlink outright) and
+    # O_NONBLOCK (a FIFO reader never blocks waiting for a writer), then require
+    # S_ISREG on the opened fd's own fstat before reading anything.
+    try:
+        design_fd = os.open(str(design_path), os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except OSError as exc:
+        return "", f"export refused: could not open {design_path}: {exc}"
+    try:
+        design_fstat = os.fstat(design_fd)
+        if not stat.S_ISREG(design_fstat.st_mode):
+            return "", f"export refused: {design_path} is not a regular file"
+        design_bytes = os.read(design_fd, DESIGN_TEXT_CAP_BYTES + 1)
+    finally:
+        os.close(design_fd)
+    if len(design_bytes) > DESIGN_TEXT_CAP_BYTES:
+        return "", f"export refused: {design_path} exceeds {DESIGN_TEXT_CAP_BYTES} bytes"
+    try:
+        return design_bytes.decode("utf-8"), None
+    except UnicodeDecodeError as exc:
+        return "", f"export refused: {design_path} is not valid UTF-8: {exc}"
+
+
 def _cmd_export(payload: dict, w_path: Path) -> dict:
     """export's own body holds every git subprocess call directly (the base_ref
     validation, then add, then diff), same spawn-scan-attribution reason as
@@ -649,6 +753,9 @@ def _cmd_export(payload: dict, w_path: Path) -> dict:
     profile_refusal = _check_profile(payload)
     if profile_refusal is not None:
         return profile_refusal
+    seed_refusal = _seed_profile_name_refusal(payload["profile"])
+    if seed_refusal is not None:
+        return _refused(seed_refusal)
 
     base_ref = str(payload["base_ref"])
     dash_reason = _base_ref_leading_dash_refusal(base_ref)
@@ -687,7 +794,7 @@ def _cmd_export(payload: dict, w_path: Path) -> dict:
         payload,
         [
             GIT_PATH, "-C", str(repo), *_EXPORT_GIT_CONFIG, "diff", "--cached", "--binary",
-            "--no-ext-diff", "--no-textconv", "--src-prefix=a/", "--dst-prefix=b/",
+            "--no-color", "--no-ext-diff", "--no-textconv", "--src-prefix=a/", "--dst-prefix=b/",
             "--end-of-options", base_ref, "--", *_FACTORY_EXCLUDE_PATHSPECS,
         ],
     )
@@ -703,37 +810,9 @@ def _cmd_export(payload: dict, w_path: Path) -> dict:
         return _refused("export too large")
     patch_b64 = base64.b64encode(patch_bytes).decode("ascii")
 
-    design_path = repo / ".factory" / "design.md"
-    design_text = ""
-    try:
-        os.lstat(str(design_path))
-    except OSError:
-        design_exists = False
-    else:
-        design_exists = True
-    if design_exists:
-        # Review item 3 (PR 1178 gate): a directory or FIFO at this path used to pass
-        # straight through as "absent" (is_file() is False for both, so the block
-        # below was simply skipped). Open with O_NOFOLLOW (refuses a symlink outright)
-        # and O_NONBLOCK (a FIFO reader never blocks waiting for a writer), then
-        # require S_ISREG on the opened fd's own fstat before reading anything.
-        try:
-            design_fd = os.open(str(design_path), os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
-        except OSError as exc:
-            return _refused(f"export refused: could not open {design_path}: {exc}")
-        try:
-            design_fstat = os.fstat(design_fd)
-            if not stat.S_ISREG(design_fstat.st_mode):
-                return _refused(f"export refused: {design_path} is not a regular file")
-            design_bytes = os.read(design_fd, DESIGN_TEXT_CAP_BYTES + 1)
-        finally:
-            os.close(design_fd)
-        if len(design_bytes) > DESIGN_TEXT_CAP_BYTES:
-            return _refused(f"export refused: {design_path} exceeds {DESIGN_TEXT_CAP_BYTES} bytes")
-        try:
-            design_text = design_bytes.decode("utf-8")
-        except UnicodeDecodeError as exc:
-            return _refused(f"export refused: {design_path} is not valid UTF-8: {exc}")
+    design_text, design_reason = _read_design_text(repo)
+    if design_reason is not None:
+        return _refused(design_reason)
 
     envelope = _ok(0, "", "")
     envelope["patch_b64"] = patch_b64
@@ -792,19 +871,27 @@ def _cmd_venv(payload: dict, w_path: Path, kind: str) -> dict:
     profile_refusal = _check_profile(payload)
     if profile_refusal is not None:
         return profile_refusal
+    seed_refusal = _seed_profile_name_refusal(payload["profile"])
+    if seed_refusal is not None:
+        return _refused(seed_refusal)
 
     try:
         env = _venv_tmp_env(payload, tree_dir)
     except OSError as exc:
         return _refused(f"could not create HOME under {tree_dir}: {exc}")
 
+    venv_dir = tree_dir / VERIFICATION_VENV_NAME
     if kind == "pip":
-        venv_python = tree_dir / ".verification-venv" / "bin" / "python"
+        # AC-3 (D2 critic option (b)): PATH/VIRTUAL_ENV come from W and the validated
+        # tree alone -- a payload PATH/VIRTUAL_ENV is always overwritten.
+        env["PATH"] = f"{venv_dir}/bin:{FIXED_CHILD_PATH}"
+        env["VIRTUAL_ENV"] = str(venv_dir)
+        venv_python = venv_dir / "bin" / "python"
         argv = _sandboxed_argv(
             payload, [str(venv_python), "-m", "pip", "install", *list(payload["args"])]
         )
     else:
-        argv = _sandboxed_argv(payload, [sys.executable, "-I", "-m", "venv", ".verification-venv"])
+        argv = _sandboxed_argv(payload, [sys.executable, "-I", "-m", "venv", VERIFICATION_VENV_NAME])
     deadline_s = float(payload["deadline_s"])
     proc = subprocess.Popen(
         argv, env=env, cwd=str(tree_dir),
@@ -815,99 +902,164 @@ def _cmd_venv(payload: dict, w_path: Path, kind: str) -> dict:
     )
 
 
-# --- `purge`: clears uchg, restores u+w, removes only what this uid owns -----------
+# --- `purge`: clears uchg/uappnd, restores u+w, removes only what this uid owns ----
 
-#: 0x00020000 on every platform stat.py defines it on; absent (not merely 0) is why
-#: getattr(..., 0) below would be wrong -- a real but unsupported flag bit must never
-#: match a file's st_flags by coincidence, so purge simply never offers it off-darwin.
+#: 0x00020000/0x00000004 on every platform stat.py defines them on; absent (not
+#: merely 0) is why getattr(..., 0) below would be wrong -- a real but unsupported
+#: flag bit must never match a file's st_flags by coincidence, so purge simply never
+#: offers either off-darwin.
 UF_IMMUTABLE: int | None = getattr(stat, "UF_IMMUTABLE", None)
+UF_APPEND: int | None = getattr(stat, "UF_APPEND", None)
 _CHFLAGS: Callable[[str, int], None] | None = getattr(os, "chflags", None)
+_PURGE_LOCK_MASK = (UF_IMMUTABLE or 0) | (UF_APPEND or 0)
 
 
-def _purge_unlock_dir(path: Path, euid: int) -> None:
-    """Pass 1 (AC-5, order amended): clears `uchg` and restores u+w on a directory this
-    uid owns, best-effort, BEFORE pass 2 tries to remove its children -- unlinking or
-    renaming an entry needs write+execute on its PARENT directory, not just on the
-    entry itself, so a 0555 or uchg-flagged directory must be unlocked before, never
-    after, its contents are walked for removal."""
+def _purge_target_refusal(w_path: Path, tmp_root: str, euid: int) -> str | None:
+    """AC-5(a): the ONE directory purge ever touches -- argv ``w_path`` itself --
+    must lstat as a non-symlink directory whose real basename is a VALID_TREES name,
+    or whose realpath equals the worker's own `<tmp_root>/claude-<euid>` scratchpad
+    (dispatch.CLAUDE_HARNESS_SCRATCHPAD_ROOT's shape, not imported here per Invariant
+    L). Every other path -- W itself, R, anything else -- is refused before purge
+    touches anything."""
     try:
-        st = os.lstat(str(path))
-    except OSError:
-        return
-    if st.st_uid != euid or not stat.S_ISDIR(st.st_mode):
-        return
+        st = os.lstat(str(w_path))
+    except OSError as exc:
+        return f"purge refused: could not stat {w_path}: {exc}"
+    if stat.S_ISLNK(st.st_mode) or not stat.S_ISDIR(st.st_mode):
+        return f"purge refused: {w_path} is not a non-symlink directory"
+    real = os.path.realpath(str(w_path))
+    if os.path.basename(real) in VALID_TREES:
+        return None
+    if real == os.path.realpath(f"{tmp_root}/claude-{euid}"):
+        return None
+    return f"purge refused: {w_path} is neither a tree directory nor the worker scratch dir"
+
+
+def _purge_clear_flags_and_unlock(path: str, st: os.stat_result) -> None:
+    """Best-effort: clears uchg/uappnd (darwin only) and restores the owner's rwx
+    bits, so a following os.listdir/unlink/rmdir on ``path`` can see or remove it.
+    Caller has already checked ``st.st_uid`` is the effective uid."""
     flags = getattr(st, "st_flags", 0)
     try:
-        if _CHFLAGS is not None and UF_IMMUTABLE is not None and flags & UF_IMMUTABLE:
-            _CHFLAGS(str(path), flags & ~UF_IMMUTABLE)
-        os.chmod(str(path), stat.S_IMODE(st.st_mode) | stat.S_IWUSR)
+        if _CHFLAGS is not None and _PURGE_LOCK_MASK and (flags & _PURGE_LOCK_MASK):
+            _CHFLAGS(path, flags & ~_PURGE_LOCK_MASK)
+        os.chmod(path, stat.S_IMODE(st.st_mode) | stat.S_IRWXU)
     except OSError:
         pass
 
 
-def _purge_clear_and_remove(path: Path, euid: int) -> bool:
-    """True when `path` is gone (or was already gone) after this call. Only ever acts
-    on an entry owned by `euid`; never follows a symlink (lstat, then unlink it as a
-    plain entry rather than treating it as the directory it may point to)."""
-    try:
-        st = os.lstat(str(path))
-    except OSError:
-        return True
-    if st.st_uid != euid:
-        return False
-    if stat.S_ISLNK(st.st_mode):
+def _purge_walk(
+    root: Path, euid: int, deadline: float
+) -> tuple[list[tuple[Path, list[str]]], list[str]]:
+    """AC-5(b), top-down, LIFO stack, never following a symlink: for each directory,
+    lstat it; if owned by `euid`, unlock it (see :func:`_purge_clear_flags_and_unlock`)
+    BEFORE listing it; then os.listdir it. A directory that cannot be listed is
+    recorded as remaining (and not descended) whoever owns it: a foreign directory
+    is never unlocked and never modified, but the worker cannot see whether it holds
+    files the worker owns, so the only honest report is that it remains (AC-5(c):
+    'purged' is said only when nothing the worker owns remains, and an unlisted
+    directory cannot prove that). Returns every
+    successfully listed ``(directory, names)`` pair in TOP-DOWN discovery order: since
+    this stack always finishes exploring one subtree before resuming a pending
+    sibling, a directory's own entry here always precedes every one of its
+    subdirectories' entries, so ``reversed(...)`` of the result is a true bottom-up
+    order for the removal pass below."""
+    listed: list[tuple[Path, list[str]]] = []
+    remaining: list[str] = []
+    stack: list[Path] = [root]
+    while stack:
+        current = stack.pop()
+        if time.monotonic() > deadline:
+            remaining.append(str(current))
+            continue
         try:
-            os.unlink(str(path))
+            st = os.lstat(str(current))
         except OSError:
-            return False
-        return True
-    flags = getattr(st, "st_flags", 0)
-    try:
-        if _CHFLAGS is not None and UF_IMMUTABLE is not None and flags & UF_IMMUTABLE:
-            _CHFLAGS(str(path), flags & ~UF_IMMUTABLE)
-        os.chmod(str(path), stat.S_IMODE(st.st_mode) | stat.S_IWUSR)
-    except OSError:
-        return False
-    try:
-        if stat.S_ISDIR(st.st_mode):
-            os.rmdir(str(path))
-        else:
-            os.unlink(str(path))
-    except OSError:
-        return False
-    return True
+            continue  # already gone
+        if stat.S_ISLNK(st.st_mode) or not stat.S_ISDIR(st.st_mode):
+            continue
+        owned = st.st_uid == euid
+        if owned:
+            _purge_clear_flags_and_unlock(str(current), st)
+        try:
+            names = os.listdir(str(current))
+        except OSError:
+            remaining.append(str(current))
+            continue
+        listed.append((current, names))
+        for name in names:
+            child = current / name
+            try:
+                child_st = os.lstat(str(child))
+            except OSError:
+                continue
+            if stat.S_ISDIR(child_st.st_mode) and not stat.S_ISLNK(child_st.st_mode):
+                stack.append(child)
+    return listed, remaining
+
+
+def _purge_remove_pass(
+    listed: list[tuple[Path, list[str]]], euid: int, remaining: list[str], deadline: float
+) -> None:
+    """AC-5(b)/(c), bottom-up (``reversed(listed)`` -- see :func:`_purge_walk`'s
+    docstring for why that is a valid bottom-up order): for each entry, an entry owned
+    by another uid is never touched and never recorded as remaining; an entry owned by
+    `euid` is unlocked then unlinked/rmdir'ed. D9: an EMPTY, owned directory whose
+    removal itself fails with EACCES/EPERM while ITS OWN PARENT (``directory`` here)
+    is foreign-owned counts as purged anyway -- the dispatcher owns that parent and
+    will remove the directory once it reaps the attempt -- but first it is chmodded to
+    0o755 so a plain `rmtree` can list it even if the worker left it at 0700 or 0000."""
+    for directory, names in reversed(listed):
+        if time.monotonic() > deadline:
+            remaining.extend(str(directory / name) for name in names)
+            continue
+        try:
+            parent_foreign = os.lstat(str(directory)).st_uid != euid
+        except OSError:
+            parent_foreign = False
+        for name in names:
+            target = directory / name
+            try:
+                st = os.lstat(str(target))
+            except OSError:
+                continue  # already gone
+            if st.st_uid != euid:
+                continue  # foreign: never touched, never remaining
+            if stat.S_ISLNK(st.st_mode):
+                # A symlink is only ever unlinked, never unlocked: os.chmod follows
+                # symlinks, so unlocking first would chmod whatever the link points at,
+                # which may be outside W (the escape test below pins this).
+                try:
+                    os.unlink(str(target))
+                except OSError:
+                    remaining.append(str(target))
+                continue
+            _purge_clear_flags_and_unlock(str(target), st)
+            is_dir = stat.S_ISDIR(st.st_mode)
+            try:
+                os.rmdir(str(target)) if is_dir else os.unlink(str(target))
+            except OSError as exc:
+                if parent_foreign and is_dir and exc.errno in (errno.EACCES, errno.EPERM):
+                    try:
+                        os.chmod(str(target), 0o755)
+                    except OSError:
+                        pass
+                    continue  # counted as purged, not remaining (D9)
+                remaining.append(str(target))
 
 
 def _cmd_purge(payload: dict, w_path: Path) -> dict:
     euid = os.geteuid()
-    keep_root = bool(payload.get("keep_root", False))
+    tmp_root = str(payload.get("tmp_root", "/tmp"))
+    refusal = _purge_target_refusal(w_path, tmp_root, euid)
+    if refusal is not None:
+        return _refused(refusal)
+
     timeout_s = float(payload.get("timeout_s", 60.0))
     deadline = time.monotonic() + timeout_s
-    remaining: list[str] = []
 
-    # Pass 1, top-down: unlock every owned directory (uchg cleared, u+w restored)
-    # before pass 2 below ever tries to remove one of its children.
-    for root, _dirs, _files in os.walk(str(w_path), topdown=True, followlinks=False):
-        if time.monotonic() > deadline:
-            break
-        _purge_unlock_dir(Path(root), euid)
-
-    # Pass 2, bottom-up: remove everything this uid owns.
-    for root, dirs, files in os.walk(str(w_path), topdown=False, followlinks=False):
-        root_path = Path(root)
-        for name in (*files, *dirs):
-            target = root_path / name
-            if time.monotonic() > deadline:
-                remaining.append(str(target))
-                continue
-            if not _purge_clear_and_remove(target, euid):
-                remaining.append(str(target))
-
-    if not keep_root:
-        if time.monotonic() > deadline:
-            remaining.append(str(w_path))
-        elif not _purge_clear_and_remove(w_path, euid):
-            remaining.append(str(w_path))
+    listed, remaining = _purge_walk(w_path, euid, deadline)
+    _purge_remove_pass(listed, euid, remaining, deadline)
 
     if remaining:
         body = json.dumps({"remaining_count": len(remaining), "remaining": remaining[:10]})
@@ -1008,6 +1160,9 @@ def _cmd_probe(payload: dict, w_path: Path) -> dict:
         )
         if profile_refusal is not None:
             return profile_refusal
+        seed_refusal = _seed_profile_name_refusal(worker_profile)
+        if seed_refusal is not None:
+            return _refused(seed_refusal)
 
     bootstrap_plist = payload.get("bootstrap_plist")
     if bootstrap_plist:

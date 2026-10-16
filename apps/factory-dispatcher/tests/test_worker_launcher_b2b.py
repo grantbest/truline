@@ -255,7 +255,7 @@ def test_seed_composes_sandboxed_git_argv_without_executing(monkeypatch, tmp_pat
     assert captured[4] == [
         wl.SANDBOX_EXEC_PATH, "-f", str(profile), wl.GIT_PATH, "-C", str(repo), "fetch",
         "--quiet", "--end-of-options", str(bundle),
-        "refs/remotes/origin/main:refs/remotes/origin/main",
+        "+refs/remotes/origin/main:refs/remotes/origin/main",
     ]
 
 
@@ -558,6 +558,59 @@ def test_seed_never_honours_a_payload_git_config_parameters_hooks_path_on_every_
 
 
 # ---------------------------------------------------------------------------
+# PARTB-B2c AC-4 (D12): the fetch refspec is force-prefixed.
+# ---------------------------------------------------------------------------
+
+
+def _make_divergent_bundle_repo(tmp_path: Path) -> tuple[Path, str, str]:
+    """A repo whose refs/heads/main (B) is one commit ahead of refs/remotes/
+    origin/main (O) -- the shape a preserved baseline leaves behind on every wtree/
+    vtree seed after a retry (D12), and B4c/B5b's own bundle shape. Returns
+    (bundle, head_sha (B), base_sha (O))."""
+    src = tmp_path / "divergent-src"
+    _init_repo(src)
+    (src / "file.txt").write_text("hello\n")
+    _git(src, "add", "file.txt")
+    _git(src, "commit", "-q", "-m", "base")
+    base_sha = _git(src, "rev-parse", "HEAD").stdout.strip()
+    _git(src, "update-ref", "refs/remotes/origin/main", base_sha)
+    (src / "file.txt").write_text("hello\nmore\n")
+    _git(src, "add", "file.txt")
+    _git(src, "commit", "-q", "-m", "ahead")
+    head_sha = _git(src, "rev-parse", "HEAD").stdout.strip()
+    bundle = tmp_path / "divergent.bundle"
+    _git(src, "bundle", "create", str(bundle), "HEAD", "refs/heads/main", "refs/remotes/origin/main")
+    return bundle, head_sha, base_sha
+
+
+def test_seed_force_fetches_when_the_bundle_has_a_divergent_tracking_ref(monkeypatch, tmp_path):
+    """D12: after `git clone`, the clone's own refs/remotes/origin/main already holds
+    the bundle's refs/heads/main (B, the ahead commit); fetching the bundle's
+    refs/remotes/origin/main (O, an ancestor of B) back into that SAME ref is a
+    non-fast-forward unless the refspec is force-prefixed with '+'. Runs on CI's git
+    2.34 and the host's 2.50 (this drops the sandbox-exec wrapper, same idiom as the
+    cross-platform hooks-path test above). Mutation: dropping the '+' turns this red."""
+    monkeypatch.setattr(wl, "_sandboxed_argv", lambda payload, argv: list(argv))
+    bundle, head_sha, base_sha = _make_divergent_bundle_repo(tmp_path)
+    w_path = tmp_path / "W"
+    w_path.mkdir()
+    bundle_in_w = w_path / "repo.bundle"
+    shutil.copy(bundle, bundle_in_w)
+    profile = _permissive_profile(w_path / "worker.sb")  # unused: sandboxing is bypassed
+    payload = _seed_payload(
+        w_path, bundle_in_w, profile, tree="wtree",
+        remote_url="https://example.invalid/real-repo.git",
+    )
+
+    envelope = wl._cmd_seed(payload, w_path)
+
+    assert envelope["status"] == "ok", envelope
+    repo = w_path / "wtree" / "repo"
+    assert _git(repo, "rev-parse", "HEAD").stdout.strip() == head_sha
+    assert _git(repo, "rev-parse", "refs/remotes/origin/main").stdout.strip() == base_sha
+
+
+# ---------------------------------------------------------------------------
 # AC-12: payload paths and refs are confined.
 # ---------------------------------------------------------------------------
 
@@ -800,6 +853,7 @@ def test_export_composes_the_required_git_config_and_flags(monkeypatch, tmp_path
     assert add_argv[-3:] == [
         ".", ":(exclude,icase,glob)**/.factory", ":(exclude,icase,glob)**/.factory/**",
     ]
+    assert "--no-color" in diff_argv  # PARTB-B2c AC-7(a), dev.finding 118e3fcd
     assert "--no-ext-diff" in diff_argv
     assert "--no-textconv" in diff_argv
     assert "--src-prefix=a/" in diff_argv
@@ -813,6 +867,115 @@ def test_export_composes_the_required_git_config_and_flags(monkeypatch, tmp_path
     assert add_env["GIT_ATTR_NOSYSTEM"] == "1"
     assert diff_env["GIT_ATTR_NOSYSTEM"] == "1"
     assert ref_check_env["GIT_ATTR_NOSYSTEM"] == "1"
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="sandbox-exec is macOS-only")
+def test_export_patch_has_no_ansi_escape_even_with_color_diff_always(tmp_path):
+    """AC-7(a), dev.finding 118e3fcd: a worker-set color.diff=always in the tree's own
+    config used to make export emit an ANSI-colored patch."""
+    available, reason = _sandbox_probes_available()
+    if not available:
+        pytest.skip(f"sandbox-exec not usable in this process: {reason}")
+    repo = tmp_path / "wtree" / "repo"
+    _init_repo(repo)
+    (repo / "a.txt").write_text("one\n")
+    _git(repo, "add", "a.txt")
+    _git(repo, "commit", "-q", "-m", "init")
+    _git(repo, "config", "color.diff", "always")
+    (repo / "a.txt").write_text("two\n")
+    profile = _permissive_profile(tmp_path / "worker.sb")
+    payload = {
+        "tree": "wtree", "base_ref": "main",
+        "profile": str(profile), "profile_owner_uid": os.getuid(), "deadline_s": 10.0,
+        "env": {},
+    }
+
+    envelope = wl._cmd_export(payload, tmp_path)
+
+    assert envelope["status"] == "ok", envelope
+    patch_bytes = base64.b64decode(envelope["patch_b64"])
+    assert b"\x1b" not in patch_bytes
+
+
+def test_check_ref_format_accepts_a_40_hex_sha():
+    """AC-7(c): the sha B4c sends as export's base_ref passes export's own
+    check-ref-format validation, under _git_env's own env."""
+    sha = "a" * 40
+    result = subprocess.run(
+        [wl.GIT_PATH, "check-ref-format", "--branch", sha],
+        env=wl._git_env({}), capture_output=True,
+    )
+    assert result.returncode == 0
+
+
+# ---------------------------------------------------------------------------
+# PARTB-B2c AC-7(b), dev.finding 789fbc6b: a .factory SYMLINK is refused before
+# design.md is ever opened.
+# ---------------------------------------------------------------------------
+
+
+def test_export_refuses_when_factory_itself_is_a_symlink_to_an_outside_directory(
+    monkeypatch, tmp_path
+):
+    monkeypatch.setattr(
+        subprocess, "run", lambda argv, env=None, **kw: _FakeRunResult(returncode=0, stdout=b"", stderr=b"")
+    )
+    repo = tmp_path / "wtree" / "repo"
+    repo.mkdir(parents=True)
+    outside = tmp_path / "outside-factory"
+    outside.mkdir()
+    (outside / "design.md").write_text("do not leak")
+    (repo / ".factory").symlink_to(outside)
+    profile = _permissive_profile(tmp_path / "worker.sb")
+    payload = {
+        "tree": "wtree", "base_ref": "main",
+        "profile": str(profile), "profile_owner_uid": os.getuid(), "deadline_s": 5.0,
+        "env": {},
+    }
+
+    envelope = wl._cmd_export(payload, tmp_path)
+
+    assert envelope["status"] == "refused"
+    assert "do not leak" not in json.dumps(envelope)
+
+
+def test_export_design_md_through_a_real_factory_directory_returns_its_text(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        subprocess, "run", lambda argv, env=None, **kw: _FakeRunResult(returncode=0, stdout=b"", stderr=b"")
+    )
+    repo = tmp_path / "wtree" / "repo"
+    (repo / ".factory").mkdir(parents=True)
+    (repo / ".factory" / "design.md").write_text("design notes")
+    profile = _permissive_profile(tmp_path / "worker.sb")
+    payload = {
+        "tree": "wtree", "base_ref": "main",
+        "profile": str(profile), "profile_owner_uid": os.getuid(), "deadline_s": 5.0,
+        "env": {},
+    }
+
+    envelope = wl._cmd_export(payload, tmp_path)
+
+    assert envelope["status"] == "ok", envelope
+    assert envelope["design_text"] == "design notes"
+
+
+def test_export_design_text_empty_when_factory_absent(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        subprocess, "run", lambda argv, env=None, **kw: _FakeRunResult(returncode=0, stdout=b"", stderr=b"")
+    )
+    repo = tmp_path / "wtree" / "repo"
+    repo.mkdir(parents=True)
+    profile = _permissive_profile(tmp_path / "worker.sb")
+    payload = {
+        "tree": "wtree", "base_ref": "main",
+        "profile": str(profile), "profile_owner_uid": os.getuid(), "deadline_s": 5.0,
+        "env": {},
+    }
+
+    envelope = wl._cmd_export(payload, tmp_path)
+
+    assert envelope["status"] == "ok", envelope
+    assert envelope["design_text"] == ""
 
 
 def test_export_refuses_when_repo_is_absent(tmp_path):
@@ -1360,6 +1523,248 @@ def test_pip_composes_sandboxed_argv_using_the_trees_own_venv(monkeypatch, tmp_p
     ]
 
 
+# ---------------------------------------------------------------------------
+# PARTB-B2c AC-3: pip's PATH/VIRTUAL_ENV come from W and the validated tree, never
+# the payload; venv keeps FIXED_CHILD_PATH and sets no VIRTUAL_ENV.
+# ---------------------------------------------------------------------------
+
+
+def test_pip_path_and_virtual_env_come_from_w_and_tree_never_the_payload(monkeypatch, tmp_path):
+    captured = {}
+    monkeypatch.setattr(subprocess, "Popen", _fake_popen_capturing(captured))
+    tree_dir = tmp_path / "ptree"
+    tree_dir.mkdir()
+    profile = _permissive_profile(tmp_path / "pip.sb")
+    payload = {
+        "tree": "ptree", "args": ["pkg"],
+        "profile": str(profile), "profile_owner_uid": os.getuid(), "deadline_s": 5.0,
+        "env": {"PATH": "/evil/bin", "VIRTUAL_ENV": "/evil"},
+    }
+
+    envelope = wl._cmd_venv(payload, tmp_path, kind="pip")
+
+    assert envelope["status"] == "ok", envelope
+    env = captured["kwargs"]["env"]
+    expected_venv = tree_dir / wl.VERIFICATION_VENV_NAME
+    assert env["PATH"] == f"{expected_venv}/bin:{wl.FIXED_CHILD_PATH}"
+    assert env["VIRTUAL_ENV"] == str(expected_venv)
+
+
+def test_venv_path_stays_fixed_and_sets_no_virtual_env(monkeypatch, tmp_path):
+    captured = {}
+    monkeypatch.setattr(subprocess, "Popen", _fake_popen_capturing(captured))
+    tree_dir = tmp_path / "ptree"
+    tree_dir.mkdir()
+    profile = _permissive_profile(tmp_path / "pip.sb")
+    # No payload VIRTUAL_ENV here: unlike PATH (always overwritten by
+    # _finalize_child_env), venv's code path never reads or sets VIRTUAL_ENV at all
+    # -- this proves that absence, not a scrub of a payload-supplied value.
+    payload = {
+        "tree": "ptree", "profile": str(profile), "profile_owner_uid": os.getuid(),
+        "deadline_s": 5.0, "env": {"PATH": "/evil/bin"},
+    }
+
+    envelope = wl._cmd_venv(payload, tmp_path, kind="venv")
+
+    assert envelope["status"] == "ok", envelope
+    env = captured["kwargs"]["env"]
+    assert env["PATH"] == wl.FIXED_CHILD_PATH
+    assert "VIRTUAL_ENV" not in env
+
+
+def test_seed_profile_name_matches_containment():
+    import containment
+
+    assert wl.SEED_PROFILE_NAME == containment.SEED_PROFILE_NAME
+
+
+# ---------------------------------------------------------------------------
+# PARTB-B2c AC-2: the seed-only profile is refused by materialize/export/venv/pip,
+# and by probe's worker_profile -- never by seed/vseed themselves.
+# ---------------------------------------------------------------------------
+
+
+def test_materialize_refuses_a_seed_named_profile_before_any_spawn(tmp_path, monkeypatch):
+    repo = tmp_path / "wtree" / "repo"
+    (repo / "scripts").mkdir(parents=True)
+    (repo / "scripts" / "materialize_agents.py").write_text("")
+
+    def fake_popen(argv, **kwargs):
+        class _Child:
+            pid = 1
+            returncode = 0
+
+            def communicate(self, timeout=None):
+                return b"", b""
+
+        return _Child()
+
+    monkeypatch.setattr(subprocess, "Popen", fake_popen)
+    control_profile = _permissive_profile(tmp_path / "worker.sb")
+    control_payload = {
+        "tree": "wtree", "profile": str(control_profile), "profile_owner_uid": os.getuid(),
+        "deadline_s": 5.0, "env": {},
+    }
+    control_envelope = wl._cmd_materialize(control_payload, tmp_path)
+    assert control_envelope["status"] == "ok", control_envelope
+
+    def _boom(*_a, **_k):
+        raise AssertionError("materialize spawned a process despite a seed-named profile")
+
+    monkeypatch.setattr(subprocess, "Popen", _boom)
+    seed_profile = _permissive_profile(tmp_path / wl.SEED_PROFILE_NAME)
+    payload = {
+        "tree": "wtree", "profile": str(seed_profile), "profile_owner_uid": os.getuid(),
+        "deadline_s": 5.0, "env": {},
+    }
+
+    envelope = wl._cmd_materialize(payload, tmp_path)
+
+    assert envelope["status"] == "refused"
+    assert wl.SEED_PROFILE_NAME in envelope["stderr"]
+
+
+def test_export_refuses_a_seed_named_profile_before_any_spawn(tmp_path, monkeypatch):
+    repo = tmp_path / "wtree" / "repo"
+    repo.mkdir(parents=True)
+
+    def fake_run(argv, env=None, **kwargs):
+        return _FakeRunResult(returncode=0, stdout=b"", stderr=b"")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    control_profile = _permissive_profile(tmp_path / "worker.sb")
+    control_payload = {
+        "tree": "wtree", "base_ref": "main",
+        "profile": str(control_profile), "profile_owner_uid": os.getuid(), "deadline_s": 5.0,
+        "env": {},
+    }
+    control_envelope = wl._cmd_export(control_payload, tmp_path)
+    assert control_envelope["status"] == "ok", control_envelope
+
+    def _boom(*_a, **_k):
+        raise AssertionError("export spawned a process despite a seed-named profile")
+
+    monkeypatch.setattr(subprocess, "run", _boom)
+    seed_profile = _permissive_profile(tmp_path / wl.SEED_PROFILE_NAME)
+    payload = {
+        "tree": "wtree", "base_ref": "main",
+        "profile": str(seed_profile), "profile_owner_uid": os.getuid(), "deadline_s": 5.0,
+        "env": {},
+    }
+
+    envelope = wl._cmd_export(payload, tmp_path)
+
+    assert envelope["status"] == "refused"
+    assert wl.SEED_PROFILE_NAME in envelope["stderr"]
+
+
+def test_venv_refuses_a_seed_named_profile_before_any_spawn(tmp_path, monkeypatch):
+    tree_dir = tmp_path / "ptree"
+    tree_dir.mkdir()
+
+    def fake_popen(argv, **kwargs):
+        class _Child:
+            pid = 1
+            returncode = 0
+
+            def communicate(self, timeout=None):
+                return b"", b""
+
+        return _Child()
+
+    monkeypatch.setattr(subprocess, "Popen", fake_popen)
+    control_profile = _permissive_profile(tmp_path / "pip.sb")
+    control_payload = {
+        "tree": "ptree", "profile": str(control_profile), "profile_owner_uid": os.getuid(),
+        "deadline_s": 5.0, "env": {},
+    }
+    control_envelope = wl._cmd_venv(control_payload, tmp_path, kind="venv")
+    assert control_envelope["status"] == "ok", control_envelope
+
+    def _boom(*_a, **_k):
+        raise AssertionError("venv spawned a process despite a seed-named profile")
+
+    monkeypatch.setattr(subprocess, "Popen", _boom)
+    seed_profile = _permissive_profile(tmp_path / wl.SEED_PROFILE_NAME)
+    payload = {
+        "tree": "ptree", "profile": str(seed_profile), "profile_owner_uid": os.getuid(),
+        "deadline_s": 5.0, "env": {},
+    }
+
+    envelope = wl._cmd_venv(payload, tmp_path, kind="venv")
+
+    assert envelope["status"] == "refused"
+    assert wl.SEED_PROFILE_NAME in envelope["stderr"]
+
+
+def test_pip_refuses_a_seed_named_profile_before_any_spawn(tmp_path, monkeypatch):
+    tree_dir = tmp_path / "ptree"
+    tree_dir.mkdir()
+
+    def fake_popen(argv, **kwargs):
+        class _Child:
+            pid = 1
+            returncode = 0
+
+            def communicate(self, timeout=None):
+                return b"", b""
+
+        return _Child()
+
+    monkeypatch.setattr(subprocess, "Popen", fake_popen)
+    control_profile = _permissive_profile(tmp_path / "pip.sb")
+    control_payload = {
+        "tree": "ptree", "args": ["pkg"],
+        "profile": str(control_profile), "profile_owner_uid": os.getuid(), "deadline_s": 5.0,
+        "env": {},
+    }
+    control_envelope = wl._cmd_venv(control_payload, tmp_path, kind="pip")
+    assert control_envelope["status"] == "ok", control_envelope
+
+    def _boom(*_a, **_k):
+        raise AssertionError("pip spawned a process despite a seed-named profile")
+
+    monkeypatch.setattr(subprocess, "Popen", _boom)
+    seed_profile = _permissive_profile(tmp_path / wl.SEED_PROFILE_NAME)
+    payload = {
+        "tree": "ptree", "args": ["pkg"],
+        "profile": str(seed_profile), "profile_owner_uid": os.getuid(), "deadline_s": 5.0,
+        "env": {},
+    }
+
+    envelope = wl._cmd_venv(payload, tmp_path, kind="pip")
+
+    assert envelope["status"] == "refused"
+    assert wl.SEED_PROFILE_NAME in envelope["stderr"]
+
+
+def test_probe_refuses_a_seed_named_worker_profile_before_any_spawn(tmp_path, monkeypatch):
+    monkeypatch.setattr(wl, "PROBE_RUNNER", lambda *a, **k: _FakeRunResult())
+    monkeypatch.setattr(wl, "PROBE_BOOTSTRAP_LOOK_UP", lambda name: 1102)
+    monkeypatch.setattr(wl, "PROBE_SYSCTL_PROCARGS2", lambda pid: {"ok": True})
+
+    control_profile = _permissive_profile(tmp_path / "worker.sb")
+    control_payload = {
+        "paths": [], "mach_names": [], "worker_profile": str(control_profile),
+        "worker_profile_owner_uid": os.getuid(),
+    }
+    control_envelope = wl._cmd_probe(control_payload, tmp_path)
+    assert control_envelope["status"] == "ok", control_envelope
+
+    calls = _no_probe_runner_recorder(monkeypatch)
+    seed_profile = _permissive_profile(tmp_path / wl.SEED_PROFILE_NAME)
+    payload = {
+        "paths": [], "mach_names": [], "worker_profile": str(seed_profile),
+        "worker_profile_owner_uid": os.getuid(),
+    }
+
+    envelope = wl._cmd_probe(payload, tmp_path)
+
+    assert envelope["status"] == "refused"
+    assert wl.SEED_PROFILE_NAME in envelope["stderr"]
+    assert calls == []
+
+
 def test_venv_refuses_when_tree_is_absent(tmp_path):
     profile = _permissive_profile(tmp_path / "pip.sb")
     payload = {
@@ -1506,30 +1911,86 @@ def test_venv_creates_a_real_venv(tmp_path):
 # ---------------------------------------------------------------------------
 
 
+def test_purge_refuses_a_target_that_is_not_a_tree_or_scratch_dir(tmp_path):
+    """AC-5(a): a bare "W"-shaped directory (not one of VALID_TREES, not the worker
+    scratchpad) is refused before anything under it is touched."""
+    w_dir = tmp_path / "W"
+    w_dir.mkdir()
+    (w_dir / "a.txt").write_text("x")
+
+    envelope = wl._cmd_purge({}, w_dir)
+
+    assert envelope["status"] == "refused"
+    assert (w_dir / "a.txt").exists()
+
+
+def test_purge_refuses_a_target_named_r(tmp_path):
+    r_dir = tmp_path / "R"
+    r_dir.mkdir()
+    (r_dir / "a.txt").write_text("x")
+
+    envelope = wl._cmd_purge({}, r_dir)
+
+    assert envelope["status"] == "refused"
+    assert (r_dir / "a.txt").exists()
+
+
+def test_purge_refuses_a_symlink_to_a_tree_directory(tmp_path):
+    real_tree = tmp_path / "factory-x" / "wtree"
+    real_tree.mkdir(parents=True)
+    (real_tree / "a.txt").write_text("x")
+    link = tmp_path / "wtree-link"
+    link.symlink_to(real_tree)
+
+    envelope = wl._cmd_purge({}, link)
+
+    assert envelope["status"] == "refused"
+    assert (real_tree / "a.txt").exists()
+
+
+def test_purge_accepts_a_named_tree_directory(tmp_path):
+    target = tmp_path / "factory-x" / "wtree"
+    target.mkdir(parents=True)
+
+    envelope = wl._cmd_purge({}, target)
+
+    assert envelope["status"] == "ok", envelope
+
+
 def test_purge_removes_entries_it_owns(tmp_path):
-    (tmp_path / "a.txt").write_text("x")
-    sub = tmp_path / "sub"
+    # AC-5(a): purge never removes its own argv target -- the target itself always
+    # survives, emptied (keep_root has nothing left to do).
+    target = tmp_path / "factory-x" / "wtree"
+    target.mkdir(parents=True)
+    (target / "a.txt").write_text("x")
+    sub = target / "sub"
     sub.mkdir()
     (sub / "b.txt").write_text("y")
 
-    envelope = wl._cmd_purge({}, tmp_path)
+    envelope = wl._cmd_purge({}, target)
 
     assert envelope["status"] == "ok", envelope
-    assert not tmp_path.exists()
+    assert target.is_dir()
+    assert list(target.iterdir()) == []
 
 
 def test_purge_with_keep_root_empties_contents_but_keeps_the_directory(tmp_path):
-    (tmp_path / "a.txt").write_text("x")
+    # keep_root is accepted and ignored (AC-5(a)) -- passing it changes nothing.
+    target = tmp_path / "factory-x" / "ptree"
+    target.mkdir(parents=True)
+    (target / "a.txt").write_text("x")
 
-    envelope = wl._cmd_purge({"keep_root": True}, tmp_path)
+    envelope = wl._cmd_purge({"keep_root": True}, target)
 
     assert envelope["status"] == "ok", envelope
-    assert tmp_path.is_dir()
-    assert list(tmp_path.iterdir()) == []
+    assert target.is_dir()
+    assert list(target.iterdir()) == []
 
 
 def test_purge_skips_an_entry_owned_by_another_uid(monkeypatch, tmp_path):
-    foreign = tmp_path / "foreign.txt"
+    target = tmp_path / "factory-x" / "wtree"
+    target.mkdir(parents=True)
+    foreign = target / "foreign.txt"
     foreign.write_text("mine? no.")
     real_lstat = os.lstat
 
@@ -1544,34 +2005,136 @@ def test_purge_skips_an_entry_owned_by_another_uid(monkeypatch, tmp_path):
 
     monkeypatch.setattr(os, "lstat", fake_lstat)
 
-    envelope = wl._cmd_purge({"keep_root": True}, tmp_path)
+    envelope = wl._cmd_purge({}, target)
 
+    # AC-5(c): a foreign-owned entry is left in place and NEVER counted as remaining
+    # -- stdout is exactly "purged", not today's old remaining-count JSON.
     assert envelope["status"] == "ok", envelope
     assert foreign.exists()
+    assert envelope["stdout"] == "purged"
+
+
+def test_purge_removes_entries_inside_0000_and_0300_directories(tmp_path):
+    if os.geteuid() == 0:
+        pytest.skip("mode bits do not bind for root")
+    target = tmp_path / "factory-x" / "ptree"
+    target.mkdir(parents=True)
+    locked_0000 = target / "locked_0000"
+    locked_0000.mkdir()
+    (locked_0000 / "a.txt").write_text("x")
+    os.chmod(str(locked_0000), 0o000)
+    locked_0300 = target / "locked_0300"
+    locked_0300.mkdir()
+    (locked_0300 / "b.txt").write_text("y")
+    os.chmod(str(locked_0300), 0o300)
+
+    envelope = wl._cmd_purge({}, target)
+
+    assert envelope["status"] == "ok", envelope
+    assert not locked_0000.exists()
+    assert not locked_0300.exists()
+
+
+def test_purge_records_an_unlistable_directory_as_remaining(monkeypatch, tmp_path):
+    target = tmp_path / "factory-x" / "vtree"
+    locked = target / "locked"
+    locked.mkdir(parents=True)
+    (locked / "a.txt").write_text("x")
+
+    real_listdir = os.listdir
+
+    def fake_listdir(path, *a, **k):
+        if str(path) == str(locked):
+            raise PermissionError(13, "denied")
+        return real_listdir(path, *a, **k)
+
+    monkeypatch.setattr(os, "listdir", fake_listdir)
+
+    envelope = wl._cmd_purge({}, target)
+
+    assert envelope["status"] == "ok", envelope
     body = json.loads(envelope["stdout"])
-    assert str(foreign) in body["remaining"]
+    assert str(locked) in body["remaining"]
+
+
+def test_purge_counts_an_eacces_empty_dir_under_a_foreign_parent_as_purged(monkeypatch, tmp_path):
+    if os.geteuid() == 0:
+        pytest.skip("mode bits do not bind for root")
+    target = tmp_path / "factory-x" / "wtree"
+    target.mkdir(parents=True)
+    stuck = target / "stuck"
+    stuck.mkdir(mode=0o700)
+
+    real_lstat = os.lstat
+
+    def fake_lstat(path, *a, **k):
+        st = real_lstat(path, *a, **k)
+        if str(path) == str(target):
+            return os.stat_result(
+                (st.st_mode, st.st_ino, st.st_dev, st.st_nlink, st.st_uid + 1, st.st_gid,
+                 st.st_size, st.st_atime, st.st_mtime, st.st_ctime)
+            )
+        return st
+
+    monkeypatch.setattr(os, "lstat", fake_lstat)
+
+    real_rmdir = os.rmdir
+
+    def fake_rmdir(path, *a, **k):
+        if str(path) == str(stuck):
+            raise PermissionError(13, "denied")
+        return real_rmdir(path, *a, **k)
+
+    monkeypatch.setattr(os, "rmdir", fake_rmdir)
+
+    envelope = wl._cmd_purge({}, target)
+
+    assert envelope["status"] == "ok", envelope
+    assert envelope["stdout"] == "purged"
+    assert stuck.is_dir()
+    assert stat.S_IMODE(os.stat(str(stuck)).st_mode) == 0o755
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="chflags/uchg is macOS-only")
 def test_purge_clears_uchg_and_removes_the_file(tmp_path):
-    target = tmp_path / "locked.txt"
-    target.write_text("locked")
-    os.chflags(str(target), stat.UF_IMMUTABLE)
+    target = tmp_path / "factory-x" / "wtree"
+    target.mkdir(parents=True)
+    locked = target / "locked.txt"
+    locked.write_text("locked")
+    os.chflags(str(locked), stat.UF_IMMUTABLE)
 
-    envelope = wl._cmd_purge({"keep_root": True}, tmp_path)
+    envelope = wl._cmd_purge({}, target)
 
     assert envelope["status"] == "ok", envelope
-    assert not target.exists()
+    assert not locked.exists()
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="chflags/uappnd is macOS-only")
+def test_purge_clears_uappnd_and_removes_the_file(tmp_path):
+    """dev.finding 118e3fcd: a uappnd (append-only) file used to strand purge --
+    only uchg was ever cleared."""
+    target = tmp_path / "factory-x" / "wtree"
+    target.mkdir(parents=True)
+    locked = target / "locked.txt"
+    locked.write_text("locked")
+    os.chflags(str(locked), stat.UF_APPEND)
+
+    envelope = wl._cmd_purge({}, target)
+
+    assert envelope["status"] == "ok", envelope
+    assert not locked.exists()
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="chmod 0555 enforcement is macOS-only here")
 def test_purge_removes_a_file_inside_a_0555_directory(tmp_path):
-    locked_dir = tmp_path / "locked_dir"
+    target = tmp_path / "factory-x" / "wtree"
+    target.mkdir(parents=True)
+    locked_dir = target / "locked_dir"
     locked_dir.mkdir()
     (locked_dir / "inside.txt").write_text("inside")
     os.chmod(str(locked_dir), 0o555)
 
-    envelope = wl._cmd_purge({"keep_root": True}, tmp_path)
+    envelope = wl._cmd_purge({}, target)
 
     assert envelope["status"] == "ok", envelope
     assert not locked_dir.exists()
@@ -1579,39 +2142,99 @@ def test_purge_removes_a_file_inside_a_0555_directory(tmp_path):
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="chflags/uchg is macOS-only")
 def test_purge_removes_a_file_inside_a_uchg_directory(tmp_path):
-    locked_dir = tmp_path / "uchg_dir"
+    target = tmp_path / "factory-x" / "wtree"
+    target.mkdir(parents=True)
+    locked_dir = target / "uchg_dir"
     locked_dir.mkdir()
     (locked_dir / "inside.txt").write_text("inside")
     os.chflags(str(locked_dir), stat.UF_IMMUTABLE)
 
-    envelope = wl._cmd_purge({"keep_root": True}, tmp_path)
+    envelope = wl._cmd_purge({}, target)
 
     assert envelope["status"] == "ok", envelope
     assert not locked_dir.exists()
 
 
 def test_purge_never_follows_a_symlink_out_of_w(tmp_path):
-    outside = tmp_path.parent / "purge-outside"
+    target = tmp_path / "factory-x" / "wtree"
+    target.mkdir(parents=True)
+    outside = tmp_path / "purge-outside"
     outside.mkdir(exist_ok=True)
     marker = outside / "marker.txt"
     marker.write_text("do not touch")
     try:
-        link = tmp_path / "escape"
+        link = target / "escape"
         link.symlink_to(outside)
 
-        envelope = wl._cmd_purge({"keep_root": True}, tmp_path)
+        # 0o700 on the target: if purge ever chmods THROUGH the link (os.chmod
+        # follows symlinks), the unlock pass would turn these bits into 0o7xx|S_IRWXU
+        # -- the same value -- so pin a mode the unlock would visibly change instead.
+        os.chmod(str(outside), 0o555)
+        mode_before = stat.S_IMODE(os.lstat(str(outside)).st_mode)
+
+        envelope = wl._cmd_purge({}, target)
 
         assert envelope["status"] == "ok", envelope
         assert not link.exists() and not link.is_symlink()
+        assert stat.S_IMODE(os.lstat(str(outside)).st_mode) == mode_before
         assert marker.read_text() == "do not touch"
         assert outside.is_dir()
     finally:
+        os.chmod(str(outside), 0o755)
         shutil.rmtree(outside, ignore_errors=True)
 
 
+def test_purge_records_a_foreign_unlistable_directory_as_remaining(monkeypatch, tmp_path):
+    """Gate finding on #1226: a directory owned by another uid that cannot be listed
+    may still hold files the worker owns, so purge must not say 'purged' past it.
+    It is never unlocked and never modified; it is reported as remaining."""
+    target = tmp_path / "factory-x" / "vtree"
+    foreign = target / "foreign"
+    foreign.mkdir(parents=True)
+    (foreign / "mine.txt").write_text("x")
+
+    real_lstat = os.lstat
+    real_listdir = os.listdir
+    chmodded = []
+
+    def fake_lstat(path, *a, **k):
+        st = real_lstat(path, *a, **k)
+        if str(path) == str(foreign):
+            return os.stat_result(
+                (st.st_mode, st.st_ino, st.st_dev, st.st_nlink, st.st_uid + 1, st.st_gid,
+                 st.st_size, st.st_atime, st.st_mtime, st.st_ctime)
+            )
+        return st
+
+    def fake_listdir(path, *a, **k):
+        if str(path) == str(foreign):
+            raise PermissionError(13, "denied")
+        return real_listdir(path, *a, **k)
+
+    real_chmod = os.chmod
+
+    def spy_chmod(path, *a, **k):
+        chmodded.append(str(path))
+        return real_chmod(path, *a, **k)
+
+    monkeypatch.setattr(os, "lstat", fake_lstat)
+    monkeypatch.setattr(os, "listdir", fake_listdir)
+    monkeypatch.setattr(os, "chmod", spy_chmod)
+
+    envelope = wl._cmd_purge({}, target)
+
+    assert envelope["status"] == "ok", envelope
+    body = json.loads(envelope["stdout"])
+    assert str(foreign) in body["remaining"]
+    assert str(foreign) not in chmodded
+    assert (foreign / "mine.txt").read_text() == "x"
+
+
 def test_purge_bounded_by_timeout_reports_remaining(monkeypatch, tmp_path):
-    (tmp_path / "a.txt").write_text("x")
-    (tmp_path / "b.txt").write_text("y")
+    target = tmp_path / "factory-x" / "wtree"
+    target.mkdir(parents=True)
+    (target / "a.txt").write_text("x")
+    (target / "b.txt").write_text("y")
 
     times = iter([0.0] + [1000.0] * 20)
 
@@ -1620,11 +2243,23 @@ def test_purge_bounded_by_timeout_reports_remaining(monkeypatch, tmp_path):
 
     monkeypatch.setattr(wl.time, "monotonic", fake_monotonic)
 
-    envelope = wl._cmd_purge({"timeout_s": 1.0}, tmp_path)
+    envelope = wl._cmd_purge({"timeout_s": 1.0}, target)
 
     assert envelope["status"] == "ok", envelope
     body = json.loads(envelope["stdout"])
     assert body["remaining_count"] >= 1
+
+
+def test_purge_scratch_form_empties_and_keeps_the_directory(tmp_path):
+    scratch = tmp_path / f"claude-{os.geteuid()}"
+    scratch.mkdir()
+    (scratch / "a.txt").write_text("x")
+
+    envelope = wl._cmd_purge({"tmp_root": str(tmp_path)}, scratch)
+
+    assert envelope["status"] == "ok", envelope
+    assert scratch.is_dir()
+    assert list(scratch.iterdir()) == []
 
 
 # ---------------------------------------------------------------------------
@@ -1872,8 +2507,11 @@ def test_every_b2b_subcommand_is_registered_in_every_table():
 
 
 def test_b2b_subcommands_use_the_designs_profile_assignment():
-    assert wl.SUBCOMMAND_PROFILE["seed"] == "worker"
-    assert wl.SUBCOMMAND_PROFILE["vseed"] == "verification"
+    # PARTB-B2c (decision (a1)): seed/vseed moved from worker/verification to their
+    # own seed-only profile category (D1: both run git calls the other two profiles'
+    # .git-control write denies would EPERM).
+    assert wl.SUBCOMMAND_PROFILE["seed"] == "seed"
+    assert wl.SUBCOMMAND_PROFILE["vseed"] == "seed"
     assert wl.SUBCOMMAND_PROFILE["materialize"] == "worker"
     assert wl.SUBCOMMAND_PROFILE["export"] == "worker"
     assert wl.SUBCOMMAND_PROFILE["venv"] == "pip"

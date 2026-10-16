@@ -1277,6 +1277,7 @@ def build_prompt(
     task: dict[str, Any],
     notes: Iterable[dict[str, Any]],
     principles: Iterable[tuple[str, str]] = (),
+    *, why_next: str | None = None,
 ) -> str:
     """Render a dev.task bead into a worker instruction.
 
@@ -1295,6 +1296,8 @@ def build_prompt(
     lines.append(f"# Task: {content.get('title', '(untitled)')}")
     lines.append("")
     lines.append(str(content.get("intent") or "").strip())
+    lines.append("")
+    lines.append(f"Why this bead is next: {why_next or 'selected by the operator (--task)'}")
     lines.append("")
 
     resume_section = render_resume_section(content, notes)

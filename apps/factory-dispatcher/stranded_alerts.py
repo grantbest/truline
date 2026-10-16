@@ -20,6 +20,15 @@ that module's `dev_task_alert_policy` already keys state by an arbitrary
 `kind` string, so a second alert family shares the file instead of forking
 the suppression logic.
 
+Both announcements declare `failure_diagnosis.ALERT_REALERT_INTERVAL_HOURS`
+(2026-10-10, dev.finding 4d00d1cc). Before that, an episode posted exactly
+once — at the first tick past the threshold — and every later tick logged
+`alert unchanged; suppressed` for as long as the bead stayed in doing: on
+2026-10-08 and again on 2026-10-09 a dead claim was found only because a
+person asked, while the worker log showed the one post it had made days
+earlier and nothing since. A condition that persists re-announces on the
+same interval the dispatcher's other dev.task alerts already use.
+
 Nothing here releases, rebinds, requeues or dispatches anything. The operator
 commands (`--release-stranded`, `--bind-pr`, `--requeue`) remain the only way
 any of this state changes.
@@ -83,6 +92,7 @@ async def _announce_stranded_doing_async(
         fingerprint,
         content,
         template_values={"bead_id": bead_id, "title": title},
+        re_alert_interval_hours=failure_diagnosis.ALERT_REALERT_INTERVAL_HOURS,
     )
 
 
@@ -139,6 +149,7 @@ async def _announce_review_missing_pr_url_async(
         fingerprint,
         content,
         template_values={"bead_id": bead_id, "title": title},
+        re_alert_interval_hours=failure_diagnosis.ALERT_REALERT_INTERVAL_HOURS,
     )
 
 

@@ -550,8 +550,18 @@ def test_dispatch_once_prompt_is_byte_identical_for_an_unmapped_lane(monkeypatch
 
     assert rc == 0
     notes = sub.list_notes("task-1")
+    # R26.12 B8: the real claim path passes why_next=<the computed queue
+    # position's explanation>, which build_prompt(bead, notes) alone cannot
+    # reproduce (it defaults to the --task operator string) -- irrelevant to
+    # what this test checks (doctrine), so both renders are compared with
+    # that one line removed rather than threading the explanation through.
+    def _without_why_next_line(prompt: str) -> str:
+        return "\n".join(
+            line for line in prompt.splitlines() if not line.startswith("Why this bead is next:")
+        )
+
     prompt_without_doctrine = guards.build_prompt(bead, notes)
-    assert captured_prompt["prompt"] == prompt_without_doctrine
+    assert _without_why_next_line(captured_prompt["prompt"]) == _without_why_next_line(prompt_without_doctrine)
     assert "## Doctrine" not in captured_prompt["prompt"]
     assert sub.links == []
 

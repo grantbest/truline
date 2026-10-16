@@ -44,6 +44,18 @@ BEAD_LINE_RE = _markers.BEAD_LINE_RE
 DEV_TASK_REF_RE = _markers.DEV_TASK_REF_RE
 OUTER_LOOP_RE = _markers.OUTER_LOOP_RE
 find_bead_id = _markers.find_bead_id
+is_outer_loop = _markers.is_outer_loop
+split_lines = _markers.split_lines
+fence_mask = _markers.fence_mask
+
+
+def _unfenced(body: str) -> str:
+    """``body`` with every fenced-code-block line blanked (AC-4) -- the same
+    rule ``gate_markers.find_bead_id``/``is_outer_loop`` apply, exposed here
+    so ``_bead_check``'s own malformed-line scan can share it."""
+    lines = split_lines(body or "")
+    mask = fence_mask(lines)
+    return "\n".join("" if masked else line for line, masked in zip(lines, mask))
 CHANGE_KIND_RE = re.compile(r"(?m)^Change kind:\s*(structural|behavioral)\s*$")
 # The dispatcher's own PR-body template (apps/factory-dispatcher/dispatch.py,
 # open_pull_request) opens every dispatched PR with this exact sentence,
@@ -88,7 +100,7 @@ def _is_body_outer_loop(body: str) -> bool:
     outer-loop, regardless of where in the body a marker appears.
     """
     dispatcher_shaped = DISPATCHER_TEMPLATE_OPENING_RE.match(body) is not None
-    return not dispatcher_shaped and OUTER_LOOP_RE.search(body) is not None
+    return not dispatcher_shaped and is_outer_loop(body)
 
 
 # `## Dispatcher verification` is where the live dispatcher template embeds the
@@ -484,7 +496,7 @@ def _bead_check(pr: PullRequest) -> CheckResult:
             pr.number, "bead", True, f"originating dev.task bead id {bead_id} recognised"
         )
 
-    bead_lines = BEAD_LINE_RE.findall(pr.body)
+    bead_lines = BEAD_LINE_RE.findall(_unfenced(pr.body))
     if bead_lines:
         return CheckResult(
             pr.number,

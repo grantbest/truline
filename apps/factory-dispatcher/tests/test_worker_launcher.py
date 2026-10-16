@@ -250,7 +250,7 @@ def _invariant_l_violations(source: str) -> list[str]:
                                 f"UNSANDBOXED function {enclosing!r} spawns with a "
                                 f"non-fixed argv at line {node.lineno}"
                             )
-                    elif category not in ("worker", "verification", "pip"):
+                    elif category not in ("worker", "verification", "pip", "seed"):
                         violations.append(
                             f"{enclosing!r} (subcommand {subcommand!r}) maps to "
                             f"unrecognised category {category!r}"
@@ -701,6 +701,187 @@ def test_exec_composes_sandboxed_argv_without_executing_it(tmp_path, monkeypatch
 
     assert envelope["status"] == "ok"
     assert captured["argv"] == [wl.SANDBOX_EXEC_PATH, "-f", str(profile), "/bin/echo", "hi"]
+
+
+# ---------------------------------------------------------------------------
+# PARTB-B2c AC-3: exec's PATH/VIRTUAL_ENV come from W and the validated tree, never
+# the payload; run keeps FIXED_CHILD_PATH and sets no VIRTUAL_ENV.
+# ---------------------------------------------------------------------------
+
+
+def test_exec_path_and_virtual_env_come_from_w_and_tree_never_the_payload(tmp_path, monkeypatch):
+    captured = {}
+
+    def fake_popen(argv, **kwargs):
+        captured["env"] = dict(kwargs["env"])
+        return _FakeCompletedChild(argv, **kwargs)
+
+    monkeypatch.setattr(subprocess, "Popen", fake_popen)
+    for tree in ("ptree", "vtree"):
+        repo = tmp_path / tree / "repo"
+        repo.mkdir(parents=True)
+        profile = _permissive_profile(tmp_path / f"{tree}-exec.sb")
+        payload = _base_payload(repo, profile, env={"PATH": "/evil/bin", "VIRTUAL_ENV": "/evil"})
+
+        envelope = wl._cmd_exec(payload, tmp_path)
+
+        assert envelope["status"] == "ok", (tree, envelope)
+        expected_venv = tmp_path / tree / wl.VERIFICATION_VENV_NAME
+        assert captured["env"]["PATH"] == f"{expected_venv}/bin:{wl.FIXED_CHILD_PATH}"
+        assert captured["env"]["VIRTUAL_ENV"] == str(expected_venv)
+
+
+def test_run_path_stays_fixed_and_sets_no_virtual_env(tmp_path, monkeypatch):
+    captured = {}
+
+    def fake_popen(argv, **kwargs):
+        captured["env"] = dict(kwargs["env"])
+        return _FakeCompletedChild(argv, **kwargs)
+
+    monkeypatch.setattr(subprocess, "Popen", fake_popen)
+    repo = tmp_path / "wtree" / "repo"
+    repo.mkdir(parents=True)
+    profile = _permissive_profile(tmp_path / "worker.sb")
+    payload = _base_payload(repo, profile, env={"PATH": "/evil/bin", "VIRTUAL_ENV": "/evil"})
+
+    envelope = wl.run(payload, tmp_path)
+
+    assert envelope["status"] == "ok", envelope
+    assert captured["env"]["PATH"] == wl.FIXED_CHILD_PATH
+    assert "VIRTUAL_ENV" not in captured["env"]
+
+
+def test_exec_prepends_the_trees_own_venv_to_path_for_real(tmp_path, monkeypatch):
+    """AC-3: a real venv (no pip, so no network/build needed) built at
+    W/ptree/.verification-venv is actually first on PATH for a bare `python` argv --
+    not merely a string comparison against the composed env."""
+    repo = tmp_path / "ptree" / "repo"
+    repo.mkdir(parents=True)
+    venv_dir = tmp_path / "ptree" / wl.VERIFICATION_VENV_NAME
+    subprocess.run(
+        [sys.executable, "-I", "-m", "venv", "--without-pip", str(venv_dir)],
+        check=True, capture_output=True,
+    )
+    profile = _permissive_profile(tmp_path / "ptree-exec.sb")
+    payload = _base_payload(
+        repo, profile, argv=["python", "-c", "import sys; print(sys.prefix)"]
+    )
+
+    captured = {}
+
+    def fake_popen(argv, **kwargs):
+        captured["argv"] = list(argv)
+        captured["kwargs"] = kwargs
+        return _FakeCompletedChild(argv, **kwargs)
+
+    monkeypatch.setattr(subprocess, "Popen", fake_popen)
+
+    envelope = wl._cmd_exec(payload, tmp_path)
+    monkeypatch.undo()  # restore the real subprocess.Popen before the real run below
+
+    assert envelope["status"] == "ok", envelope
+    argv = captured["argv"]
+    assert argv[:3] == [wl.SANDBOX_EXEC_PATH, "-f", str(profile)]
+    run_env = dict(captured["kwargs"]["env"])
+    # The composed env is the launcher's, which deliberately carries no loader
+    # variables. The venv's `python` is a symlink to sys.executable, and on a
+    # runner whose interpreter is a shared-library build found through
+    # LD_LIBRARY_PATH (actions/setup-python's tool cache) it cannot start without
+    # it. Copy only that variable through: it does not touch what this test
+    # asserts, which is PATH resolution.
+    if "LD_LIBRARY_PATH" in os.environ:
+        run_env["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"]
+    result = subprocess.run(
+        argv[3:], env=run_env, cwd=captured["kwargs"]["cwd"],
+        capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == str(venv_dir)
+
+
+def test_verification_venv_name_matches_containment():
+    import containment
+
+    assert wl.VERIFICATION_VENV_NAME == containment.VERIFICATION_VENV_NAME
+
+
+# ---------------------------------------------------------------------------
+# PARTB-B2c AC-6 (D13 hardening): run refuses a relative argv[0] before any spawn.
+# ---------------------------------------------------------------------------
+
+
+def test_run_refuses_a_relative_argv0_before_any_spawn(tmp_path, monkeypatch):
+    def _boom(*_a, **_k):
+        raise AssertionError("run spawned a process despite a relative argv[0]")
+
+    monkeypatch.setattr(subprocess, "Popen", _boom)
+    repo = tmp_path / "wtree" / "repo"
+    repo.mkdir(parents=True)
+    profile = _permissive_profile(tmp_path / "worker.sb")
+    payload = _base_payload(repo, profile, argv=["claude", "-p", "x"])
+
+    envelope = wl.run(payload, tmp_path)
+
+    assert envelope["status"] == "refused"
+
+
+def test_run_accepts_an_absolute_argv0_as_before(tmp_path, monkeypatch):
+    monkeypatch.setattr(subprocess, "Popen", lambda argv, **kw: _FakeCompletedChild(argv, **kw))
+    repo = tmp_path / "wtree" / "repo"
+    repo.mkdir(parents=True)
+    profile = _permissive_profile(tmp_path / "worker.sb")
+    payload = _base_payload(repo, profile, argv=["/usr/bin/true"])
+
+    envelope = wl.run(payload, tmp_path)
+
+    assert envelope["status"] == "ok", envelope
+
+
+# ---------------------------------------------------------------------------
+# PARTB-B2c AC-2: the seed-only profile is refused by every subcommand but seed/vseed.
+# ---------------------------------------------------------------------------
+
+
+def test_run_refuses_a_seed_named_profile_before_any_spawn(tmp_path, monkeypatch):
+    repo = tmp_path / "wtree" / "repo"
+    repo.mkdir(parents=True)
+
+    monkeypatch.setattr(subprocess, "Popen", lambda argv, **kw: _FakeCompletedChild(argv, **kw))
+    control_profile = _permissive_profile(tmp_path / "worker.sb")
+    control_envelope = wl.run(_base_payload(repo, control_profile), tmp_path)
+    assert control_envelope["status"] == "ok", control_envelope
+
+    def _boom(*_a, **_k):
+        raise AssertionError("run spawned a process despite a seed-named profile")
+
+    monkeypatch.setattr(subprocess, "Popen", _boom)
+    seed_profile = _permissive_profile(tmp_path / wl.SEED_PROFILE_NAME)
+
+    envelope = wl.run(_base_payload(repo, seed_profile), tmp_path)
+
+    assert envelope["status"] == "refused"
+    assert wl.SEED_PROFILE_NAME in envelope["stderr"]
+
+
+def test_exec_refuses_a_seed_named_profile_before_any_spawn(tmp_path, monkeypatch):
+    repo = tmp_path / "vtree" / "repo"
+    repo.mkdir(parents=True)
+
+    monkeypatch.setattr(subprocess, "Popen", lambda argv, **kw: _FakeCompletedChild(argv, **kw))
+    control_profile = _permissive_profile(tmp_path / "verify.sb")
+    control_envelope = wl._cmd_exec(_base_payload(repo, control_profile), tmp_path)
+    assert control_envelope["status"] == "ok", control_envelope
+
+    def _boom(*_a, **_k):
+        raise AssertionError("exec spawned a process despite a seed-named profile")
+
+    monkeypatch.setattr(subprocess, "Popen", _boom)
+    seed_profile = _permissive_profile(tmp_path / wl.SEED_PROFILE_NAME)
+
+    envelope = wl._cmd_exec(_base_payload(repo, seed_profile), tmp_path)
+
+    assert envelope["status"] == "refused"
+    assert wl.SEED_PROFILE_NAME in envelope["stderr"]
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="sandbox-exec is macOS-only")

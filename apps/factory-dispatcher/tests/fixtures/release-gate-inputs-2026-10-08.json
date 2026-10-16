@@ -1,0 +1,296 @@
+{
+  "_header": {
+    "synthetic": "SYNTHETIC. No PR, bead, commit or verdict here exists; the shas, PR numbers and dev.task ids are made up. Committed by the outer loop with GD-1a on 2026-10-08 for GD-1b (dev.task fad97cba) AC-4: every criterion measures against this file, injected doubles and the Temporal test environment, never the live store (2026-09-13 D7).",
+    "shape": "Each case carries `inputs` (the GateInputs the activity materialises: pr_number, head_sha, base_sha, title, body, comments, bead_spec, diff_text, prepass_report, house_lessons), `cli_result` (one `claude -p --output-format json` result document, the shape dispatch._grade_json_worker_result reads: is_error, result, total_cost_usd, usage), and `expected` (what the activity records). `recogniser_output` is what scripts/gate_markers.find_release_gate_verdict_record and dispatch._sum_usage_tokens return on the case as committed, pinned on 2026-10-08 against main after #1229 and #1231; a test that disagrees with it has changed the recogniser, not the fixture.",
+    "outcomes": {
+      "VERDICT": "the record parsed; verdict, revision and could_not_verify are written to the dev.note",
+      "UNVERDICTED": "the recogniser found no attributable verdict line (here: only a quoted one and a prose mention); the note carries the last raw_tail_chars of raw output, never dropped (A37 clause 3)",
+      "OVER_BUDGET": "usage summed over FACTORY_GATE_MAX_TOKENS (500000); the note records OVER_BUDGET and never a verdict, even when the text parses"
+    },
+    "budget": {
+      "FACTORY_GATE_MAX_MINUTES": 45,
+      "FACTORY_GATE_MAX_TOKENS": 500000
+    }
+  },
+  "cases": [
+    {
+      "case": "merge",
+      "expected": {
+        "outcome": "VERDICT",
+        "verdict": "MERGE",
+        "revision": "9f3c2a1d4e5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d",
+        "could_not_verify": []
+      },
+      "inputs": {
+        "pr_number": 3001,
+        "head_sha": "9f3c2a1d4e5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d",
+        "base_sha": "45a83f6a67369ee3faa39936bde14d885a43d468",
+        "title": "guards: read resets_attempts from note content, not the envelope",
+        "body": "Change kind: behavioral\n\n`dev.task`: 11111111-1111-4111-8111-111111111111\n\n## Verification Evidence\npytest tests/test_guards.py -q: 41 passed",
+        "comments": [],
+        "bead_spec": {
+          "id": "synthetic-merge",
+          "lane": "code-health",
+          "title": "guards: read resets_attempts from note content, not the envelope",
+          "requirement_refs": [
+            "PC-EXE-007"
+          ],
+          "acceptance": [
+            "AC-1 the requeue marker is read from content"
+          ]
+        },
+        "diff_text": "--- a/apps/factory-dispatcher/guards.py\n+++ b/apps/factory-dispatcher/guards.py\n@@ -210,3 +210,3 @@\n-    if note.get(\"resets_attempts\") is True:\n+    if _note_content(note).get(\"resets_attempts\") is True:\n",
+        "prepass_report": "gate-prepass: bead check PASS; Change kind: behavioral; Verification Evidence present",
+        "house_lessons": [
+          "A tool's output answers a specific question; corroborate with a second command shaped differently.",
+          "A test double that accepts more than the live contract is a second implementation."
+        ]
+      },
+      "cli_result": {
+        "type": "result",
+        "subtype": "success",
+        "is_error": false,
+        "duration_ms": 840000,
+        "duration_api_ms": 839500,
+        "num_turns": 31,
+        "result": "## Diff review\nOne function, one test; the test fails on the merge base and passes on the head (ran it: 1 failed -> 1 passed).\n\n## Requirement verification\nPC-EXE-007 AC-1 SATISFIED — apps/factory-dispatcher/guards.py:212 `if note.get(\"resets_attempts\") is True:` is the deciding line.\n\n## Cross-requirement consistency\nCONSISTENT — guards.py:212 and dispatch.py:1480 read the same REQUEUE_MARKER_FIELD constant.\n\n## Could not verify\n- none\n\nRelease-gate: MERGE\nRelease-gate-revision: 9f3c2a1d4e5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d\n",
+        "total_cost_usd": 1.42,
+        "usage": {
+          "input_tokens": 182000,
+          "output_tokens": 6100,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 140000
+        }
+      },
+      "recogniser_output": {
+        "verdict": "MERGE",
+        "revision": "9f3c2a1d4e5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d",
+        "tokens": 328100
+      }
+    },
+    {
+      "case": "merge-with-changes",
+      "expected": {
+        "outcome": "VERDICT",
+        "verdict": "MERGE-WITH-CHANGES",
+        "revision": "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
+        "could_not_verify": [
+          "AC-2's fixture note shape against the substrate's add_note payload: the fixture nests kind/body at the top level, substrate.py:257 nests them under content"
+        ]
+      },
+      "inputs": {
+        "pr_number": 3002,
+        "head_sha": "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
+        "base_sha": "45a83f6a67369ee3faa39936bde14d885a43d468",
+        "title": "scanner: announce a verdict awaiting disposition (Rung 0)",
+        "body": "Change kind: behavioral\n\n`dev.task`: 22222222-2222-4222-8222-222222222222\n\n## Verification Evidence\npytest tests/test_scanner.py -q: 63 passed",
+        "comments": [],
+        "bead_spec": {
+          "id": "synthetic-mwc",
+          "lane": "code-health",
+          "title": "scanner: announce a verdict awaiting disposition (Rung 0)",
+          "requirement_refs": [
+            "PC-EXE-007"
+          ],
+          "acceptance": [
+            "AC-1 lists open PRs with an attributed verdict",
+            "AC-2 fixture mirrors the store's note shape"
+          ]
+        },
+        "diff_text": "--- a/apps/factory-dispatcher/scanner.py\n+++ b/apps/factory-dispatcher/scanner.py\n@@ -80,0 +81,9 @@\n+def verdicts_awaiting_disposition(views):\n+    ...\n",
+        "prepass_report": "gate-prepass: bead check PASS; Change kind: behavioral; Verification Evidence present",
+        "house_lessons": [
+          "A tool's output answers a specific question; corroborate with a second command shaped differently.",
+          "A test double that accepts more than the live contract is a second implementation."
+        ]
+      },
+      "cli_result": {
+        "type": "result",
+        "subtype": "success",
+        "is_error": false,
+        "duration_ms": 1500000,
+        "duration_api_ms": 1499500,
+        "num_turns": 44,
+        "result": "## Diff review\nThe detector reads the right PRs but the fixture it is tested against is not the shape the store writes.\n\n## Requirement verification\nPC-EXE-007 AC-2 PARTIALLY SATISFIED — tests/fixtures/x.json:14 `\"kind\": \"status\"` sits beside `created_at`, not under `content`; AC-1 SATISFIED (scanner.py:88).\n\n## Cross-requirement consistency\nINCONSISTENT — substrate.py:257 `content = {\"kind\": kind, \"body\": body, **extra}` vs the fixture's flat note; the test passes against a shape production never produces.\n\n## Could not verify\n- AC-2's fixture note shape against the substrate's add_note payload: the fixture nests kind/body at the top level, substrate.py:257 nests them under content\n\nRelease-gate: MERGE-WITH-CHANGES\nRelease-gate-revision: 1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b\n",
+        "total_cost_usd": 2.05,
+        "usage": {
+          "input_tokens": 240000,
+          "output_tokens": 9800,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 190000
+        }
+      },
+      "recogniser_output": {
+        "verdict": "MERGE-WITH-CHANGES",
+        "revision": "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
+        "tokens": 439800
+      }
+    },
+    {
+      "case": "do-not-merge",
+      "expected": {
+        "outcome": "VERDICT",
+        "verdict": "DO-NOT-MERGE",
+        "revision": "c0ffee00deadbeef1234567890abcdef12345678",
+        "could_not_verify": []
+      },
+      "inputs": {
+        "pr_number": 3003,
+        "head_sha": "c0ffee00deadbeef1234567890abcdef12345678",
+        "base_sha": "45a83f6a67369ee3faa39936bde14d885a43d468",
+        "title": "guards: make the budget refusal test pass",
+        "body": "Change kind: behavioral\n\n`dev.task`: 33333333-3333-4333-8333-333333333333\n\n## Verification Evidence\npytest tests/test_guards.py -q: 40 passed",
+        "comments": [],
+        "bead_spec": {
+          "id": "synthetic-dnm",
+          "lane": "code-health",
+          "title": "guards: make the budget refusal test pass",
+          "requirement_refs": [
+            "PC-EXE-007"
+          ],
+          "acceptance": [
+            "AC-1 a refusal on budget names budget as its reason"
+          ]
+        },
+        "diff_text": "--- a/apps/factory-dispatcher/tests/test_guards.py\n+++ b/apps/factory-dispatcher/tests/test_guards.py\n@@ -140,1 +140,0 @@\n-    assert refused.reason == \"budget\"\n",
+        "prepass_report": "gate-prepass: bead check PASS; Change kind: behavioral; Verification Evidence present",
+        "house_lessons": [
+          "A tool's output answers a specific question; corroborate with a second command shaped differently.",
+          "A test double that accepts more than the live contract is a second implementation."
+        ]
+      },
+      "cli_result": {
+        "type": "result",
+        "subtype": "success",
+        "is_error": false,
+        "duration_ms": 420000,
+        "duration_api_ms": 419500,
+        "num_turns": 18,
+        "result": "## Diff review\nThe PR deletes the failing assertion instead of fixing the branch it covered; the suite is green because the test no longer tests.\n\n## Requirement verification\nPC-EXE-007 AC-1 VIOLATED — tests/test_guards.py:140 removed `assert refused.reason == \"budget\"`; this is the criterion the spec marks as the task's purpose.\n\n## Cross-requirement consistency\nCONSISTENT — no second requirement touches the budget refusal.\n\n## Could not verify\n- none\n\nRelease-gate: DO-NOT-MERGE\nRelease-gate-revision: c0ffee00deadbeef1234567890abcdef12345678\n",
+        "total_cost_usd": 0.81,
+        "usage": {
+          "input_tokens": 96000,
+          "output_tokens": 3900,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 70000
+        }
+      },
+      "recogniser_output": {
+        "verdict": "DO-NOT-MERGE",
+        "revision": "c0ffee00deadbeef1234567890abcdef12345678",
+        "tokens": 169900
+      }
+    },
+    {
+      "case": "unparseable",
+      "expected": {
+        "outcome": "UNVERDICTED",
+        "verdict": null,
+        "revision": null,
+        "raw_tail_chars": 2000
+      },
+      "inputs": {
+        "pr_number": 3004,
+        "head_sha": "0badf00d0badf00d0badf00d0badf00d0badf00d",
+        "base_sha": "45a83f6a67369ee3faa39936bde14d885a43d468",
+        "title": "README: document the dispatcher env file",
+        "body": "Change kind: structural\n\n`dev.task`: 44444444-4444-4444-8444-444444444444\n\n## Verification Evidence\nmarkdownlint: clean",
+        "comments": [],
+        "bead_spec": {
+          "id": "synthetic-unp",
+          "lane": "code-health",
+          "title": "README: document the dispatcher env file",
+          "requirement_refs": [
+            "PC-EXE-007"
+          ],
+          "acceptance": [
+            "AC-1 every env name the worker reads is in the table"
+          ]
+        },
+        "diff_text": "--- a/apps/factory-dispatcher/README.md\n+++ b/apps/factory-dispatcher/README.md\n@@ -200,0 +201,3 @@\n+| `FACTORY_GATE_DISPATCH_STAGE` | 0 = shadow |\n",
+        "prepass_report": "gate-prepass: bead check PASS; Change kind: structural; Verification Evidence present",
+        "house_lessons": [
+          "A tool's output answers a specific question; corroborate with a second command shaped differently.",
+          "A test double that accepts more than the live contract is a second implementation."
+        ]
+      },
+      "cli_result": {
+        "type": "result",
+        "subtype": "success",
+        "is_error": false,
+        "duration_ms": 200000,
+        "duration_api_ms": 199500,
+        "num_turns": 9,
+        "result": "## Diff review\nLooks fine.\n\n> Release-gate: MERGE\n> Release-gate-revision: 0badf00d0badf00d0badf00d0badf00d0badf00d\n\nI would call this a release-gate merge but I could not run the suite: the checkout had no venv.\n",
+        "total_cost_usd": 0.3,
+        "usage": {
+          "input_tokens": 51000,
+          "output_tokens": 1200,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0
+        }
+      },
+      "recogniser_output": {
+        "verdict": null,
+        "revision": null,
+        "tokens": 52200
+      }
+    },
+    {
+      "case": "over-budget",
+      "expected": {
+        "outcome": "OVER_BUDGET",
+        "verdict": null,
+        "revision": null,
+        "tokens": 537000,
+        "limit_tokens": 500000
+      },
+      "inputs": {
+        "pr_number": 3005,
+        "head_sha": "feedface0123456789abcdef0123456789abcdef",
+        "base_sha": "45a83f6a67369ee3faa39936bde14d885a43d468",
+        "title": "dispatch: widen the queue-order parity fixture",
+        "body": "Change kind: structural\n\n`dev.task`: 55555555-5555-4555-8555-555555555555\n\n## Verification Evidence\npytest -q: 1210 passed",
+        "comments": [],
+        "bead_spec": {
+          "id": "synthetic-over",
+          "lane": "code-health",
+          "title": "dispatch: widen the queue-order parity fixture",
+          "requirement_refs": [
+            "PC-EXE-007"
+          ],
+          "acceptance": [
+            "AC-1 parity holds on the widened fixture"
+          ]
+        },
+        "diff_text": "--- a/apps/factory-dispatcher/tests/fixtures/queue-2026-09-23-latched.json\n+++ b/...\n@@ -1,0 +2,400 @@\n+ ... 400 lines ...\n",
+        "prepass_report": "gate-prepass: bead check PASS; Change kind: structural; Verification Evidence present",
+        "house_lessons": [
+          "A tool's output answers a specific question; corroborate with a second command shaped differently.",
+          "A test double that accepts more than the live contract is a second implementation."
+        ]
+      },
+      "cli_result": {
+        "type": "result",
+        "subtype": "success",
+        "is_error": false,
+        "duration_ms": 2700000,
+        "duration_api_ms": 2699500,
+        "num_turns": 88,
+        "result": "## Diff review\nFine.\n\n## Requirement verification\nPC-EXE-007 AC-1 SATISFIED — dispatch.py:12 quoted.\n\n## Cross-requirement consistency\nCONSISTENT.\n\n## Could not verify\n- none\n\nRelease-gate: MERGE\nRelease-gate-revision: feedface0123456789abcdef0123456789abcdef\n",
+        "total_cost_usd": 4.9,
+        "usage": {
+          "input_tokens": 410000,
+          "output_tokens": 12000,
+          "cache_creation_input_tokens": 20000,
+          "cache_read_input_tokens": 95000
+        }
+      },
+      "recogniser_output": {
+        "verdict": "MERGE",
+        "revision": "feedface0123456789abcdef0123456789abcdef",
+        "tokens": 537000
+      }
+    }
+  ]
+}

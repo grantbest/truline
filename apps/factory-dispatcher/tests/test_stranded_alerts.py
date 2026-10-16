@@ -18,7 +18,7 @@ delivery and every bead store below is a plain Python fake.
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -220,6 +220,89 @@ def test_bead_stranded_again_after_recovery_re_alerts(tmp_path, monkeypatch):
     assert first is True
     assert unbounded_repeat is False
     assert recovered_and_restranded is True
+    assert fake_post.calls == 2
+
+
+def _dedup_policy(fake_post):
+    """The real dedup policy over the real host-local state file."""
+    return stranded_alerts.notify.AlertPolicy(
+        load_alert_state=stranded_alerts.failure_diagnosis._load_dev_task_alert_state,
+        record_alert_posted=stranded_alerts.failure_diagnosis._record_dev_task_alert_posted,
+        post=fake_post,
+    )
+
+
+def test_stranded_doing_episode_that_persists_re_alerts_after_the_declared_interval(
+    tmp_path, monkeypatch
+):
+    """2026-10-08 / 2026-10-09 (dev.finding 4d00d1cc): a dead claim posted once
+    at the first tick past the threshold and then logged ``alert unchanged;
+    suppressed`` every 15 minutes for days. The same episode must re-announce
+    once ``failure_diagnosis.ALERT_REALERT_INTERVAL_HOURS`` has elapsed since
+    the last post, and stay quiet until then."""
+    monkeypatch.setenv("FACTORY_ALERT_STATE_PATH", str(tmp_path / "alert-state.json"))
+    task = doing_task("3fbc16e3", "2026-10-08T21:15:00Z")
+    interval = stranded_alerts.failure_diagnosis.ALERT_REALERT_INTERVAL_HOURS
+
+    async def fake_post(_content, **_kwargs):
+        fake_post.calls += 1
+        return True
+
+    fake_post.calls = 0
+    policy = _dedup_policy(fake_post)
+    # The state file records the real wall clock as last_posted_at, so the
+    # later observations are placed relative to it rather than to a frozen date.
+    first_post_at = datetime.now(timezone.utc)
+    first = stranded_alerts.announce_stranded_doing_task(
+        task, 45, "age_exceeded_threshold", policy=policy
+    )
+
+    one_tick_short = first_post_at + timedelta(hours=interval) - timedelta(minutes=15)
+    monkeypatch.setattr(stranded_alerts.notify, "_utc_now", lambda: one_tick_short)
+    still_inside_interval = stranded_alerts.announce_stranded_doing_task(
+        task, 45 + int(interval * 60) - 15, "age_exceeded_threshold", policy=policy
+    )
+
+    one_tick_past = first_post_at + timedelta(hours=interval) + timedelta(minutes=15)
+    monkeypatch.setattr(stranded_alerts.notify, "_utc_now", lambda: one_tick_past)
+    re_announced = stranded_alerts.announce_stranded_doing_task(
+        task, 45 + int(interval * 60) + 15, "age_exceeded_threshold", policy=policy
+    )
+
+    assert first is True
+    assert still_inside_interval is False
+    assert re_announced is True
+    assert fake_post.calls == 2
+
+
+def test_review_missing_pr_url_episode_that_persists_re_alerts_after_the_declared_interval(
+    tmp_path, monkeypatch
+):
+    """Same shape as the doing alert: a review bead with no pr_url is not a
+    one-time event, it is a condition until someone binds or requeues it."""
+    monkeypatch.setenv("FACTORY_ALERT_STATE_PATH", str(tmp_path / "alert-state.json"))
+    task = {
+        "id": "b7c0ffee-0000-4000-8000-000000000000",
+        "state": "review",
+        "updated_at": "2026-10-08T21:15:00Z",
+        "content": {"title": "no pr bound"},
+    }
+    interval = stranded_alerts.failure_diagnosis.ALERT_REALERT_INTERVAL_HOURS
+
+    async def fake_post(_content, **_kwargs):
+        fake_post.calls += 1
+        return True
+
+    fake_post.calls = 0
+    policy = _dedup_policy(fake_post)
+    first_post_at = datetime.now(timezone.utc)
+    first = stranded_alerts.announce_review_missing_pr_url(task, policy=policy)
+    one_tick_past = first_post_at + timedelta(hours=interval) + timedelta(minutes=15)
+    monkeypatch.setattr(stranded_alerts.notify, "_utc_now", lambda: one_tick_past)
+    re_announced = stranded_alerts.announce_review_missing_pr_url(task, policy=policy)
+
+    assert first is True
+    assert re_announced is True
     assert fake_post.calls == 2
 
 
